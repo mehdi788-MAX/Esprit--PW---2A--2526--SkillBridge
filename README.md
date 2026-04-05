@@ -28,6 +28,7 @@ SkillBridge is a web application that allows users to communicate, manage profil
 
 ## Contributors
 - Your Name
+- oussema hedhli
 - mehdi788-MAX
 
 ## Academic Context
