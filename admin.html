@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillBridge — Admin</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Our CSS -->
+  <link href="assets/css/admin.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===================== TOPBAR ===================== -->
+  <div class="sb-topbar">
+    <a href="admin.html" class="sb-topbar-brand">Skill<span>Bridge &nbsp;|&nbsp; Admin</span></a>
+    <div class="d-flex align-items-center gap-3">
+      <!-- Link back to Client -->
+      <a href="index.html" style="font-size:0.82rem;color:#4e73df;font-weight:700;text-decoration:none;">
+        <i class="bi bi-person-circle"></i> Vue Client
+      </a>
+      <div class="sb-topbar-user">
+        <div class="sb-topbar-avatar"><i class="bi bi-person-fill"></i></div>
+        Administrateur
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-body">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <div class="sb-sidebar">
+      <div class="sb-brand">
+        <div class="sb-brand-icon"><i class="bi bi-clipboard2-check"></i></div>
+        <div class="sb-brand-text">Test & Validation</div>
+      </div>
+      <hr class="sb-divider">
+      <div class="sb-heading">Navigation</div>
+      <ul class="sb-nav">
+        <li><a href="#" class="active"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+        <li><a href="#"><i class="bi bi-clipboard2-check"></i> Gestion des tests</a></li>
+        <li><a href="#"><i class="bi bi-bar-chart-line"></i> Résultats</a></li>
+      </ul>
+      <hr class="sb-divider">
+      <div class="sb-heading">Compte</div>
+      <ul class="sb-nav">
+        <li><a href="#"><i class="bi bi-gear"></i> Paramètres</a></li>
+        <li><a href="index.html"><i class="bi bi-box-arrow-left"></i> Retour au site</a></li>
+      </ul>
+    </div>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <div class="sb-content">
+
+      <div class="sb-page-title">Dashboard</div>
+      <div class="sb-breadcrumb"><a href="#">Accueil</a> › Gestion Test &amp; Validation</div>
+
+      <!-- STAT CARDS -->
+      <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+          <div class="sb-stat primary">
+            <div>
+              <div class="label">Tests Créés</div>
+              <div class="value">6</div>
+            </div>
+            <i class="bi bi-clipboard2-check icon"></i>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="sb-stat success">
+            <div>
+              <div class="label">Certifiés</div>
+              <div class="value">1</div>
+            </div>
+            <i class="bi bi-patch-check icon"></i>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="sb-stat warning">
+            <div>
+              <div class="label">En attente</div>
+              <div class="value">0</div>
+            </div>
+            <i class="bi bi-hourglass-split icon"></i>
+          </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+          <div class="sb-stat info">
+            <div>
+              <div class="label">Score Moyen</div>
+              <div class="value">92%</div>
+            </div>
+            <i class="bi bi-bar-chart-line icon"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- TESTS CARD -->
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h6><i class="bi bi-clipboard2-check me-2"></i>Gestion des Tests</h6>
+          <button class="sb-add-btn" onclick="toggleForm()">
+            <i class="bi bi-plus-lg"></i> Nouveau test
+          </button>
+        </div>
+        <div class="sb-card-body">
+
+          <!-- Add Test Form (hidden by default) -->
+          <div class="sb-form-card" id="sb-form">
+            <h6>Créer un nouveau test</h6>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label>Titre du test</label>
+                <input type="text" placeholder="ex: Développement Web">
+              </div>
+              <div class="col-md-3">
+                <label>Catégorie</label>
+                <select>
+                  <option>Développement</option>
+                  <option>Design</option>
+                  <option>Data</option>
+                  <option>Marketing</option>
+                  <option>Management</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label>Durée (min)</label>
+                <input type="number" placeholder="60">
+              </div>
+              <div class="col-md-3">
+                <label>Niveau</label>
+                <select>
+                  <option>Débutant</option>
+                  <option>Moyen</option>
+                  <option>Avancé</option>
+                </select>
+              </div>
+              <div class="col-12 d-flex gap-2">
+                <button class="sb-btn-primary">Enregistrer</button>
+                <button class="sb-btn-secondary" onclick="toggleForm()">Annuler</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tests Table -->
+          <div class="table-responsive">
+            <table class="sb-table">
+              <thead>
+                <tr>
+                  <th>Titre</th>
+                  <th>Catégorie</th>
+                  <th>Durée</th>
+                  <th>Niveau</th>
+                  <th>Passés</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-tests-table"></tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RESULTS CARD -->
+      <div class="sb-card">
+        <div class="sb-card-header">
+          <h6><i class="bi bi-bar-chart-line me-2"></i>Résultats des Freelancers</h6>
+        </div>
+        <div class="sb-card-body">
+          <div class="table-responsive">
+            <table class="sb-table">
+              <thead>
+                <tr>
+                  <th>Freelancer</th>
+                  <th>Test passé</th>
+                  <th>Date</th>
+                  <th>Score</th>
+                  <th>Statut</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-results-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- sb-content -->
+  </div><!-- sb-body -->
+
+  <!-- ===================== FOOTER ===================== -->
+  <div class="sb-footer">
+    <strong>SkillBridge</strong> · Module Gestion Test &amp; Validation · Mohamed Emin · NEXT STEP · Esprit 2025
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <!-- Our JS -->
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillBridge — Gestion Test & Validation</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <!-- Our CSS -->
+  <link href="assets/css/client.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="ef-header">
+    <div class="container">
+      <div class="ef-header-container">
+        <a href="index.html" class="ef-logo">Skill<span>Bridge</span></a>
+        <ul class="ef-nav">
+          <li><a href="#hero"    class="active">Accueil</a></li>
+          <li><a href="#how">    Comment ça marche</a></li>
+          <li><a href="#tests">  Tests</a></li>
+          <li><a href="#talents">Talents</a></li>
+        </ul>
+        <!-- Link to Admin -->
+        <a href="admin.html" class="btn-outline-ef" style="font-size:0.8rem;padding:7px 16px;">
+          <i class="bi bi-shield-fill"></i> Vue Admin
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="ef-hero" id="hero">
+    <div class="container" style="position:relative;z-index:2;">
+      <div class="row align-items-center g-5">
+
+        <div class="col-lg-6">
+          <div class="ef-hero-badge">La confiance par la preuve</div>
+          <h1>Recrutez les meilleurs <span>talents vérifiés</span></h1>
+          <p>SkillBridge élimine l'incertitude du recrutement. Accédez à un vivier de freelancers dont les compétences ont été rigoureusement testées.</p>
+          <div class="d-flex gap-3 flex-wrap mt-4">
+            <a href="#tests" class="btn-primary-ef">Explorer les tests <i class="bi bi-arrow-right"></i></a>
+            <button class="btn-outline-ef">Comment ça marche ?</button>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="cert-card">
+            <h3>Top Certifications ⚡</h3>
+            <div class="cert-row">
+              <div class="cert-avatar" style="background:#ec4899;">👤</div>
+              <div style="flex:1;">
+                <div class="d-flex justify-content-between">
+                  <span class="cert-name">Chadi Hassen</span>
+                  <span class="cert-pct">92%</span>
+                </div>
+                <div class="cert-bar"><div class="cert-fill" style="width:92%;"></div></div>
+                <span class="cert-sub">Gestion de Projet Agile</span>
+              </div>
+            </div>
+            <div class="cert-stats">
+              <div><span class="val">1</span><span class="lbl">Tests passés</span></div>
+              <div><span class="val">92%</span><span class="lbl">Meilleur score</span></div>
+              <div><span class="val">6</span><span class="lbl">Tests dispo</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <section class="section-white" id="how">
+    <div class="container">
+      <div class="ef-section-title">
+        <h2>Comment SkillBridge valide vos talents</h2>
+        <div class="title-shape">
+          <svg viewBox="0 0 200 20" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 0,10 C 40,0 60,20 100,10 C 140,0 160,20 200,10" fill="none" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <p>Un processus rigoureux pour garantir que vous ne travaillez qu'avec les meilleurs experts du marché.</p>
+      </div>
+      <div class="row g-5 justify-content-center">
+        <div class="col-md-4">
+          <div class="how-card">
+            <div class="how-icon blue">🎯</div>
+            <h4>Tests de Compétences</h4>
+            <p>Chaque freelancer passe des tests techniques chronométrés conçus par des experts du domaine.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="how-card">
+            <div class="how-icon green">✅</div>
+            <h4>Validation Humaine</h4>
+            <p>Nos administrateurs vérifient manuellement les portfolios et les résultats pour assurer la qualité.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="how-card">
+            <div class="how-icon orange">🏅</div>
+            <h4>Certification SkillBridge</h4>
+            <p>Seuls les profils ayant obtenu un score supérieur à 70% reçoivent le badge de certification.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TESTS ===================== -->
+  <section class="section-light" id="tests">
+    <div class="container">
+      <div class="d-flex align-items-end justify-content-between flex-wrap gap-4 mb-5">
+        <div>
+          <h2 style="font-family:'Questrial',sans-serif;font-size:1.9rem;color:#0f2943;">Découvrez nos certifications</h2>
+          <p style="color:#6b7280;font-size:0.88rem;margin-top:6px;">Explorez les domaines de compétences que nous validons.</p>
+        </div>
+        <div class="d-flex gap-3 flex-wrap">
+          <div class="search-wrap">
+            <i class="bi bi-search search-ico"></i>
+            <input type="text" id="ef-search" placeholder="Rechercher..." oninput="filterTests()">
+          </div>
+          <div class="filter-wrap">
+            <i class="bi bi-funnel search-ico"></i>
+            <select id="ef-cat" onchange="filterTests()">
+              <option value="Tous">Tous</option>
+              <option value="Développement">Développement</option>
+              <option value="Design">Design</option>
+              <option value="Data">Data</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Management">Management</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4" id="tests-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== FREELANCERS ===================== -->
+  <section class="section-white" id="talents">
+    <div class="container">
+      <div class="d-flex align-items-start justify-content-between mb-5 flex-wrap gap-3">
+        <div>
+          <h2 style="font-family:'Questrial',sans-serif;font-size:1.9rem;color:#0f2943;">Talents à la une</h2>
+          <p style="color:#6b7280;font-size:0.88rem;margin-top:6px;">Les meilleurs scores de la semaine.</p>
+        </div>
+        <button style="color:#e87532;font-weight:600;font-size:0.85rem;border:none;background:none;cursor:pointer;">Voir tout le vivier →</button>
+      </div>
+      <div class="row g-4" id="freelancers-grid"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CTA ===================== -->
+  <section class="section-light">
+    <div class="container">
+      <div class="ef-cta">
+        <h2>Prêt à recruter sans risque ?</h2>
+        <p>Rejoignez des milliers d'entreprises qui font confiance à SkillBridge pour valider les compétences de leurs futurs collaborateurs.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+          <button class="btn-white">Commencer maintenant</button>
+          <button class="btn-dark">Contacter un expert</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="ef-footer">
+    <strong>SkillBridge</strong> — Module : <strong>Gestion Test &amp; Validation</strong> · Mohamed Emin · NEXT STEP · Esprit 2025
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+  <!-- Our JS -->
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/client.js"></script>
+</body>
+</html>
