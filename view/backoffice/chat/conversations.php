@@ -40,43 +40,7 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
 </head>
 <body id="page-top">
     <div id="wrapper">
-        <!-- Sidebar -->
-        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="#">
-                <div class="sidebar-brand-text mx-3">Skill <sup>Bridge</sup></div>
-            </a>
-            <hr class="sidebar-divider my-0">
-            <li class="nav-item">
-                <a class="nav-link" href="#">
-                    <i class="fas fa-fw fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider">
-            <div class="sidebar-heading">Chat</div>
-            <li class="nav-item active">
-                <a class="nav-link" href="conversations.php">
-                    <i class="fas fa-fw fa-comments"></i>
-                    <span>Conversations</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="add_conversation.php">
-                    <i class="fas fa-fw fa-plus-circle"></i>
-                    <span>Nouvelle Conversation</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="messages.php">
-                    <i class="fas fa-fw fa-envelope"></i>
-                    <span>Tous les Messages</span>
-                </a>
-            </li>
-            <hr class="sidebar-divider d-none d-md-block">
-            <div class="text-center d-none d-md-inline">
-                <button class="rounded-circle border-0" id="sidebarToggle"></button>
-            </div>
-        </ul>
+        <?php $activePage = 'conversations'; include 'sidebar.php'; ?>
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
