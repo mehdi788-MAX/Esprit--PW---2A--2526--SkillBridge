@@ -1,4 +1,10 @@
 <?php
+session_start();
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    die("Vous devez être connecté");
+}
 // ──────────────────────────────────────────────
 //  SkillBridge – Ajout d'une demande client
 //  Connexion BDD via PDO (MySQL)

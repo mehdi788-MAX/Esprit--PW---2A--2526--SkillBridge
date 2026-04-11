@@ -137,7 +137,13 @@
     });
 
     isotopeItem.querySelectorAll('.isotope-filters li').forEach(function(filters) {
-      filters.addEventListener('click', function() {
+      filters.addEventListener('click', function(e) {
+        if (e.target.closest('a') || this.classList.contains('portfolio-add-link')) {
+          return;
+        }
+        if (!initIsotope) {
+          return;
+        }
         isotopeItem.querySelector('.isotope-filters .filter-active').classList.remove('filter-active');
         this.classList.add('filter-active');
         initIsotope.arrange({

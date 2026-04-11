@@ -3,7 +3,7 @@
 $dbHost = 'localhost';
 $dbUser = 'root';
 $dbPassword = '';
-$dbName = 'matching';
+$dbName = 'skillbridge';
 
 try {
     $pdo = new PDO(

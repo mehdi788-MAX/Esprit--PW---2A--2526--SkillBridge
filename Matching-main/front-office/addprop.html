@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Ajouter une proposition – SkillBridge</title>
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/css/main.css" rel="stylesheet">
+  <style>
+    .addprop-wrap { max-width: 640px; margin: 0 auto; padding: 48px 16px 80px; }
+    .addprop-card { background: #fff8f0; border: 1px solid #ffe0cc; border-radius: 12px; padding: 32px; box-shadow: 0 8px 25px rgba(0,0,0,0.06); }
+    .addprop-card h1 { color: #ff6600; font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; }
+    .addprop-card .lead { color: #4b5563; font-size: 0.95rem; margin-bottom: 24px; }
+    .addprop-card label { font-weight: 600; color: #cc5200; margin-bottom: 6px; }
+    .addprop-card .form-control, .addprop-card textarea { border-radius: 8px; border-color: #ffb366; }
+    .addprop-card .form-control:focus, .addprop-card textarea:focus { border-color: #ff6600; box-shadow: 0 0 0 0.2rem rgba(255,102,0,0.2); }
+    .btn-prop { background: #ff6600; color: #fff; font-weight: 600; border: none; padding: 12px 28px; border-radius: 8px; }
+    .btn-prop:hover { background: #e65c00; color: #fff; }
+    .back-link { color: #ff6600; text-decoration: none; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+
+<body class="index-page">
+  <header id="header" class="header d-flex align-items-center sticky-top">
+    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+        <h1 class="sitename">SkillBridge</h1>
+      </a>
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="index.html#propositions">Propositions</a></li>
+          <li><a href="mes-demandes.php">Mes Demandes</a></li>
+          <li><a href="Addrequest.php">Publier une demande</a></li>
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+    </div>
+  </header>
+
+  <main class="addprop-wrap container">
+    <p class="mb-3"><a href="index.html#propositions" class="back-link"><i class="bi bi-arrow-left"></i> Retour aux propositions</a></p>
+
+    <div id="flash-ok" class="alert alert-success d-none" role="alert">Proposition enregistrée avec succès.</div>
+    <div id="flash-err" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="addprop-card">
+      <h1>Ajouter une proposition</h1>
+      <p class="lead">Répondez à une demande publiée. L’auteur est enregistré avec l’utilisateur nº&nbsp;0 (temporaire).</p>
+
+      <form action="addprop.php" method="post" class="d-flex flex-column gap-3">
+        <div>
+          <label for="demande_id" class="form-label">ID de la demande</label>
+          <input type="number" class="form-control" name="demande_id" id="demande_id" min="1" required placeholder="Ex. 1">
+          <small class="text-muted">Indiquez l’identifiant de la demande (visible dans l’URL de « Voir propositions » ou dans le back-office).</small>
+        </div>
+        <div>
+          <label for="freelancer_name" class="form-label">Nom affiché</label>
+          <input type="text" class="form-control" name="freelancer_name" id="freelancer_name" required maxlength="120" placeholder="Votre nom ou pseudo">
+        </div>
+        <div>
+          <label for="price" class="form-label">Prix proposé (DT)</label>
+          <input type="number" class="form-control" name="price" id="price" min="1" step="1" required placeholder="Ex. 200">
+        </div>
+        <div>
+          <label for="message" class="form-label">Message / détail de l’offre</label>
+          <textarea class="form-control" name="message" id="message" rows="5" required placeholder="Décrivez votre offre, délais, livrables…"></textarea>
+        </div>
+        <div>
+          <button type="submit" class="btn btn-prop">Envoyer la proposition</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var q = new URLSearchParams(window.location.search);
+      if (q.get('ok') === '1') {
+        document.getElementById('flash-ok').classList.remove('d-none');
+      }
+      var err = q.get('err');
+      if (err) {
+        var el = document.getElementById('flash-err');
+        el.textContent = err;
+        el.classList.remove('d-none');
+      }
+    })();
+  </script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
