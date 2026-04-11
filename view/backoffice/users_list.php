@@ -1,3 +1,29 @@
+<?php
+session_start();
+
+// Vérifier si admin connecté
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
+    header('Location: ../frontoffice/EasyFolio/login.php');
+    exit;
+}
+
+// Connexion BDD
+$db = new PDO("mysql:host=localhost;dbname=skillbridge;charset=utf8", "root", "");
+$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+require_once '../../model/utilisateur.php';
+
+$utilisateurModel   = new Utilisateur($db);
+$total_utilisateurs = $utilisateurModel->countAll();
+$total_freelancers  = $utilisateurModel->countByRole('freelancer');
+$total_clients      = $utilisateurModel->countByRole('client');
+$stmt               = $utilisateurModel->readAll();
+$utilisateurs       = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$success = isset($_SESSION['success']) ? $_SESSION['success'] : null;
+$error   = isset($_SESSION['error'])   ? $_SESSION['error']   : null;
+unset($_SESSION['success'], $_SESSION['error']);
+?>
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -223,7 +249,7 @@
       <a href="settings.php" class="nav-link">
         <i class="bi bi-gear-fill"></i> Paramètres
       </a>
-      <a href="../../controllers/UtilisateurController.php?action=logout" class="nav-link mt-5">
+      <a href="../../controller/utilisateurcontroller.php?action=logout" class="nav-link mt-5">
         <i class="bi bi-box-arrow-left"></i> Déconnexion
       </a>
     </nav>

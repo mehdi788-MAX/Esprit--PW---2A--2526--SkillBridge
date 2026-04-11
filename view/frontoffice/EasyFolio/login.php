@@ -75,13 +75,14 @@
             <div class="contact-form card" data-aos="fade-up" data-aos-delay="200">
               <div class="card-body p-4 p-lg-5">
 
-                <?php
-                if (isset($error)) {
-                  echo '<div class="alert alert-danger">' . $error . '</div>';
-                }
-                ?>
+                <?php if (isset($error)): ?>
+                  <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
 
-                <form action="../../controllers/UtilisateurController.php" method="POST">
+                <!-- Conteneur erreurs JS -->
+                <div id="js-errors" class="alert alert-danger d-none"></div>
+
+                <form id="loginForm" action="../../../controller/utilisateurcontroller.php" method="POST" novalidate>
                   <input type="hidden" name="action" value="login">
 
                   <div class="row gy-4">
@@ -89,18 +90,20 @@
                     <!-- Email -->
                     <div class="col-12">
                       <label for="email" class="form-label">Adresse Email <span class="text-danger">*</span></label>
-                      <input type="email" name="email" id="email" class="form-control" placeholder="example@email.com" required>
+                      <input type="text" name="email" id="email" class="form-control" placeholder="example@email.com">
+                      <div id="email-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                     </div>
 
                     <!-- Mot de passe -->
                     <div class="col-12">
                       <label for="password" class="form-label">Mot de passe <span class="text-danger">*</span></label>
                       <div class="input-group">
-                        <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe" required>
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                           <i class="bi bi-eye" id="eyeIcon"></i>
                         </button>
                       </div>
+                      <div id="password-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                     </div>
 
                     <!-- Se souvenir de moi -->
@@ -163,20 +166,84 @@
   <script src="assets/js/main.js"></script>
 
   <script>
-    // Toggle affichage mot de passe
-    document.getElementById('togglePassword').addEventListener('click', function() {
-      const pwd = document.getElementById('password');
-      const icon = document.getElementById('eyeIcon');
-      if (pwd.type === 'password') {
-        pwd.type = 'text';
-        icon.classList.replace('bi-eye', 'bi-eye-slash');
-      } else {
-        pwd.type = 'password';
-        icon.classList.replace('bi-eye-slash', 'bi-eye');
-      }
-    });
-  </script>
+document.getElementById('loginForm').addEventListener('submit', function (e) {
 
-</body>
+  let valid = true;
 
-</html>
+  const emailField = document.getElementById('email');
+  const passwordField = document.getElementById('password');
+
+  const emailError = document.getElementById('email-error');
+  const passwordError = document.getElementById('password-error');
+
+  function resetField(field, errorDiv) {
+    field.classList.remove('is-invalid', 'is-valid');
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+  }
+
+  resetField(emailField, emailError);
+  resetField(passwordField, passwordError);
+
+  function showError(field, errorDiv, message) {
+    field.classList.add('is-invalid');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+    field.focus();
+    valid = false;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const email = emailField.value.trim();
+  const password = passwordField.value;
+
+  // Email
+  if (email === '') {
+    showError(emailField, emailError, "L'adresse email est obligatoire.");
+  } else if (!emailRegex.test(email)) {
+    showError(emailField, emailError, "Format invalide (ex: nom@email.com).");
+  } else {
+    emailField.classList.add('is-valid');
+  }
+
+  // Password
+  if (password === '') {
+    showError(passwordField, passwordError, "Le mot de passe est obligatoire.");
+  } else if (password.length < 6) {
+    showError(passwordField, passwordError, "Minimum 6 caractères.");
+  } else {
+    passwordField.classList.add('is-valid');
+  }
+
+  if (!valid) {
+    e.preventDefault();
+  } else {
+    document.querySelector('button[type="submit"]').disabled = true;
+  }
+
+});
+
+// Effacer erreurs en tapant
+['email', 'password'].forEach(function (id) {
+  const field = document.getElementById(id);
+  const errorDiv = document.getElementById(id + '-error');
+
+  field.addEventListener('input', function () {
+    field.classList.remove('is-invalid');
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+  });
+});
+
+// Toggle password
+document.getElementById('togglePassword').addEventListener('click', function () {
+  const pwd = document.getElementById('password');
+  const icon = document.getElementById('eyeIcon');
+
+  pwd.type = (pwd.type === 'password') ? 'text' : 'password';
+
+  icon.classList.toggle('bi-eye');
+  icon.classList.toggle('bi-eye-slash');
+});
+</script>
