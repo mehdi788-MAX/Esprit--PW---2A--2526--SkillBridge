@@ -29,397 +29,283 @@ unset($_SESSION['success'], $_SESSION['error']);
 
 <head>
   <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <title>Gestion Utilisateurs - SkillBridge Admin</title>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Vendor CSS Files -->
-  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
-  <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-
-  <!-- Main CSS File -->
-  <link href="assets/css/main.css" rel="stylesheet">
-
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+  <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
   <style>
-    body {
-      background: #f4f6f9;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 250px;
-      min-height: 100vh;
-      background: #1a1a2e;
-      color: #fff;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 100;
-      padding-top: 20px;
-    }
-    .sidebar .logo {
-      padding: 20px 25px;
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: #0ea2bd;
-      border-bottom: 1px solid #2a2a4a;
-      margin-bottom: 10px;
-    }
-    .sidebar .nav-link {
-      color: #ccc;
-      padding: 12px 25px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.95rem;
-      transition: 0.2s;
-    }
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link.active {
-      color: #fff;
-      background: #0ea2bd22;
-      border-left: 3px solid #0ea2bd;
-    }
-    .sidebar .nav-link i {
-      font-size: 1.1rem;
-    }
-
-    /* Main content */
-    .main-content {
-      margin-left: 250px;
-      padding: 30px;
-    }
-
-    /* Topbar */
-    .topbar {
-      background: #fff;
-      padding: 15px 25px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-    .topbar h4 {
-      margin: 0;
-      font-weight: 700;
-      color: #1a1a2e;
-    }
-
-    /* Stats cards */
-    .stat-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 25px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-    .stat-card .icon {
-      width: 55px;
-      height: 55px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      color: #fff;
-    }
-    .stat-card .icon.blue { background: #0ea2bd; }
-    .stat-card .icon.green { background: #28a745; }
-    .stat-card .icon.orange { background: #fd7e14; }
-    .stat-card .stat-info h3 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      margin: 0;
-      color: #1a1a2e;
-    }
-    .stat-card .stat-info p {
-      margin: 0;
-      color: #888;
-      font-size: 0.85rem;
-    }
-
-    /* Table card */
-    .table-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    .table-card .card-header-custom {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .table-card h5 {
-      font-weight: 700;
-      color: #1a1a2e;
-      margin: 0;
-    }
-
-    /* Table */
-    .table th {
-      background: #f8f9fa;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: #555;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .table td {
-      vertical-align: middle;
-      font-size: 0.9rem;
-    }
-    .user-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .user-avatar-placeholder {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #e0f7fa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #0ea2bd;
-      font-size: 1rem;
-    }
-    .badge-role {
-      font-size: 0.75rem;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .badge-freelancer { background: #0ea2bd22; color: #0ea2bd; }
-    .badge-client { background: #28a74522; color: #28a745; }
-    .badge-admin { background: #dc354522; color: #dc3545; }
-
-    /* Search bar */
-    .search-bar {
-      position: relative;
-      max-width: 280px;
-    }
-    .search-bar input {
-      padding-left: 35px;
-      border-radius: 20px;
-      font-size: 0.9rem;
-    }
-    .search-bar i {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #888;
-    }
+    .user-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; }
+    .user-avatar-placeholder { width: 38px; height: 38px; border-radius: 50%; background: #e0f7fa; display: flex; align-items: center; justify-content: center; color: #4e73df; font-size: 1rem; }
+    .badge-freelancer { background: #1cc88a22; color: #1cc88a; }
+    .badge-client { background: #36b9cc22; color: #36b9cc; }
+    .badge-admin { background: #e74a3b22; color: #e74a3b; }
+    .badge-role { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; }
   </style>
 </head>
 
-<body>
+<body id="page-top">
 
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="logo">
-      <i class="bi bi-layers me-2"></i> SkillBridge
-    </div>
-    <nav>
-      <a href="dashboard.php" class="nav-link">
-        <i class="bi bi-speedometer2"></i> Dashboard
-      </a>
-      <a href="users_list.php" class="nav-link active">
-        <i class="bi bi-people-fill"></i> Utilisateurs
-      </a>
-      <a href="offres.php" class="nav-link">
-        <i class="bi bi-briefcase-fill"></i> Offres
-      </a>
-      <a href="projets.php" class="nav-link">
-        <i class="bi bi-folder-fill"></i> Projets
-      </a>
-      <a href="settings.php" class="nav-link">
-        <i class="bi bi-gear-fill"></i> Paramètres
-      </a>
-      <a href="../../controller/utilisateurcontroller.php?action=logout" class="nav-link mt-5">
-        <i class="bi bi-box-arrow-left"></i> Déconnexion
-      </a>
-    </nav>
-  </div>
+  <div id="wrapper">
 
-  <!-- Main Content -->
-  <div class="main-content">
-
-    <!-- Topbar -->
-    <div class="topbar">
-      <h4><i class="bi bi-people-fill me-2"></i>Gestion des Utilisateurs</h4>
-      <div class="d-flex align-items-center gap-3">
-        <span class="text-muted" style="font-size:0.9rem;">
-          <i class="bi bi-person-circle me-1"></i> Admin
-        </span>
-      </div>
-    </div>
-
-    <?php if (isset($success)): ?>
-      <div class="alert alert-success"><?= $success ?></div>
-    <?php endif; ?>
-    <?php if (isset($error)): ?>
-      <div class="alert alert-danger"><?= $error ?></div>
-    <?php endif; ?>
-
-    <!-- Stats -->
-    <div class="row">
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="icon blue"><i class="bi bi-people-fill"></i></div>
-          <div class="stat-info">
-            <h3><?= $total_utilisateurs ?? 0 ?></h3>
-            <p>Total Utilisateurs</p>
+    <!-- Sidebar -->
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+        <div class="sidebar-brand-text mx-3">Skill <sup>Bridge</sup></div>
+      </a>
+      <hr class="sidebar-divider my-0">
+      <li class="nav-item">
+        <a class="nav-link" href="index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">Gestion Chat</div>
+      <li class="nav-item">
+        <a class="nav-link" href="chat/conversations.php"><i class="fas fa-fw fa-comments"></i><span>Conversations</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="chat/add_conversation.php"><i class="fas fa-fw fa-plus-circle"></i><span>Nouvelle Conversation</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="chat/messages.php"><i class="fas fa-fw fa-envelope"></i><span>Tous les Messages</span></a>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">Interface</div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+          <i class="fas fa-fw fa-cog"></i><span>Components</span>
+        </a>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Custom Components:</h6>
+            <a class="collapse-item" href="buttons.html">Buttons</a>
+            <a class="collapse-item" href="cards.html">Cards</a>
           </div>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="icon green"><i class="bi bi-person-check-fill"></i></div>
-          <div class="stat-info">
-            <h3><?= $total_freelancers ?? 0 ?></h3>
-            <p>Freelancers</p>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities" aria-expanded="true" aria-controls="collapseUtilities">
+          <i class="fas fa-fw fa-wrench"></i><span>Utilities</span>
+        </a>
+        <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Custom Utilities:</h6>
+            <a class="collapse-item" href="utilities-color.html">Colors</a>
+            <a class="collapse-item" href="utilities-border.html">Borders</a>
+            <a class="collapse-item" href="utilities-animation.html">Animations</a>
+            <a class="collapse-item" href="utilities-other.html">Other</a>
           </div>
         </div>
-      </div>
-      <div class="col-md-4">
-        <div class="stat-card">
-          <div class="icon orange"><i class="bi bi-person-fill"></i></div>
-          <div class="stat-info">
-            <h3><?= $total_clients ?? 0 ?></h3>
-            <p>Clients</p>
+      </li>
+      <hr class="sidebar-divider">
+      <div class="sidebar-heading">Addons</div>
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages" aria-expanded="true" aria-controls="collapsePages">
+          <i class="fas fa-fw fa-folder"></i><span>Pages</span>
+        </a>
+        <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+            <h6 class="collapse-header">Login Screens:</h6>
+            <a class="collapse-item" href="login.html">Login</a>
+            <a class="collapse-item" href="register.html">Register</a>
+            <a class="collapse-item" href="forgot-password.html">Forgot Password</a>
+            <div class="collapse-divider"></div>
+            <h6 class="collapse-header">Other Pages:</h6>
+            <a class="collapse-item" href="404.html">404 Page</a>
+            <a class="collapse-item" href="blank.html">Blank Page</a>
           </div>
         </div>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="charts.html"><i class="fas fa-fw fa-chart-area"></i><span>Charts</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="tables.html"><i class="fas fa-fw fa-table"></i><span>Tables</span></a>
+      </li>
+      <hr class="sidebar-divider d-none d-md-block">
+      <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
       </div>
-    </div>
+    </ul>
 
-    <!-- Table -->
-    <div class="table-card" data-aos="fade-up">
-      <div class="card-header-custom">
-        <h5>Liste des Utilisateurs</h5>
-        <div class="d-flex gap-3 align-items-center">
-          <!-- Recherche -->
-          <div class="search-bar">
-            <i class="bi bi-search"></i>
-            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher...">
-          </div>
-          <!-- Filtre rôle -->
-          <select id="filterRole" class="form-select form-select-sm" style="width:140px; border-radius:20px;">
-            <option value="">Tous les rôles</option>
-            <option value="freelancer">Freelancer</option>
-            <option value="client">Client</option>
-            <option value="admin">Admin</option>
-          </select>
-          <!-- Ajouter -->
-          <a href="add_user.php" class="btn btn-submit btn-sm">
-            <i class="bi bi-plus-lg me-1"></i> Ajouter
-          </a>
-        </div>
-      </div>
+    <!-- Content Wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+      <div id="content">
 
-      <div class="table-responsive">
-        <table class="table table-hover" id="usersTable">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Utilisateur</th>
-              <th>Email</th>
-              <th>Rôle</th>
-              <th>Téléphone</th>
-              <th>Date d'inscription</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (!empty($utilisateurs)): ?>
-              <?php foreach ($utilisateurs as $index => $user): ?>
-              <tr>
-                <td><?= $index + 1 ?></td>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    <?php if (!empty($user['photo'])): ?>
-                      <img src="assets/img/profile/<?= htmlspecialchars($user['photo']) ?>" class="user-avatar" alt="">
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                  <i class="fas fa-user-circle mr-1"></i> <?= htmlspecialchars($_SESSION['user_nom'] ?? 'Admin') ?>
+                </span>
+                <img class="img-profile rounded-circle" src="img/undraw_profile.svg">
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Page Content -->
+        <div class="container-fluid">
+
+          <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800"><i class="fas fa-users mr-2"></i>Gestion des Utilisateurs</h1>
+          </div>
+
+          <?php if (isset($success)): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+              <?= $success ?>
+              <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+          <?php endif; ?>
+          <?php if (isset($error)): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <?= $error ?>
+              <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+            </div>
+          <?php endif; ?>
+
+          <!-- Stats Cards -->
+          <div class="row">
+            <div class="col-xl-4 col-md-6 mb-4">
+              <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Utilisateurs</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_utilisateurs ?? 0 ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-users fa-2x text-gray-300"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+              <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Freelancers</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_freelancers ?? 0 ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-user-tie fa-2x text-gray-300"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+              <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                  <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                      <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Clients</div>
+                      <div class="h5 mb-0 font-weight-bold text-gray-800"><?= $total_clients ?? 0 ?></div>
+                    </div>
+                    <div class="col-auto"><i class="fas fa-user fa-2x text-gray-300"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Users Table -->
+          <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+              <h6 class="m-0 font-weight-bold text-primary">Liste des Utilisateurs</h6>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Utilisateur</th>
+                      <th>Email</th>
+                      <th>Rôle</th>
+                      <th>Téléphone</th>
+                      <th>Date d'inscription</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php if (!empty($utilisateurs)): ?>
+                      <?php foreach ($utilisateurs as $index => $user): ?>
+                      <tr>
+                        <td><?= $index + 1 ?></td>
+                        <td>
+                          <div class="d-flex align-items-center">
+                            <?php if (!empty($user['photo'])): ?>
+                              <img src="../frontoffice/EasyFolio/assets/img/profile/<?= htmlspecialchars($user['photo']) ?>" class="user-avatar mr-2" alt="">
+                            <?php else: ?>
+                              <div class="user-avatar-placeholder mr-2">
+                                <i class="fas fa-user"></i>
+                              </div>
+                            <?php endif; ?>
+                            <span><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></span>
+                          </div>
+                        </td>
+                        <td><?= htmlspecialchars($user['email']) ?></td>
+                        <td>
+                          <span class="badge badge-role badge-<?= $user['role'] ?>">
+                            <?= ucfirst(htmlspecialchars($user['role'])) ?>
+                          </span>
+                        </td>
+                        <td><?= !empty($user['telephone']) ? htmlspecialchars($user['telephone']) : '-' ?></td>
+                        <td><?= htmlspecialchars($user['date_inscription']) ?></td>
+                        <td>
+                          <a href="edit_user.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-warning" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                          </a>
+                          <a href="../../controller/utilisateurcontroller.php?action=delete&id=<?= $user['id'] ?>"
+                             class="btn btn-sm btn-danger"
+                             title="Supprimer"
+                             onclick="return confirm('Confirmer la suppression de cet utilisateur ?')">
+                            <i class="fas fa-trash"></i>
+                          </a>
+                        </td>
+                      </tr>
+                      <?php endforeach; ?>
                     <?php else: ?>
-                      <div class="user-avatar-placeholder">
-                        <i class="bi bi-person-fill"></i>
-                      </div>
+                      <tr>
+                        <td colspan="7" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
+                      </tr>
                     <?php endif; ?>
-                    <span><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></span>
-                  </div>
-                </td>
-                <td><?= htmlspecialchars($user['email']) ?></td>
-                <td>
-                  <span class="badge badge-<?= $user['role'] ?>">
-                    <?= ucfirst(htmlspecialchars($user['role'])) ?>
-                  </span>
-                </td>
-                <td><?= !empty($user['telephone']) ? htmlspecialchars($user['telephone']) : '-' ?></td>
-                <td><?= htmlspecialchars($user['date_inscription']) ?></td>
-                <td>
-                  <div class="d-flex gap-2">
-                    <a href="edit_user.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier">
-                      <i class="fas fa-edit"></i>
-                    </a>
-                    <a href="../../controller/utilisateurcontroller.php?action=delete&id=<?= $user['id'] ?>"
-                       class="btn btn-sm btn-outline-danger"
-                       title="Supprimer"
-                       onclick="return confirm('Confirmer la suppression de cet utilisateur ?')">
-                      <i class="fas fa-trash"></i>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <tr>
-                <td colspan="7" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
-              </tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
-    </div>
+      <!-- Footer -->
+      <footer class="sticky-footer bg-white">
+        <div class="container my-auto">
+          <div class="copyright text-center my-auto">
+            <span>Copyright &copy; SkillBridge <?= date('Y') ?></span>
+          </div>
+        </div>
+      </footer>
 
+    </div>
   </div>
 
-  <!-- Vendor JS Files -->
-  <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/js/main.js"></script>
+  <a class="scroll-to-top rounded" href="#page-top"><i class="fas fa-angle-up"></i></a>
 
-  <script>
-    // Recherche en temps réel
-    document.getElementById('searchInput').addEventListener('input', filterTable);
-    document.getElementById('filterRole').addEventListener('change', filterTable);
-
-    function filterTable() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const role = document.getElementById('filterRole').value.toLowerCase();
-      const rows = document.querySelectorAll('#usersTable tbody tr');
-
-      rows.forEach(row => {
-        const text = row.textContent.toLowerCase();
-        const roleCell = row.querySelector('.badge') ? row.querySelector('.badge').textContent.toLowerCase() : '';
-        const matchSearch = text.includes(search);
-        const matchRole = role === '' || roleCell.includes(role);
-        row.style.display = matchSearch && matchRole ? '' : 'none';
-      });
-    }
-  </script>
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
+  <script src="js/sb-admin-2.min.js"></script>
+  <script src="vendor/datatables/jquery.dataTables.min.js"></script>
+  <script src="vendor/datatables/dataTables.bootstrap4.min.js"></script>
+  <script>$(document).ready(function() { $('#dataTable').DataTable(); });</script>
 
 </body>
 
