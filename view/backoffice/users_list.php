@@ -39,7 +39,7 @@ unset($_SESSION['success'], $_SESSION['error']);
 
   <!-- Vendor CSS Files -->
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
 
   <!-- Main CSS File -->
@@ -371,13 +371,13 @@ unset($_SESSION['success'], $_SESSION['error']);
                 <td>
                   <div class="d-flex gap-2">
                     <a href="edit_user.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-outline-primary" title="Modifier">
-                      <i class="bi bi-pencil-fill"></i>
+                      <i class="fas fa-edit"></i>
                     </a>
-                    <a href="../../controllers/UtilisateurController.php?action=delete&id=<?= $user['id'] ?>"
+                    <a href="../../controller/utilisateurcontroller.php?action=delete&id=<?= $user['id'] ?>"
                        class="btn btn-sm btn-outline-danger"
                        title="Supprimer"
                        onclick="return confirm('Confirmer la suppression de cet utilisateur ?')">
-                      <i class="bi bi-trash-fill"></i>
+                      <i class="fas fa-trash"></i>
                     </a>
                   </div>
                 </td>

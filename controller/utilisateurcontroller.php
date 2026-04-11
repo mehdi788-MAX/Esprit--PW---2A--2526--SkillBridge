@@ -180,7 +180,7 @@ switch ($action) {
             $_SESSION['error'] = "Erreur lors de la suppression.";
         }
 
-        header('Location: ../view/backoffice/userlist.php');
+        header('Location: ../view/backoffice/users_list.php');
         exit;
 
     // =====================
