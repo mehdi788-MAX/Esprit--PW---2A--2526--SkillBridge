@@ -2,14 +2,12 @@
 
 session_start();
 
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../model/utilisateur.php';
 require_once __DIR__ . '/../model/profil.php';
 
-$db = new PDO("mysql:host=localhost;dbname=skillbridge;charset=utf8", "root", "");
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-$utilisateur = new Utilisateur($db);
-$profil      = new Profil($db);
+$utilisateur = new Utilisateur($pdo);
+$profil      = new Profil($pdo);
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 

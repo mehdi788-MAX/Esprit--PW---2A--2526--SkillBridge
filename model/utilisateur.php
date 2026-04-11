@@ -26,7 +26,7 @@ class Utilisateur {
     public function create() {
         $query = "INSERT INTO " . $this->table . "
                   (nom, prenom, email, password, role, telephone, date_inscription)
-                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, NOW())";
+                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, :date_inscription)";
  
         $stmt = $this->conn->prepare($query);
  
@@ -44,7 +44,9 @@ class Utilisateur {
         $stmt->bindParam(':password',  $this->password);
         $stmt->bindParam(':role',      $this->role);
         $stmt->bindParam(':telephone', $this->telephone);
- 
+        $now = date('Y-m-d H:i:s');
+        $stmt->bindParam(':date_inscription', $now);
+
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
             return true;

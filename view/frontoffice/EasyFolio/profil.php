@@ -8,15 +8,12 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Connexion base de données
-$db = new PDO("mysql:host=localhost;dbname=skillbridge;charset=utf8", "root", "");
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-// Charger les models
+require_once '../../../config.php';
 require_once '../../../model/utilisateur.php';
 require_once '../../../model/profil.php';
 
 // Charger l'utilisateur connecté
-$utilisateurModel = new Utilisateur($db);
+$utilisateurModel = new Utilisateur($pdo);
 $utilisateurModel->id = $_SESSION['user_id'];
 $utilisateurModel->readOne();
 
@@ -32,7 +29,7 @@ $utilisateur = [
 ];
 
 // Charger le profil
-$profilModel = new Profil($db);
+$profilModel = new Profil($pdo);
 $profilModel->utilisateur_id = $_SESSION['user_id'];
 $profilModel->readByUserId();
 
