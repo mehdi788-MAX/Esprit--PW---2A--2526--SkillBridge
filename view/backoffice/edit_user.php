@@ -123,6 +123,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <a class="nav-link" href="index.html"><i class="fas fa-fw fa-tachometer-alt"></i><span>Dashboard</span></a>
       </li>
       <hr class="sidebar-divider">
+      <div class="sidebar-heading">Gestion Utilisateurs</div>
+      <li class="nav-item active">
+        <a class="nav-link" href="users_list.php"><i class="fas fa-fw fa-users"></i><span>Liste Utilisateurs</span></a>
+      </li>
+      <hr class="sidebar-divider">
       <div class="sidebar-heading">Gestion Chat</div>
       <li class="nav-item">
         <a class="nav-link" href="chat/conversations.php"><i class="fas fa-fw fa-comments"></i><span>Conversations</span></a>
