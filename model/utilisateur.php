@@ -198,5 +198,55 @@ class Utilisateur {
     public function verifyPassword($password, $hash) {
         return password_verify($password, $hash);
     }
+    // =====================
+// READ ALL WITH PROFIL (Jointure)
+// =====================
+public function readAllWithProfil() {
+    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone, 
+                     u.photo, u.date_inscription,
+                     p.bio, p.competences, p.localisation, p.site_web
+              FROM utilisateurs u
+              LEFT JOIN profils p ON u.id = p.utilisateur_id
+              ORDER BY u.date_inscription DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute();
+    return $stmt;
+}
+
+// =====================
+// READ ONE WITH PROFIL (Jointure)
+// =====================
+public function readOneWithProfil() {
+    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
+                     u.photo, u.date_inscription,
+                     p.bio, p.competences, p.localisation, p.site_web
+              FROM utilisateurs u
+              LEFT JOIN profils p ON u.id = p.utilisateur_id
+              WHERE u.id = :id
+              LIMIT 1";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $this->id);
+    $stmt->execute();
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+// =====================
+// READ BY ROLE WITH PROFIL (Jointure + Filtre)
+// =====================
+public function readByRoleWithProfil($role) {
+    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
+                     u.photo, u.date_inscription,
+                     p.bio, p.competences, p.localisation, p.site_web
+              FROM utilisateurs u
+              LEFT JOIN profils p ON u.id = p.utilisateur_id
+              WHERE u.role = :role
+              ORDER BY u.date_inscription DESC";
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':role', $role);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 }
 ?>

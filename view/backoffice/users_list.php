@@ -61,8 +61,15 @@ unset($_SESSION['success'], $_SESSION['error']);
       <hr class="sidebar-divider">
       <div class="sidebar-heading">Gestion Utilisateurs</div>
       <li class="nav-item active">
-        <a class="nav-link" href="users_list.php"><i class="fas fa-fw fa-users"></i><span>Liste Utilisateurs</span></a>
+        <a class="nav-link" href="users_list.php"><i class="fas fa-fw fa-users"></i><span> liste utilisateur</span></a>
+
       </li>
+      <li class="nav-item">
+  <a class="nav-link" href="users_profils.php"><i class="fas fa-fw fa-id-card"></i><span>Utilisateurs & Profils</span></a>
+</li>
+ <li class="nav-item">
+  <a class="nav-link" href="search_utilisateurs.php"><i class="fas fa-fw fa-id-card"></i><span>recherche par role </span></a>
+</li>
       <hr class="sidebar-divider">
       <div class="sidebar-heading">Gestion Chat</div>
       <li class="nav-item">
