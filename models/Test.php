@@ -50,7 +50,11 @@ class Test {
     }
 
     // -------------------------------------------------------
+<<<<<<< HEAD
     // ajouter un nouveau test
+=======
+    // CREATE — Ajouter un nouveau test
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     // -------------------------------------------------------
     public function create() {
         $query = "INSERT INTO " . $this->table . "
@@ -80,7 +84,11 @@ class Test {
     }
 
     // -------------------------------------------------------
+<<<<<<< HEAD
     // modifier un test existant
+=======
+    // UPDATE — Modifier un test existant
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     // -------------------------------------------------------
     public function update() {
         $query = "UPDATE " . $this->table . "
@@ -116,7 +124,11 @@ class Test {
     }
 
     // -------------------------------------------------------
+<<<<<<< HEAD
     //  Supprimer un test
+=======
+    // DELETE — Supprimer un test
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     // -------------------------------------------------------
     public function delete() {
         $query = "DELETE FROM " . $this->table . " WHERE id = :id";

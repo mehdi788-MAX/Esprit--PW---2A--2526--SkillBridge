@@ -11,7 +11,11 @@
     .sb-topbar { background: white; height: 56px; border-bottom: 1px solid #e3e6f0; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 100; box-shadow: 0 0.15rem 1.75rem rgba(58,59,69,0.08); }
     .sb-topbar-brand { font-size: 1rem; font-weight: 800; color: #4e73df; text-decoration: none; }
     .sb-body { display: flex; min-height: calc(100vh - 56px); }
+<<<<<<< HEAD
     .sb-sidebar { width: 224px; flex-shrink: 0; background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+=======
+    .sb-sidebar { width: 224px; flex-shrink: 0; background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); position: sticky; top: 56px; height: calc(100vh - 56px); }
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     .sb-brand { padding: 18px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.15); }
     .sb-brand-text { color: white; font-weight: 800; font-size: 0.9rem; }
     .sb-heading { color: rgba(255,255,255,0.4); font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; padding: 10px 16px 4px; }
@@ -38,6 +42,7 @@
     .btn-add  { background: #4e73df; color: white; padding: 8px 18px; border-radius: 6px; border: none; font-weight: 700; font-size: 0.82rem; cursor: pointer; text-decoration: none; display: inline-block; }
     .btn-add:hover { background: #2e59d9; color: white; }
     .alert-success { background: #d4edda; color: #155724; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #c3e6cb; font-size: 0.85rem; }
+<<<<<<< HEAD
     .alert-error   { background: #f8d7da; color: #721c24; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border: 1px solid #f5c6cb; font-size: 0.85rem; }
 
     /* MODAL */
@@ -56,6 +61,8 @@
     .btn-save.yellow { background: #f6c23e; color: #5a5c69; }
     .btn-save.yellow:hover { background: #e0a800; }
     .btn-cancel-modal { background: #858796; color: white; padding: 10px 18px; border-radius: 6px; border: none; font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: 'Nunito', sans-serif; }
+=======
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
   </style>
 </head>
 <body>
@@ -86,6 +93,7 @@
     <!-- CONTENU -->
     <div class="sb-content">
 
+<<<<<<< HEAD
       <h4 style="font-weight:800;color:#5a5c69;margin-bottom:4px;">Dashboard</h4>
       <p style="font-size:0.82rem;color:#858796;margin-bottom:20px;">Gestion des catégories et des tests</p>
 
@@ -152,6 +160,26 @@
       <!-- ================================================ -->
       <!-- CARD TESTS                                       -->
       <!-- ================================================ -->
+=======
+      <h4 style="font-weight:800;color:#5a5c69;margin-bottom:4px;">Gestion des Tests</h4>
+      <p style="font-size:0.82rem;color:#858796;margin-bottom:20px;">
+        <a href="index.php" style="color:#4e73df;text-decoration:none;">Accueil</a> › Tests
+      </p>
+
+      <!-- Message de succès -->
+      <?php if (isset($_GET['success'])): ?>
+        <div class="alert-success">
+          ✅
+          <?php
+            if ($_GET['success'] == 'ajout')       echo "Test ajouté avec succès !";
+            if ($_GET['success'] == 'modif')        echo "Test modifié avec succès !";
+            if ($_GET['success'] == 'suppression')  echo "Test supprimé avec succès !";
+          ?>
+        </div>
+      <?php endif; ?>
+
+      <!-- CARD TESTS -->
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
       <div class="sb-card">
         <div class="sb-card-header">
           <h6>📋 Liste des tests</h6>
@@ -174,6 +202,7 @@
               </thead>
               <tbody>
                 <?php
+<<<<<<< HEAD
                   $j = 1;
                   while ($row = $tests->fetch(PDO::FETCH_ASSOC)):
                     $badge = 'success';
@@ -182,6 +211,17 @@
                 ?>
                 <tr>
                   <td><?= $j++ ?></td>
+=======
+                  $i = 1;
+                  while ($row = $tests->fetch(PDO::FETCH_ASSOC)):
+                    // Choisir la couleur du badge niveau
+                    $badge = 'success';
+                    if ($row['level'] == 'Moyen')   $badge = 'warning';
+                    if ($row['level'] == 'Avancé')  $badge = 'danger';
+                ?>
+                <tr>
+                  <td><?= $i++ ?></td>
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
                   <td class="td-bold"><?= htmlspecialchars($row['title']) ?></td>
                   <td><?= htmlspecialchars($row['category_name']) ?></td>
                   <td><?= $row['duration'] ?> min</td>
@@ -201,6 +241,7 @@
         </div>
       </div>
 
+<<<<<<< HEAD
     </div><!-- /sb-content -->
   </div><!-- /sb-body -->
 
@@ -244,6 +285,8 @@
           <button type="button" class="btn-cancel-modal" onclick="fermerModal('modalModifierCat')">Annuler</button>
         </div>
       </form>
+=======
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     </div>
   </div>
 

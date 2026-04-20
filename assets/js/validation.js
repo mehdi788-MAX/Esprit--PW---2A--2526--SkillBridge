@@ -1,18 +1,34 @@
 // assets/js/validation.js
 
 // -------------------------------------------------------
+<<<<<<< HEAD
 // Valider le formulaire test (ajout ET modification)
 // -------------------------------------------------------
 function validerFormTest() {
+=======
+// Valider le formulaire d'ajout ET de modification
+// -------------------------------------------------------
+function validerFormTest() {
+    // Récupérer les valeurs des champs
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     var title         = document.getElementById('title').value.trim();
     var category_id   = document.getElementById('category_id').value;
     var duration      = document.getElementById('duration').value.trim();
     var level         = document.getElementById('level').value;
     var average_score = document.getElementById('average_score').value.trim();
 
+<<<<<<< HEAD
     effacerErreurs();
     var valide = true;
 
+=======
+    // Vider les anciens messages d'erreur
+    effacerErreurs();
+
+    var valide = true;
+
+    // --- Vérification du titre ---
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     if (title === '') {
         afficherErreur('error_title', 'Le titre est obligatoire.');
         valide = false;
@@ -24,11 +40,19 @@ function validerFormTest() {
         valide = false;
     }
 
+<<<<<<< HEAD
+=======
+    // --- Vérification de la catégorie ---
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     if (category_id === '' || category_id === '0') {
         afficherErreur('error_category', 'Veuillez choisir une catégorie.');
         valide = false;
     }
 
+<<<<<<< HEAD
+=======
+    // --- Vérification de la durée ---
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     if (duration === '') {
         afficherErreur('error_duration', 'La durée est obligatoire.');
         valide = false;
@@ -40,12 +64,20 @@ function validerFormTest() {
         valide = false;
     }
 
+<<<<<<< HEAD
+=======
+    // --- Vérification du niveau ---
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     var niveauxValides = ['Débutant', 'Moyen', 'Avancé'];
     if (level === '' || niveauxValides.indexOf(level) === -1) {
         afficherErreur('error_level', 'Veuillez choisir un niveau valide.');
         valide = false;
     }
 
+<<<<<<< HEAD
+=======
+    // --- Vérification du score moyen ---
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     if (average_score === '') {
         afficherErreur('error_score', 'Le score moyen est obligatoire.');
         valide = false;
@@ -58,6 +90,7 @@ function validerFormTest() {
 }
 
 // -------------------------------------------------------
+<<<<<<< HEAD
 // Valider le formulaire catégorie (create OU edit)
 // -------------------------------------------------------
 function validerFormCat(mode) {
@@ -114,6 +147,9 @@ document.addEventListener('click', function(e) {
 
 // -------------------------------------------------------
 // Afficher un message d'erreur
+=======
+// Afficher un message d'erreur sous un champ
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
 // -------------------------------------------------------
 function afficherErreur(elementId, message) {
     var el = document.getElementById(elementId);
@@ -135,13 +171,18 @@ function effacerErreurs() {
 }
 
 // -------------------------------------------------------
+<<<<<<< HEAD
 // Confirmer la suppression d'un test
+=======
+// Confirmer la suppression
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
 // -------------------------------------------------------
 function confirmerSuppression(id) {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce test ?')) {
         window.location.href = 'index.php?action=delete&id=' + id;
     }
 }
+<<<<<<< HEAD
 
 // -------------------------------------------------------
 // Confirmer la suppression d'une catégorie
@@ -151,3 +192,5 @@ function confirmerSuppressionCat(id) {
         window.location.href = 'index.php?action=cat_delete&id=' + id;
     }
 }
+=======
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d

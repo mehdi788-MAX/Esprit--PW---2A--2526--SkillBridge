@@ -1,6 +1,12 @@
 <?php
 // controllers/TestController.php
+<<<<<<< HEAD
 
+=======
+// Ce fichier reçoit les actions de l'utilisateur et appelle le bon Model et la bonne View
+
+// Inclure la connexion et les modèles
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
 require_once "config/Database.php";
 require_once "models/Test.php";
 require_once "models/Category.php";
@@ -11,6 +17,10 @@ class TestController {
     private $test;
     private $category;
 
+<<<<<<< HEAD
+=======
+    // Constructeur : prépare la connexion et les objets
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function __construct() {
         $database       = new Database();
         $this->db       = $database->getConnection();
@@ -18,6 +28,7 @@ class TestController {
         $this->category = new Category($this->db);
     }
 
+<<<<<<< HEAD
     // --- GETTERS ---
     public function getDb() {
         return $this->db;
@@ -45,19 +56,36 @@ class TestController {
     }
 
     // Backoffice — page unifiée (tests + catégories)
+=======
+    // -------------------------------------------------------
+    // Afficher tous les tests (BackOffice)
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function index() {
         $tests      = $this->test->getAll();
         $categories = $this->category->getAll();
         require_once "views/backoffice/index.php";
     }
 
+<<<<<<< HEAD
     // Formulaire d'ajout de test
+=======
+    // -------------------------------------------------------
+    // Afficher le formulaire d'ajout
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function create() {
         $categories = $this->category->getAll();
         require_once "views/backoffice/create.php";
     }
 
+<<<<<<< HEAD
     // Enregistrer un nouveau test (POST)
+=======
+    // -------------------------------------------------------
+    // Enregistrer le nouveau test (POST)
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function store() {
         $this->test->title         = $_POST['title'];
         $this->test->category_id   = $_POST['category_id'];
@@ -73,7 +101,13 @@ class TestController {
         exit();
     }
 
+<<<<<<< HEAD
     // Formulaire de modification de test
+=======
+    // -------------------------------------------------------
+    // Afficher le formulaire de modification
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function edit() {
         $this->test->id = $_GET['id'];
         $stmt           = $this->test->getById();
@@ -82,7 +116,13 @@ class TestController {
         require_once "views/backoffice/edit.php";
     }
 
+<<<<<<< HEAD
     // Enregistrer les modifications d'un test (POST)
+=======
+    // -------------------------------------------------------
+    // Enregistrer les modifications (POST)
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function update() {
         $this->test->id            = $_POST['id'];
         $this->test->title         = $_POST['title'];
@@ -99,7 +139,13 @@ class TestController {
         exit();
     }
 
+<<<<<<< HEAD
     // Supprimer un test
+=======
+    // -------------------------------------------------------
+    // Supprimer un test
+    // -------------------------------------------------------
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function delete() {
         $this->test->id = $_GET['id'];
 
@@ -111,6 +157,7 @@ class TestController {
         exit();
     }
 
+<<<<<<< HEAD
     // Frontoffice — vue client avec filtres
     public function frontoffice() {
         $all_tests_raw = $this->test->getAll()->fetchAll(PDO::FETCH_ASSOC);
@@ -125,6 +172,14 @@ class TestController {
             return $match_cat && $match_level;
         });
 
+=======
+    // -------------------------------------------------------
+    // Afficher la vue FrontOffice (pour les clients)
+    // -------------------------------------------------------
+    public function frontoffice() {
+        $tests      = $this->test->getAll();
+        $categories = $this->category->getAll();
+>>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
         require_once "views/frontoffice/index.php";
     }
 }
