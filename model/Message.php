@@ -61,12 +61,56 @@ class Message {
     }
 
     // =====================
-    // READ BY CONVERSATION
+    // READ BY CONVERSATION (JOINTURE Conversation -> Message)
+    // Jointure entre la table messages et utilisateurs
+    // pour afficher les messages d'une conversation donnée
     // =====================
     public function readByConversation() {
-        $query = "SELECT m.*, u.nom AS sender_nom, u.prenom AS sender_prenom
+        // JOINTURE : messages JOIN utilisateurs ON sender_id = utilisateurs.id
+        // WHERE id_conversation = :id_conversation (clé étrangère FK)
+        $query = "SELECT m.id_message,
+                         m.id_conversation,
+                         m.sender_id,
+                         m.contenu,
+                         m.date_envoi,
+                         m.is_seen,
+                         m.type,
+                         u.nom AS sender_nom,
+                         u.prenom AS sender_prenom
                   FROM " . $this->table . " m
                   JOIN utilisateurs u ON m.sender_id = u.id
+                  WHERE m.id_conversation = :id_conversation
+                  ORDER BY m.date_envoi ASC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id_conversation', $this->id_conversation);
+        $stmt->execute();
+        return $stmt;
+    }
+
+    // =====================
+    // JOINTURE COMPLÈTE : messages + conversations + utilisateurs
+    // Permet d'afficher pour chaque message : l'expéditeur ET les participants de la conversation
+    // =====================
+    public function readByConversationWithFullJoin() {
+        // Double jointure :
+        //   messages JOIN utilisateurs u ON m.sender_id = u.id  (pour l'expéditeur)
+        //   messages JOIN conversations c ON m.id_conversation = c.id_conversation (pour les participants)
+        $query = "SELECT m.id_message,
+                         m.id_conversation,
+                         m.sender_id,
+                         m.contenu,
+                         m.date_envoi,
+                         m.is_seen,
+                         m.type,
+                         u.nom AS sender_nom,
+                         u.prenom AS sender_prenom,
+                         c.user1_id,
+                         c.user2_id,
+                         c.date_creation AS conversation_date
+                  FROM " . $this->table . " m
+                  JOIN utilisateurs u ON m.sender_id = u.id
+                  JOIN conversations c ON m.id_conversation = c.id_conversation
                   WHERE m.id_conversation = :id_conversation
                   ORDER BY m.date_envoi ASC";
 
