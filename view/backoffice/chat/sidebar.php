@@ -50,6 +50,11 @@ $tpl = '../startbootstrap-sb-admin-2-gh-pages';
             <i class="fas fa-fw fa-envelope"></i>
             <span>Tous les Messages</span></a>
     </li>
+      <li class="nav-item <?= ($activePage === 'messages') ? 'active' : '' ?>">
+        <a class="nav-link" href="searchMessages.php">
+            <i class="fas fa-fw fa-envelope"></i>
+            <span>Chercher les messages </span></a>
+    </li>
 
     <!-- Divider -->
     <hr class="sidebar-divider">

@@ -57,13 +57,56 @@ if (isset($_POST['action']) && $_POST['action'] === 'edit_msg') {
 
 // Traitement envoi de message
 if (isset($_POST['action']) && $_POST['action'] === 'send') {
-    $contenu = isset($_POST['contenu']) ? trim($_POST['contenu']) : '';
 
-    $validationErrors = $chatController->validateMessage($id, $currentUserId, $contenu);
-    if (!empty($validationErrors)) {
-        $errors = $validationErrors;
-    } else {
-        $result = $chatController->sendMessage($id, $currentUserId, $contenu);
+    $contenu = isset($_POST['contenu']) ? trim($_POST['contenu']) : '';
+    $errors = [];
+
+    // Nettoyage espaces
+    $contenuClean = preg_replace('/\s+/', ' ', $contenu);
+
+    // ❌ message vide
+    if (empty($contenuClean)) {
+        $errors[] = "Message vide interdit.";
+    }
+
+    // ❌ longueur (UTF-8)
+    if (mb_strlen($contenuClean, 'UTF-8') > 10) {
+        $errors[] = "Message trop long (max 10 caractères).";
+    }
+
+    // 🔴 BAD WORD FILTER
+    $badWords = ['fuck', 'shit', 'idiot', 'con', 'stupid'];
+
+    // normalisation
+    $normalized = mb_strtolower($contenuClean, 'UTF-8');
+    $normalized = iconv('UTF-8', 'ASCII//TRANSLIT', $normalized);
+    $normalized = preg_replace('/[^a-z0-9\s]/', '', $normalized);
+
+    // remplacements simples (leet)
+    $normalized = str_replace(
+        ['1','3','4','0','@'],
+        ['i','e','a','o','a'],
+        $normalized
+    );
+
+    foreach ($badWords as $word) {
+        if (preg_match('/\b' . preg_quote($word, '/') . '\b/i', $normalized)) {
+            $errors[] = "⚠️ Message inapproprié détecté.";
+            break;
+        }
+    }
+
+    // validation controller
+    $validationErrors = $chatController->validateMessage($id, $currentUserId, $contenuClean);
+    $errors = array_merge($errors, $validationErrors);
+
+    // ✅ envoi
+    if (empty($errors)) {
+
+        $contenuSafe = htmlspecialchars($contenuClean, ENT_QUOTES, 'UTF-8');
+
+        $result = $chatController->sendMessage($id, $currentUserId, $contenuSafe);
+
         if ($result['success']) {
             header('Location: chat.php?id=' . $id);
             exit;
@@ -232,15 +275,27 @@ $templateBase = '../EasyFolio';
                                     <hr>
                                 <?php endif; ?>
 
-                                <form method="POST" action="chat.php?id=<?= $id ?>" novalidate>
-                                    <input type="hidden" name="action" value="send">
-                                    <div class="input-group">
-                                        <textarea class="form-control" name="contenu" rows="2" placeholder="Tapez votre message..."></textarea>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-send"></i> Envoyer
-                                        </button>
-                                    </div>
-                                </form>
+                              <form method="POST" action="chat.php?id=<?= $id ?>" novalidate>
+    <input type="hidden" name="action" value="send">
+
+    <div class="input-group">
+        <textarea 
+            id="contenu"
+            class="form-control" 
+            name="contenu" 
+            rows="2" 
+            placeholder="Tapez votre message..."
+            maxlength="10"
+            required
+        ></textarea>
+
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send"></i> Envoyer
+        </button>
+    </div>
+
+    <small id="count" class="text-muted">0 / 10</small>
+</form>
                             </div>
                         </div>
                     </div>
@@ -263,5 +318,34 @@ $templateBase = '../EasyFolio';
         var chatContainer = document.getElementById('chatContainer');
         chatContainer.scrollTop = chatContainer.scrollHeight;
     </script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const textarea = document.getElementById("contenu");
+    const counter = document.getElementById("count");
+
+    if (textarea && counter) {
+        textarea.addEventListener("input", function () {
+            const length = [...textarea.value].length;
+            counter.textContent = length + " / 10";
+
+            // option: warning visuel
+            if (length > 450) {
+                counter.style.color = "red";
+            } else {
+                counter.style.color = "";
+            }
+        });
+    }
+});
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function(){
+    setTimeout(function(){
+        $('.alert-danger').fadeOut('slow');
+    }, 10000);
+});
+</script>
+
 </body>
 </html>

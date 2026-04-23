@@ -187,3 +187,4 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
     <script src="<?= $templateBase ?>/js/sb-admin-2.min.js"></script>
 </body>
 </html>
+
