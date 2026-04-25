@@ -15,6 +15,7 @@ class Utilisateur {
     public $telephone;
     public $photo;
     public $date_inscription;
+    public $is_active;
  
     public function __construct($db) {
         $this->conn = $db;
@@ -26,16 +27,15 @@ class Utilisateur {
     public function create() {
         $query = "INSERT INTO " . $this->table . "
                   (nom, prenom, email, password, role, telephone, date_inscription)
-                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, :date_inscription)";
+                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, NOW())";
  
         $stmt = $this->conn->prepare($query);
  
-        // Sécurisation
-        $this->nom      = htmlspecialchars(strip_tags($this->nom));
-        $this->prenom   = htmlspecialchars(strip_tags($this->prenom));
-        $this->email    = htmlspecialchars(strip_tags($this->email));
-        $this->password = password_hash($this->password, PASSWORD_BCRYPT);
-        $this->role     = htmlspecialchars(strip_tags($this->role));
+        $this->nom       = htmlspecialchars(strip_tags($this->nom));
+        $this->prenom    = htmlspecialchars(strip_tags($this->prenom));
+        $this->email     = htmlspecialchars(strip_tags($this->email));
+        $this->password  = password_hash($this->password, PASSWORD_BCRYPT);
+        $this->role      = htmlspecialchars(strip_tags($this->role));
         $this->telephone = htmlspecialchars(strip_tags($this->telephone));
  
         $stmt->bindParam(':nom',       $this->nom);
@@ -44,9 +44,7 @@ class Utilisateur {
         $stmt->bindParam(':password',  $this->password);
         $stmt->bindParam(':role',      $this->role);
         $stmt->bindParam(':telephone', $this->telephone);
-        $now = date('Y-m-d H:i:s');
-        $stmt->bindParam(':date_inscription', $now);
-
+ 
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
             return true;
@@ -58,7 +56,7 @@ class Utilisateur {
     // READ ALL
     // =====================
     public function readAll() {
-        $query = "SELECT id, nom, prenom, email, role, telephone, photo, date_inscription
+        $query = "SELECT id, nom, prenom, email, role, telephone, photo, is_active, date_inscription
                   FROM " . $this->table . "
                   ORDER BY date_inscription DESC";
  
@@ -71,7 +69,7 @@ class Utilisateur {
     // READ ONE
     // =====================
     public function readOne() {
-        $query = "SELECT id, nom, prenom, email, role, telephone, photo, date_inscription
+        $query = "SELECT id, nom, prenom, email, role, telephone, photo, is_active, date_inscription
                   FROM " . $this->table . "
                   WHERE id = :id
                   LIMIT 1";
@@ -88,6 +86,7 @@ class Utilisateur {
             $this->role             = $row['role'];
             $this->telephone        = $row['telephone'];
             $this->photo            = $row['photo'];
+            $this->is_active        = $row['is_active'];
             $this->date_inscription = $row['date_inscription'];
             return true;
         }
@@ -98,7 +97,7 @@ class Utilisateur {
     // READ BY EMAIL
     // =====================
     public function readByEmail() {
-        $query = "SELECT id, nom, prenom, email, password, role, telephone, photo, date_inscription
+        $query = "SELECT id, nom, prenom, email, password, role, telephone, photo, is_active, date_inscription
                   FROM " . $this->table . "
                   WHERE email = :email
                   LIMIT 1";
@@ -127,7 +126,7 @@ class Utilisateur {
         $this->prenom    = htmlspecialchars(strip_tags($this->prenom));
         $this->email     = htmlspecialchars(strip_tags($this->email));
         $this->telephone = htmlspecialchars(strip_tags($this->telephone));
-        $this->photo     = htmlspecialchars(strip_tags($this->photo));
+        $this->photo     = basename($this->photo);
  
         $stmt->bindParam(':nom',       $this->nom);
         $stmt->bindParam(':prenom',    $this->prenom);
@@ -154,6 +153,41 @@ class Utilisateur {
  
         return $stmt->execute();
     }
+
+    // =====================
+    // UPDATE ROLE
+    // =====================
+    public function updateRole() {
+        $query = "UPDATE " . $this->table . " SET role = :role WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':role', $this->role);
+        $stmt->bindParam(':id',   $this->id);
+        return $stmt->execute();
+    }
+
+    // =====================
+    // UPDATE PHOTO
+    // =====================
+    public function updatePhoto() {
+        $query = "UPDATE " . $this->table . " SET photo = :photo WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':photo', $this->photo);
+        $stmt->bindParam(':id',    $this->id);
+        return $stmt->execute();
+    }
+
+    // =====================
+    // TOGGLE ACTIVE
+    // =====================
+    public function toggleActive() {
+        $query = "UPDATE " . $this->table . "
+                  SET is_active = :is_active
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':is_active', $this->is_active);
+        $stmt->bindParam(':id',        $this->id);
+        return $stmt->execute();
+    }
  
     // =====================
     // DELETE
@@ -175,6 +209,19 @@ class Utilisateur {
         $stmt->execute();
         return $stmt->rowCount() > 0;
     }
+
+    // =====================
+    // EMAIL EXISTS EXCEPT CURRENT USER
+    // =====================
+    public function emailExistsExcept() {
+        $query = "SELECT id FROM " . $this->table . "
+                  WHERE email = :email AND id != :id LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $this->email);
+        $stmt->bindParam(':id',    $this->id);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
  
     // =====================
     // COUNT
@@ -191,6 +238,21 @@ class Utilisateur {
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
     }
+
+    // =====================
+    // SEARCH
+    // =====================
+    public function search($keyword) {
+        $query = "SELECT id, nom, prenom, email, role, telephone, photo, is_active, date_inscription
+                  FROM " . $this->table . "
+                  WHERE nom LIKE :kw OR prenom LIKE :kw OR email LIKE :kw
+                  ORDER BY date_inscription DESC";
+        $stmt = $this->conn->prepare($query);
+        $kw = '%' . $keyword . '%';
+        $stmt->bindParam(':kw', $kw);
+        $stmt->execute();
+        return $stmt;
+    }
  
     // =====================
     // VERIFY PASSWORD
@@ -198,55 +260,92 @@ class Utilisateur {
     public function verifyPassword($password, $hash) {
         return password_verify($password, $hash);
     }
+
     // =====================
-// READ ALL WITH PROFIL (Jointure)
-// =====================
-public function readAllWithProfil() {
-    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone, 
-                     u.photo, u.date_inscription,
-                     p.bio, p.competences, p.localisation, p.site_web
-              FROM utilisateurs u
-              LEFT JOIN profils p ON u.id = p.utilisateur_id
-              ORDER BY u.date_inscription DESC";
+    // READ ALL WITH PROFIL
+    // =====================
+    public function readAllWithProfil() {
+        $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
+                         u.photo, u.is_active, u.date_inscription,
+                         p.bio, p.competences, p.localisation, p.site_web
+                  FROM utilisateurs u
+                  LEFT JOIN profils p ON u.id = p.utilisateur_id
+                  ORDER BY u.date_inscription DESC";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt;
-}
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt;
+    }
 
-// =====================
-// READ ONE WITH PROFIL (Jointure)
-// =====================
-public function readOneWithProfil() {
-    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
-                     u.photo, u.date_inscription,
-                     p.bio, p.competences, p.localisation, p.site_web
-              FROM utilisateurs u
-              LEFT JOIN profils p ON u.id = p.utilisateur_id
-              WHERE u.id = :id
-              LIMIT 1";
+    // =====================
+    // READ ONE WITH PROFIL
+    // =====================
+    public function readOneWithProfil() {
+        $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
+                         u.photo, u.is_active, u.date_inscription,
+                         p.bio, p.competences, p.localisation, p.site_web
+                  FROM utilisateurs u
+                  LEFT JOIN profils p ON u.id = p.utilisateur_id
+                  WHERE u.id = :id
+                  LIMIT 1";
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':id', $this->id);
-    $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-// =====================
-// READ BY ROLE WITH PROFIL (Jointure + Filtre)
-// =====================
-public function readByRoleWithProfil($role) {
-    $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
-                     u.photo, u.date_inscription,
-                     p.bio, p.competences, p.localisation, p.site_web
-              FROM utilisateurs u
-              LEFT JOIN profils p ON u.id = p.utilisateur_id
-              WHERE u.role = :role
-              ORDER BY u.date_inscription DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $this->id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':role', $role);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+    // =====================
+    // READ BY ROLE WITH PROFIL
+    // =====================
+    public function readByRoleWithProfil($role) {
+        $query = "SELECT u.id, u.nom, u.prenom, u.email, u.role, u.telephone,
+                         u.photo, u.is_active, u.date_inscription,
+                         p.bio, p.competences, p.localisation, p.site_web
+                  FROM utilisateurs u
+                  LEFT JOIN profils p ON u.id = p.utilisateur_id
+                  WHERE u.role = :role
+                  ORDER BY u.date_inscription DESC";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':role', $role);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // =====================
+    // FORGOT PASSWORD
+    // =====================
+    public function setResetToken($token, $expiry) {
+        $query = "UPDATE " . $this->table . "
+                  SET reset_token = :token, reset_token_expiry = :expiry
+                  WHERE email = :email";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':token',  $token);
+        $stmt->bindParam(':expiry', $expiry);
+        $stmt->bindParam(':email',  $this->email);
+        return $stmt->execute();
+    }
+
+    public function readByResetToken($token) {
+        $query = "SELECT * FROM " . $this->table . "
+                  WHERE reset_token = :token
+                  AND reset_token_expiry > NOW()
+                  LIMIT 1";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':token', $token);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function clearResetToken() {
+        $query = "UPDATE " . $this->table . "
+                  SET reset_token = NULL, reset_token_expiry = NULL
+                  WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $this->id);
+        return $stmt->execute();
+    }
+
 }
 ?>

@@ -1,11 +1,5 @@
 <?php
-session_start();
- 
-// Vérifier si admin connecté
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../frontoffice/EasyFolio/login.php');
-    exit;
-}
+require_once 'auth_check_admin.php';
  
 // Connexion BDD
 require_once '../../config.php';
@@ -124,13 +118,7 @@ unset($_SESSION['success'], $_SESSION['error']);
             </div>
           <?php endif; ?>
  
-          <!-- Info jointure -->
-          <div class="alert alert-info mb-4">
-            <i class="fas fa-info-circle mr-2"></i>
-            Cette page utilise une <strong>jointure SQL</strong> entre les tables
-            <code>utilisateurs</code> et <code>profils</code> :
-            <code>LEFT JOIN profils ON utilisateurs.id = profils.utilisateur_id</code>
-          </div>
+          
  
           <!-- Table -->
           <div class="card shadow mb-4">

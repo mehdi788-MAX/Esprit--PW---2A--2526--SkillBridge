@@ -1,13 +1,6 @@
 <?php
-session_start();
+require_once 'auth_check.php';
 
-// Vérifier si connecté
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-// Connexion base de données
 require_once '../../../config.php';
 require_once '../../../model/utilisateur.php';
 require_once '../../../model/profil.php';
@@ -39,6 +32,23 @@ $profil = [
     'localisation' => $profilModel->localisation ?? '',
     'site_web'     => $profilModel->site_web ?? '',
 ];
+
+// Profile completion
+$completion_items = [
+    'Photo'        => !empty($utilisateur['photo']),
+    'Téléphone'    => !empty($utilisateur['telephone']),
+    'Bio'          => !empty($profil['bio']),
+    'Compétences'  => !empty($profil['competences']),
+    'Localisation' => !empty($profil['localisation']),
+    'Site Web'     => !empty($profil['site_web']),
+];
+
+$completed = count(array_filter($completion_items));
+$total     = count($completion_items);
+$percent   = round(($completed / $total) * 100);
+
+$bar_color = $percent < 40 ? 'danger' : ($percent < 80 ? 'warning' : 'success');
+$bar_label = $percent < 40 ? 'Incomplet' : ($percent < 80 ? 'En cours' : ($percent === 100 ? 'Complet !' : 'Presque complet'));
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -77,6 +87,7 @@ $profil = [
       font-size: 0.8rem; color: #888; display: block; margin-bottom: 2px;
     }
     .info-item .value { font-weight: 600; font-size: 0.95rem; }
+    .progress { background-color: #e9ecef; }
   </style>
 </head>
 
@@ -95,12 +106,6 @@ $profil = [
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
-      <div class="header-social-links">
-        <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
-        <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-        <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-        <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
-      </div>
     </div>
   </header>
 
@@ -117,16 +122,7 @@ $profil = [
           </div>
         </div>
 
-        <?php
-        if (isset($_SESSION['success'])) {
-          echo '<div class="alert alert-success">' . $_SESSION['success'] . '</div>';
-          unset($_SESSION['success']);
-        }
-        if (isset($_SESSION['error'])) {
-          echo '<div class="alert alert-danger">' . $_SESSION['error'] . '</div>';
-          unset($_SESSION['error']);
-        }
-        ?>
+        
 
         <div class="row g-4">
 
@@ -134,6 +130,7 @@ $profil = [
           <div class="col-lg-4" data-aos="fade-right" data-aos-delay="200">
             <div class="card text-center p-4 h-100">
 
+              <!-- Avatar -->
               <div class="d-flex justify-content-center mb-3">
                 <?php if (!empty($utilisateur['photo'])): ?>
                   <img src="assets/img/profile/<?= htmlspecialchars($utilisateur['photo']) ?>" alt="Avatar" class="profile-avatar">
@@ -147,6 +144,42 @@ $profil = [
               <h3 class="mb-1"><?= htmlspecialchars($utilisateur['prenom'] . ' ' . $utilisateur['nom']) ?></h3>
               <span class="badge bg-primary badge-role mb-3"><?= htmlspecialchars(ucfirst($utilisateur['role'])) ?></span>
 
+              <!-- Progress Bar -->
+              <div class="mt-2 text-start">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <small class="fw-bold">Complétion du profil</small>
+                  <small class="text-<?= $bar_color ?>">
+                    <strong><?= $percent ?>%</strong> — <?= $bar_label ?>
+                  </small>
+                </div>
+                <div class="progress" style="height: 10px; border-radius: 10px;">
+                  <div class="progress-bar bg-<?= $bar_color ?>"
+                       role="progressbar"
+                       style="width: <?= $percent ?>%; border-radius: 10px; transition: width 1s ease;"
+                       aria-valuenow="<?= $percent ?>"
+                       aria-valuemin="0"
+                       aria-valuemax="100">
+                  </div>
+                </div>
+
+                <!-- Checklist -->
+                <ul class="list-unstyled mt-3" style="font-size: 0.85rem;">
+                  <?php foreach ($completion_items as $label => $done): ?>
+                    <li class="mb-1">
+                      <?php if ($done): ?>
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                      <?php else: ?>
+                        <i class="bi bi-circle text-muted me-2"></i>
+                      <?php endif; ?>
+                      <span class="<?= $done ? 'text-success' : 'text-muted' ?>">
+                        <?= $label ?>
+                      </span>
+                    </li>
+                  <?php endforeach; ?>
+                </ul>
+              </div>
+
+              <!-- Info -->
               <div class="personal-info text-start mt-3">
                 <div class="row g-3">
                   <div class="col-12">
@@ -164,7 +197,7 @@ $profil = [
                   <div class="col-12">
                     <div class="info-item">
                       <span class="label"><i class="bi bi-calendar me-1"></i> Membre depuis</span>
-                      <span class="value"><?= htmlspecialchars($utilisateur['date_inscription']) ?></span>
+                      <span class="value"><?= date('d/m/Y', strtotime($utilisateur['date_inscription'])) ?></span>
                     </div>
                   </div>
                 </div>
@@ -180,11 +213,10 @@ $profil = [
 
                 <h4 class="mb-4">Modifier mes informations</h4>
 
-                <div id="form-errors" class="alert alert-danger" style="display:none;"></div>
-
                 <form id="profilForm" action="../../../controller/utilisateurcontroller.php" method="POST" enctype="multipart/form-data" novalidate>
                   <input type="hidden" name="action" value="update_profile">
                   <input type="hidden" name="id" value="<?= htmlspecialchars($utilisateur['id']) ?>">
+                  <input type="hidden" name="old_photo" value="<?= htmlspecialchars($utilisateur['photo'] ?? '') ?>">
 
                   <div class="row gy-4">
 
@@ -222,7 +254,36 @@ $profil = [
                     </div>
 
                     <div class="col-12">
+                      <label for="competences" class="form-label">Compétences</label>
+                      <input type="text" name="competences" id="competences" class="form-control"
+                             value="<?= htmlspecialchars($profil['competences']) ?>"
+                             placeholder="ex: PHP, MySQL, React">
+                      <small class="text-muted">Séparez par des virgules</small>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label for="localisation" class="form-label">Localisation</label>
+                      <input type="text" name="localisation" id="localisation" class="form-control"
+                             value="<?= htmlspecialchars($profil['localisation']) ?>"
+                             placeholder="ex: Tunis, Tunisie">
+                    </div>
+
+                    <div class="col-md-6">
+                      <label for="site_web" class="form-label">Site Web</label>
+                      <input type="url" name="site_web" id="site_web" class="form-control"
+                             value="<?= htmlspecialchars($profil['site_web']) ?>"
+                             placeholder="https://monsite.com">
+                    </div>
+
+                    <div class="col-12">
                       <label for="photo" class="form-label">Photo de profil</label>
+                      <?php if (!empty($utilisateur['photo'])): ?>
+                        <div class="mb-2">
+                          <img src="assets/img/profile/<?= htmlspecialchars($utilisateur['photo']) ?>"
+                               style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+                          <small class="text-muted ms-2">Photo actuelle</small>
+                        </div>
+                      <?php endif; ?>
                       <input type="file" name="photo" id="photo" class="form-control" accept="image/*">
                     </div>
 
@@ -270,7 +331,6 @@ $profil = [
 
   <script>
     document.getElementById('profilForm').addEventListener('submit', function(e) {
-
       let valid = true;
 
       ['nom','prenom','email','new_password','confirm_new_password'].forEach(function(id) {
@@ -297,26 +357,59 @@ $profil = [
       const confPwd = document.getElementById('confirm_new_password').value;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-      if (nom === '')
-        showError('nom', 'nom-error', 'Le nom est obligatoire.');
-
-      if (prenom === '')
-        showError('prenom', 'prenom-error', 'Le prénom est obligatoire.');
-
-      if (email === '')
-        showError('email', 'email-error', "L'email est obligatoire.");
-      else if (!emailRegex.test(email))
-        showError('email', 'email-error', 'Format invalide (ex: nom@email.com).');
-
-      if (newPwd !== '' && newPwd.length < 8)
-        showError('new_password', 'newpwd-error', 'Minimum 8 caractères.');
-
-      if (newPwd !== '' && newPwd !== confPwd)
-        showError('confirm_new_password', 'confirmpwd-error', 'Les mots de passe ne correspondent pas.');
+      if (nom === '')   showError('nom',   'nom-error',   'Le nom est obligatoire.');
+      if (prenom === '') showError('prenom', 'prenom-error', 'Le prénom est obligatoire.');
+      if (email === '')  showError('email',  'email-error',  "L'email est obligatoire.");
+      else if (!emailRegex.test(email)) showError('email', 'email-error', 'Format invalide.');
+      if (newPwd !== '' && newPwd.length < 8) showError('new_password', 'newpwd-error', 'Minimum 8 caractères.');
+      if (newPwd !== '' && newPwd !== confPwd) showError('confirm_new_password', 'confirmpwd-error', 'Les mots de passe ne correspondent pas.');
 
       if (!valid) e.preventDefault();
     });
   </script>
+  <!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+  <div id="toastSuccess" class="toast align-items-center text-white bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-check-circle me-2"></i>
+        <span id="toastSuccessMsg"></span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+
+  <div id="toastError" class="toast align-items-center text-white bg-danger border-0 mt-2" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-exclamation-circle me-2"></i>
+        <span id="toastErrorMsg"></span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+<script>
+function showToast(type, message) {
+  const toastEl = document.getElementById('toast' + type);
+  const msgEl   = document.getElementById('toast' + type + 'Msg');
+  msgEl.textContent = message;
+  const toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+  toast.show();
+}
+
+// Afficher automatiquement si session message
+<?php if (isset($_SESSION['success'])): ?>
+  showToast('Success', '<?= addslashes($_SESSION['success']) ?>');
+  <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+  showToast('Error', '<?= addslashes($_SESSION['error']) ?>');
+  <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+</script>
 
 </body>
+
 </html>

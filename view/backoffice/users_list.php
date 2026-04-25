@@ -1,11 +1,5 @@
 <?php
-session_start();
-
-// Vérifier si admin connecté
-if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-    header('Location: ../frontoffice/EasyFolio/login.php');
-    exit;
-}
+require_once 'auth_check_admin.php';
 
 // Connexion BDD
 require_once '../../config.php';
@@ -244,49 +238,85 @@ unset($_SESSION['success'], $_SESSION['error']);
                     </tr>
                   </thead>
                   <tbody>
-                    <?php if (!empty($utilisateurs)): ?>
-                      <?php foreach ($utilisateurs as $index => $user): ?>
-                      <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td>
-                          <div class="d-flex align-items-center">
-                            <?php if (!empty($user['photo'])): ?>
-                              <img src="../frontoffice/EasyFolio/assets/img/profile/<?= htmlspecialchars($user['photo']) ?>" class="user-avatar mr-2" alt="">
-                            <?php else: ?>
-                              <div class="user-avatar-placeholder mr-2">
-                                <i class="fas fa-user"></i>
-                              </div>
-                            <?php endif; ?>
-                            <span><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></span>
-                          </div>
-                        </td>
-                        <td><?= htmlspecialchars($user['email']) ?></td>
-                        <td>
-                          <span class="badge badge-role badge-<?= $user['role'] ?>">
-                            <?= ucfirst(htmlspecialchars($user['role'])) ?>
-                          </span>
-                        </td>
-                        <td><?= !empty($user['telephone']) ? htmlspecialchars($user['telephone']) : '-' ?></td>
-                        <td><?= htmlspecialchars($user['date_inscription']) ?></td>
-                        <td>
-                          <a href="edit_user.php?id=<?= $user['id'] ?>" class="btn btn-sm btn-warning" title="Modifier">
-                            <i class="fas fa-edit"></i>
-                          </a>
-                          <a href="../../controller/utilisateurcontroller.php?action=delete&id=<?= $user['id'] ?>"
-                             class="btn btn-sm btn-danger"
-                             title="Supprimer"
-                             onclick="return confirm('Confirmer la suppression de cet utilisateur ?')">
-                            <i class="fas fa-trash"></i>
-                          </a>
-                        </td>
-                      </tr>
-                      <?php endforeach; ?>
-                    <?php else: ?>
-                      <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
-                      </tr>
-                    <?php endif; ?>
-                  </tbody>
+  <?php if (!empty($utilisateurs)): ?>
+    <?php foreach ($utilisateurs as $index => $user): ?>
+    <tr>
+      <td><?= $index + 1 ?></td>
+      <td>
+        <div class="d-flex align-items-center">
+          <?php if (!empty($user['photo'])): ?>
+            <img src="../frontoffice/EasyFolio/assets/img/profile/<?= htmlspecialchars($user['photo']) ?>"
+                 class="user-avatar mr-2" alt="">
+          <?php else: ?>
+            <div class="user-avatar-placeholder mr-2">
+              <i class="fas fa-user"></i>
+            </div>
+          <?php endif; ?>
+          <span><?= htmlspecialchars($user['prenom'] . ' ' . $user['nom']) ?></span>
+        </div>
+      </td>
+      <td><?= htmlspecialchars($user['email']) ?></td>
+      <td>
+        <span class="badge badge-role badge-<?= $user['role'] ?>">
+          <?= ucfirst(htmlspecialchars($user['role'])) ?>
+        </span>
+        <br>
+        <?php if ($user['is_active']): ?>
+          <span class="badge badge-role mt-1" style="background:#1cc88a22; color:#1cc88a; font-size:0.7rem;">
+            <i class="fas fa-circle" style="font-size:0.5rem;"></i> Actif
+          </span>
+        <?php else: ?>
+          <span class="badge badge-role mt-1" style="background:#e74a3b22; color:#e74a3b; font-size:0.7rem;">
+            <i class="fas fa-circle" style="font-size:0.5rem;"></i> Inactif
+          </span>
+        <?php endif; ?>
+      </td>
+      <td><?= !empty($user['telephone']) ? htmlspecialchars($user['telephone']) : '-' ?></td>
+      <td><?= date('d/m/Y', strtotime($user['date_inscription'])) ?></td>
+      <td>
+        <a href="edit_user.php?id=<?= $user['id'] ?>"
+           class="btn btn-sm btn-warning" title="Modifier">
+          <i class="fas fa-edit"></i>
+        </a>
+
+        <!-- Toggle Active -->
+        <form method="POST" action="../../controller/utilisateurcontroller.php"
+              style="display:inline;">
+          <input type="hidden" name="action" value="toggle_active">
+          <input type="hidden" name="id" value="<?= $user['id'] ?>">
+          <input type="hidden" name="is_active" value="<?= $user['is_active'] ? 0 : 1 ?>">
+          <?php if ($user['is_active']): ?>
+            <button type="submit" class="btn btn-sm btn-secondary" title="Désactiver"
+                    onclick="return confirm('Désactiver ce compte ?')">
+              <i class="fas fa-user-slash"></i>
+            </button>
+          <?php else: ?>
+            <button type="submit" class="btn btn-sm btn-success" title="Activer"
+                    onclick="return confirm('Activer ce compte ?')">
+              <i class="fas fa-user-check"></i>
+            </button>
+          <?php endif; ?>
+        </form>
+
+        <!-- Delete -->
+        <form method="POST" action="../../controller/utilisateurcontroller.php"
+              style="display:inline;">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="id" value="<?= $user['id'] ?>">
+          <button type="submit" class="btn btn-sm btn-danger" title="Supprimer"
+                  onclick="return confirm('Supprimer définitivement cet utilisateur ?')">
+            <i class="fas fa-trash"></i>
+          </button>
+        </form>
+      </td>
+    </tr>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <tr>
+      <td colspan="7" class="text-center text-muted py-4">Aucun utilisateur trouvé.</td>
+    </tr>
+  <?php endif; ?>
+</tbody>
                 </table>
               </div>
             </div>
@@ -320,3 +350,18 @@ unset($_SESSION['success'], $_SESSION['error']);
 </body>
 
 </html>
+<td>
+  <span class="badge badge-role badge-<?= $user['role'] ?>">
+    <?= ucfirst(htmlspecialchars($user['role'])) ?>
+  </span>
+  <br>
+  <?php if ($user['is_active']): ?>
+    <span class="badge badge-role" style="background:#1cc88a22; color:#1cc88a; font-size:0.7rem;">
+      <i class="fas fa-circle" style="font-size:0.5rem;"></i> Actif
+    </span>
+  <?php else: ?>
+    <span class="badge badge-role" style="background:#e74a3b22; color:#e74a3b; font-size:0.7rem;">
+      <i class="fas fa-circle" style="font-size:0.5rem;"></i> Inactif
+    </span>
+  <?php endif; ?>
+</td>
