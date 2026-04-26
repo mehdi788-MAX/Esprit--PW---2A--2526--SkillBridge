@@ -157,15 +157,9 @@
                         <i class="bi bi-github me-2"></i> Continuer avec GitHub
                       </a>
 
-                      <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=facebook"
-                         class="btn w-100" style="border:1px solid #1877f2; color:#1877f2;">
-                        <i class="bi bi-facebook me-2"></i> Continuer avec Facebook
-                      </a>
+                      
 
-                      <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=linkedin"
-                         class="btn w-100" style="border:1px solid #0a66c2; color:#0a66c2;">
-                        <i class="bi bi-linkedin me-2"></i> Continuer avec LinkedIn
-                      </a>
+                      
 
                       <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=discord"
                          class="btn w-100" style="border:1px solid #5865F2; color:#5865F2;">
