@@ -49,7 +49,8 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
                     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
                         <i class="fa fa-bars"></i>
                     </button>
-                    <ul class="navbar-nav ml-auto">
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item mr-2"><div id="bellSlot"></div></li>
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                                 <span class="mr-2 d-none d-lg-inline text-gray-600 small">Mohamed Ben Ali (Freelancer)</span>
@@ -162,5 +163,10 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
     <script src="<?= $templateBase ?>/vendor/datatables/jquery.dataTables.min.js"></script>
     <script src="<?= $templateBase ?>/vendor/datatables/dataTables.bootstrap4.min.js"></script>
     <script>$(document).ready(function() { $('#dataTable').DataTable(); });</script>
+    <script src="../../shared/chatbus.js"></script>
+    <script>
+        ChatBus.init({ apiBase: '../../../api/chat.php', user: <?= (int)$currentUserId ?>, conv: 0 });
+        ChatBus.mountBell('#bellSlot');
+    </script>
 </body>
 </html>

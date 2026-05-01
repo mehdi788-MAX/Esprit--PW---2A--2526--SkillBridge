@@ -30,8 +30,13 @@ class Message {
 
         $this->id_conversation = htmlspecialchars(strip_tags($this->id_conversation));
         $this->sender_id = htmlspecialchars(strip_tags($this->sender_id));
-        $this->contenu = htmlspecialchars(strip_tags($this->contenu));
         $this->type = htmlspecialchars(strip_tags($this->type));
+        // Pour les types structurés (image, file, devis), le contenu est un
+        // JSON contrôlé côté serveur : on n'y applique PAS htmlspecialchars
+        // sinon json_decode échouera à la relecture.
+        if (!in_array($this->type, ['image', 'file', 'devis'], true)) {
+            $this->contenu = htmlspecialchars(strip_tags($this->contenu));
+        }
 
         $stmt->bindParam(':id_conversation', $this->id_conversation);
         $stmt->bindParam(':sender_id', $this->sender_id);
@@ -114,8 +119,10 @@ class Message {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->contenu = htmlspecialchars(strip_tags($this->contenu));
         $this->type = htmlspecialchars(strip_tags($this->type));
+        if ($this->type !== 'devis') {
+            $this->contenu = htmlspecialchars(strip_tags($this->contenu));
+        }
 
         $stmt->bindParam(':contenu', $this->contenu);
         $stmt->bindParam(':type', $this->type);
@@ -176,5 +183,23 @@ class Message {
         $stmt->bindParam(':id', $this->id_conversation);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    }
+
+    // =====================
+    // READ NEW MESSAGES SINCE A CURSOR (for polling)
+    // =====================
+    public function readSinceForConversation($conversationId, $sinceId) {
+        $query = "SELECT m.id_message, m.id_conversation, m.sender_id, m.contenu,
+                         m.date_envoi, m.is_seen, m.type,
+                         u.prenom AS sender_prenom, u.nom AS sender_nom
+                  FROM " . $this->table . " m
+                  JOIN utilisateurs u ON m.sender_id = u.id
+                  WHERE m.id_conversation = :cid AND m.id_message > :since
+                  ORDER BY m.id_message ASC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindValue(':cid', $conversationId, PDO::PARAM_INT);
+        $stmt->bindValue(':since', $sinceId, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

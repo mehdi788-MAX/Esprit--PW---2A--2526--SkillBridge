@@ -1,0 +1,5 @@
+# Empêche l'exécution de PHP dans le répertoire d'uploads (XAMPP/Apache)
+<FilesMatch "\.(php|phtml|phps|inc)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes

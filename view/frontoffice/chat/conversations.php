@@ -58,6 +58,7 @@ $templateBase = '../EasyFolio';
                     <li><a href="<?= $templateBase ?>/index.html">Accueil</a></li>
                     <li><a href="conversations.php" class="active">Mes Conversations</a></li>
                     <li><a href="new_conversation.php">Nouveau Chat</a></li>
+                    <li id="bellSlot" style="display:flex;align-items:center;"></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
@@ -164,5 +165,10 @@ $templateBase = '../EasyFolio';
 
     <script src="<?= $templateBase ?>/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= $templateBase ?>/assets/js/main.js"></script>
+    <script src="../../shared/chatbus.js"></script>
+    <script>
+        ChatBus.init({ apiBase: '../../../api/chat.php', user: <?= (int)$currentUserId ?>, conv: 0 });
+        ChatBus.mountBell('#bellSlot');
+    </script>
 </body>
 </html>

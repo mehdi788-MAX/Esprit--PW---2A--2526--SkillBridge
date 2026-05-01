@@ -104,6 +104,40 @@ if (!$useMySQL) {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (demande_id) REFERENCES demandes(id) ON DELETE CASCADE
             );
+
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                conversation_id INTEGER,
+                message_id INTEGER,
+                payload_json TEXT,
+                is_read INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
+                ON notifications(user_id, is_read, id);
+
+            CREATE TABLE IF NOT EXISTS typing_indicators (
+                conversation_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (conversation_id, user_id),
+                FOREIGN KEY (conversation_id) REFERENCES conversations(id_conversation) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS message_reactions (
+                message_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                emoji VARCHAR(20) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (message_id, user_id),
+                FOREIGN KEY (message_id) REFERENCES messages(id_message) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+            );
         ");
 
         // Insérer les données de test si la table est vide

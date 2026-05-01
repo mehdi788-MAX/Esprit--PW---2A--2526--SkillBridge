@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../model/Conversation.php';
 require_once __DIR__ . '/../model/Message.php';
+require_once __DIR__ . '/../model/Notification.php';
+require_once __DIR__ . '/../lib/Moderator.php';
 
 class ChatController {
 
@@ -240,7 +242,7 @@ class ChatController {
     }
 
     /**
-     * Envoyer un message
+     * Envoyer un message + notification atomique
      */
     public function sendMessage($id_conversation, $sender_id, $contenu, $type = 'text') {
         $errors = $this->validateMessage($id_conversation, $sender_id, $contenu);
@@ -248,16 +250,66 @@ class ChatController {
             return ['success' => false, 'errors' => $errors];
         }
 
-        $msg = new Message($this->pdo);
-        $msg->id_conversation = $id_conversation;
-        $msg->sender_id = $sender_id;
-        $msg->contenu = $contenu;
-        $msg->type = $type;
+        // Détection contenu off-platform (modération informative)
+        $moderation = Moderator::analyze($contenu);
 
-        if ($msg->create()) {
-            return ['success' => true, 'id' => $msg->id_message];
+        $this->pdo->beginTransaction();
+        try {
+            $msg = new Message($this->pdo);
+            $msg->id_conversation = $id_conversation;
+            $msg->sender_id = $sender_id;
+            $msg->contenu = $contenu;
+            $msg->type = $type;
+            if (!$msg->create()) {
+                throw new RuntimeException("Erreur lors de l'envoi du message.");
+            }
+
+            // Identifier le destinataire (l'autre participant)
+            $stmt = $this->pdo->prepare("SELECT user1_id, user2_id FROM conversations WHERE id_conversation = :cid");
+            $stmt->execute([':cid' => $id_conversation]);
+            $conv = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$conv) {
+                throw new RuntimeException("Conversation introuvable.");
+            }
+            $recipientId = ($conv['user1_id'] == $sender_id) ? $conv['user2_id'] : $conv['user1_id'];
+
+            // Notification au destinataire — preview adapté au type
+            $preview = '';
+            if ($type === 'image') {
+                $preview = '📷 Photo partagée';
+            } elseif ($type === 'file') {
+                $payload = json_decode($contenu, true);
+                $name = (is_array($payload) && isset($payload['name'])) ? $payload['name'] : 'Fichier';
+                $preview = '📎 ' . $name;
+            } else {
+                $preview = mb_substr(strip_tags($contenu), 0, 80, 'UTF-8');
+            }
+            $notif = new Notification($this->pdo);
+            $notif->user_id = (int)$recipientId;
+            $notif->type = 'new_message';
+            $notif->conversation_id = (int)$id_conversation;
+            $notif->message_id = (int)$msg->id_message;
+            $notif->payload_json = json_encode([
+                'preview' => $preview,
+                'sender_id' => (int)$sender_id,
+                'type' => $type,
+            ], JSON_UNESCAPED_UNICODE);
+            if (!$notif->create()) {
+                throw new RuntimeException("Erreur lors de la création de la notification.");
+            }
+
+            $this->pdo->commit();
+            return [
+                'success' => true,
+                'id' => (int)$msg->id_message,
+                'moderation' => $moderation,
+            ];
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            return ['success' => false, 'errors' => [$e->getMessage()]];
         }
-        return ['success' => false, 'errors' => ['Erreur lors de l\'envoi du message.']];
     }
 
     /**
