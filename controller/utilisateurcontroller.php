@@ -8,6 +8,12 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../model/utilisateur.php';
 require_once __DIR__ . '/../model/profil.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+require_once __DIR__ . '/../libs/PHPMailer/Exception.php';
+require_once __DIR__ . '/../libs/PHPMailer/PHPMailer.php';
+require_once __DIR__ . '/../libs/PHPMailer/SMTP.php';
+
 $utilisateur = new Utilisateur($pdo);
 $profil      = new Profil($pdo);
 
@@ -66,6 +72,7 @@ switch ($action) {
         $utilisateur->telephone = $telephone;
 
         if ($utilisateur->create()) {
+            // Créer profil
             $profil->utilisateur_id = $utilisateur->id;
             $profil->bio            = '';
             $profil->competences    = '';
@@ -73,7 +80,61 @@ switch ($action) {
             $profil->site_web       = '';
             $profil->create();
 
-            $_SESSION['success'] = "Compte créé avec succès !";
+            // Générer token de vérification
+            $token = bin2hex(random_bytes(32));
+            $pdo->prepare("UPDATE utilisateurs SET verification_token = ?, is_verified = 0 WHERE id = ?")
+                ->execute([$token, $utilisateur->id]);
+
+            // Envoyer email de vérification
+            $verifyLink = 'http://localhost/skillbridgeutilisateur/controller/verify_email.php?token=' . $token;
+            $mail = new PHPMailer(true);
+                try {
+    $mail->isSMTP();
+    $mail->Host       = 'smtp.gmail.com';
+    $mail->SMTPAuth   = true;
+    $mail->Username   = 'mehdiharrabi7@gmail.com';
+    $mail->Password   = 'fohzffakxjjckikx';
+    $mail->SMTPSecure = 'tls';
+    $mail->Port       = 587;
+    $mail->CharSet    = 'UTF-8';
+
+    $mail->setFrom('mehdiharrabi7@gmail.com', 'SkillBridge');
+    $mail->addAddress($email);
+    $mail->isHTML(true);
+    $mail->Subject = 'Vérifiez votre compte SkillBridge';
+    $mail->Body    = '
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #4e73df;">SkillBridge</h1>
+            </div>
+            <p style="font-size: 16px;">Bonjour <strong>' . htmlspecialchars($prenom . ' ' . $nom) . '</strong>,</p>
+            <p style="font-size: 16px;">Merci de vous être inscrit sur SkillBridge !</p>
+            <p style="font-size: 16px;">Cliquez sur le bouton ci-dessous pour vérifier votre adresse email :</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="' . $verifyLink . '"
+                   style="background: #4e73df; color: white; padding: 14px 35px;
+                          border-radius: 5px; text-decoration: none; font-size: 16px;
+                          display: inline-block;">
+                    Vérifier mon email
+                </a>
+            </div>
+            <p style="color: #888; font-size: 0.85rem; margin-top: 30px;">
+                ⏱ Ce lien expire dans <strong>24 heures</strong>.<br><br>
+                Si vous n\'avez pas créé de compte, ignorez cet email.
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin-top: 30px;">
+            <p style="color: #aaa; font-size: 0.75rem; text-align: center;">
+                © ' . date('Y') . ' SkillBridge. Tous droits réservés.
+            </p>
+        </div>
+    ';
+    $mail->send();
+} catch (Exception $e) {
+    error_log('Mailer Error: ' . $mail->ErrorInfo);
+}
+                
+
+            $_SESSION['success'] = "Compte créé ! Vérifiez votre email pour activer votre compte.";
             header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
         } else {
             $_SESSION['error'] = "Erreur lors de la création du compte.";
@@ -127,6 +188,12 @@ switch ($action) {
 
             if (!$user['is_active']) {
                 $_SESSION['error'] = "desactivated";
+                header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+                exit;
+            }
+
+            if (!$user['is_verified']) {
+                $_SESSION['error'] = "unverified";
                 header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
                 exit;
             }

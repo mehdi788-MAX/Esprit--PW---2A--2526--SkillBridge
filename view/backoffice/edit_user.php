@@ -44,11 +44,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telephone = trim($_POST['telephone'] ?? '');
 
     // Validation PHP
-    if (empty($nom))    $errors[] = "Le nom est obligatoire.";
-    if (empty($prenom)) $errors[] = "Le prénom est obligatoire.";
-    if (empty($email))  $errors[] = "L'email est obligatoire.";
-    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = "Format email invalide.";
-    if (empty($role))   $errors[] = "Le rôle est obligatoire.";
+    if (empty($nom))
+        $errors[] = "Le nom est obligatoire.";
+    elseif (strlen($nom) < 3)
+        $errors[] = "Le nom doit contenir au moins 3 caractères.";
+
+    if (empty($prenom))
+        $errors[] = "Le prénom est obligatoire.";
+    elseif (strlen($prenom) < 3)
+        $errors[] = "Le prénom doit contenir au moins 3 caractères.";
+
+    if (empty($email))
+        $errors[] = "L'email est obligatoire.";
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        $errors[] = "Format email invalide.";
+
+    if (empty($role))
+        $errors[] = "Le rôle est obligatoire.";
+
+    if (!empty($telephone) && strlen(preg_replace('/\D/', '', $telephone)) < 8)
+        $errors[] = "Le téléphone doit contenir au moins 8 chiffres.";
 
     if (empty($errors)) {
         $utilisateurModel->id        = $_POST['id'];
@@ -203,9 +218,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Topbar -->
         <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-          <span class="navbar-text ml-auto mr-3">
-            <i class="fas fa-user-circle mr-1"></i> <?= htmlspecialchars($_SESSION['user_nom']) ?>
-          </span>
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+          <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
+                  <i class="fas fa-user-circle mr-1"></i> <?= htmlspecialchars($_SESSION['user_nom'] ?? 'Admin') ?>
+                </span>
+              </a>
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <div class="dropdown-header">
+                  <i class="fas fa-user-circle mr-2"></i><?= htmlspecialchars($_SESSION['user_nom'] ?? 'Admin') ?>
+                </div>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="../../controller/utilisateurcontroller.php?action=logout">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Déconnexion
+                </a>
+              </div>
+            </li>
+          </ul>
         </nav>
 
         <!-- Main Content -->
@@ -239,25 +273,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Nom <span class="text-danger">*</span></label>
-                    <input type="text" name="nom" id="nom" class="form-control" value="<?= htmlspecialchars($utilisateur['nom']) ?>">
+                    <input type="text" name="nom" id="nom" class="form-control"
+                           value="<?= htmlspecialchars($utilisateur['nom']) ?>">
                     <div id="nom-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Prénom <span class="text-danger">*</span></label>
-                    <input type="text" name="prenom" id="prenom" class="form-control" value="<?= htmlspecialchars($utilisateur['prenom']) ?>">
+                    <input type="text" name="prenom" id="prenom" class="form-control"
+                           value="<?= htmlspecialchars($utilisateur['prenom']) ?>">
                     <div id="prenom-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Email <span class="text-danger">*</span></label>
-                    <input type="text" name="email" id="email" class="form-control" value="<?= htmlspecialchars($utilisateur['email']) ?>">
+                    <input type="text" name="email" id="email" class="form-control"
+                           value="<?= htmlspecialchars($utilisateur['email']) ?>">
                     <div id="email-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Téléphone</label>
-                    <input type="text" name="telephone" id="telephone" class="form-control" value="<?= htmlspecialchars($utilisateur['telephone'] ?? '') ?>">
+                    <input type="text" name="telephone" id="telephone" class="form-control"
+                           value="<?= htmlspecialchars($utilisateur['telephone'] ?? '') ?>"
+                           placeholder="+216 XX XXX XXX">
+                    <div id="tel-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
                   <div class="col-md-6 mb-3">
@@ -272,18 +312,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Photo de profil</label>
+                    <?php if (!empty($utilisateur['photo'])): ?>
+                      <div class="mb-2">
+                        <img src="../frontoffice/EasyFolio/assets/img/profile/<?= htmlspecialchars($utilisateur['photo']) ?>"
+                             style="width:50px; height:50px; border-radius:50%; object-fit:cover;">
+                        <small class="text-muted ml-2">Photo actuelle</small>
+                      </div>
+                    <?php endif; ?>
                     <input type="file" name="photo" class="form-control-file" accept="image/*">
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Nouveau mot de passe</label>
-                    <input type="password" name="new_password" id="new_password" class="form-control" placeholder="Laisser vide pour ne pas changer">
+                    <input type="password" name="new_password" id="new_password" class="form-control"
+                           placeholder="Laisser vide pour ne pas changer">
                     <div id="pwd-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
                   <div class="col-md-6 mb-3">
                     <label class="form-label font-weight-bold">Confirmer mot de passe</label>
-                    <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control" placeholder="Répétez le nouveau mot de passe">
+                    <input type="password" name="confirm_new_password" id="confirm_new_password" class="form-control"
+                           placeholder="Répétez le nouveau mot de passe">
                     <div id="confirmpwd-error" class="text-danger mt-1" style="font-size:0.85rem; display:none;"></div>
                   </div>
 
@@ -311,45 +360,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="js/sb-admin-2.min.js"></script>
 
   <script>
-    document.getElementById('editForm').addEventListener('submit', function(e) {
+  document.getElementById('editForm').addEventListener('submit', function(e) {
 
-      let valid = true;
+    let valid = true;
 
-      ['nom','prenom','email','role'].forEach(function(id) {
-        const field = document.getElementById(id);
-        if (field) field.classList.remove('is-invalid', 'is-valid');
-      });
-      ['nom-error','prenom-error','email-error','role-error','pwd-error','confirmpwd-error'].forEach(function(id) {
-        const el = document.getElementById(id);
-        if (el) { el.textContent = ''; el.style.display = 'none'; }
-      });
-
-      function showError(fieldId, errorId, msg) {
-        const field = document.getElementById(fieldId);
-        const err   = document.getElementById(errorId);
-        if (field) field.classList.add('is-invalid');
-        if (err)   { err.textContent = msg; err.style.display = 'block'; }
-        valid = false;
-      }
-
-      const nom    = document.getElementById('nom').value.trim();
-      const prenom = document.getElementById('prenom').value.trim();
-      const email  = document.getElementById('email').value.trim();
-      const role   = document.getElementById('role').value;
-      const pwd    = document.getElementById('new_password').value;
-      const cpwd   = document.getElementById('confirm_new_password').value;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-      if (nom === '')    showError('nom',    'nom-error',    'Le nom est obligatoire.');
-      if (prenom === '') showError('prenom', 'prenom-error', 'Le prénom est obligatoire.');
-      if (email === '')  showError('email',  'email-error',  "L'email est obligatoire.");
-      else if (!emailRegex.test(email)) showError('email', 'email-error', 'Format invalide.');
-      if (role === '')   showError('role',   'role-error',   'Le rôle est obligatoire.');
-      if (pwd !== '' && pwd.length < 8) showError('new_password', 'pwd-error', 'Minimum 8 caractères.');
-      if (pwd !== '' && pwd !== cpwd)   showError('confirm_new_password', 'confirmpwd-error', 'Les mots de passe ne correspondent pas.');
-
-      if (!valid) e.preventDefault();
+    ['nom','prenom','email','role','telephone'].forEach(function(id) {
+      const field = document.getElementById(id);
+      if (field) field.classList.remove('is-invalid', 'is-valid');
     });
+
+    ['nom-error','prenom-error','email-error','role-error','tel-error','pwd-error','confirmpwd-error'].forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = ''; el.style.display = 'none'; }
+    });
+
+    function showError(fieldId, errorId, msg) {
+      const field = document.getElementById(fieldId);
+      const err   = document.getElementById(errorId);
+      if (field) field.classList.add('is-invalid');
+      if (err)   { err.textContent = msg; err.style.display = 'block'; }
+      valid = false;
+    }
+
+    const nom       = document.getElementById('nom').value.trim();
+    const prenom    = document.getElementById('prenom').value.trim();
+    const email     = document.getElementById('email').value.trim();
+    const role      = document.getElementById('role').value;
+    const telephone = document.getElementById('telephone').value.trim();
+    const pwd       = document.getElementById('new_password').value;
+    const cpwd      = document.getElementById('confirm_new_password').value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    // Nom
+    if (nom === '')
+      showError('nom', 'nom-error', 'Le nom est obligatoire.');
+    else if (nom.length < 3)
+      showError('nom', 'nom-error', 'Le nom doit contenir au moins 3 caractères.');
+
+    // Prénom
+    if (prenom === '')
+      showError('prenom', 'prenom-error', 'Le prénom est obligatoire.');
+    else if (prenom.length < 3)
+      showError('prenom', 'prenom-error', 'Le prénom doit contenir au moins 3 caractères.');
+
+    // Email
+    if (email === '')
+      showError('email', 'email-error', "L'email est obligatoire.");
+    else if (!emailRegex.test(email))
+      showError('email', 'email-error', 'Format invalide (ex: nom@email.com).');
+
+    // Rôle
+    if (role === '')
+      showError('role', 'role-error', 'Le rôle est obligatoire.');
+
+    // Téléphone
+    if (telephone !== '') {
+      const digits = telephone.replace(/\D/g, '');
+      if (digits.length < 8)
+        showError('telephone', 'tel-error', 'Le téléphone doit contenir au moins 8 chiffres.');
+    }
+
+    // Mot de passe
+    if (pwd !== '' && pwd.length < 8)
+      showError('new_password', 'pwd-error', 'Minimum 8 caractères.');
+    if (pwd !== '' && pwd !== cpwd)
+      showError('confirm_new_password', 'confirmpwd-error', 'Les mots de passe ne correspondent pas.');
+
+    if (!valid) e.preventDefault();
+  });
   </script>
 
 </body>

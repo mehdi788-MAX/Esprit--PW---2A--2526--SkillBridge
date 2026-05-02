@@ -77,9 +77,20 @@
 
                 <?php
                 session_start();
-                $error = $_SESSION['error'] ?? null;
-                unset($_SESSION['error']);
+                $error   = $_SESSION['error'] ?? null;
+                $success = $_SESSION['success'] ?? null;
+                unset($_SESSION['error'], $_SESSION['success']);
                 ?>
+
+                <?php if ($success): ?>
+                  <div class="alert alert-success d-flex align-items-start gap-3" role="alert">
+                    <i class="bi bi-envelope-check fs-4 text-success mt-1"></i>
+                    <div>
+                      <h6 class="fw-bold mb-1">Compte créé avec succès !</h6>
+                      <p class="mb-0"><?= htmlspecialchars($success) ?></p>
+                    </div>
+                  </div>
+                <?php endif; ?>
 
                 <?php if ($error === 'desactivated'): ?>
                   <div class="alert alert-warning d-flex align-items-start gap-3" role="alert">
@@ -92,6 +103,14 @@
                           admin@skillbridge.com
                         </a>
                       </p>
+                    </div>
+                  </div>
+                <?php elseif ($error === 'unverified'): ?>
+                  <div class="alert alert-warning d-flex align-items-start gap-3" role="alert">
+                    <i class="bi bi-envelope-exclamation fs-3 text-warning mt-1"></i>
+                    <div>
+                      <h6 class="fw-bold mb-1">Email non vérifié</h6>
+                      <p class="mb-0">Vérifiez votre boîte email et cliquez sur le lien de confirmation avant de vous connecter.</p>
                     </div>
                   </div>
                 <?php elseif ($error): ?>
@@ -157,10 +176,6 @@
                         <i class="bi bi-github me-2"></i> Continuer avec GitHub
                       </a>
 
-                      
-
-                      
-
                       <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=discord"
                          class="btn w-100" style="border:1px solid #5865F2; color:#5865F2;">
                         <i class="bi bi-discord me-2"></i> Continuer avec Discord
@@ -206,30 +221,25 @@
           </div>
           <div class="modal-body text-center">
 
-            <!-- Status -->
             <div id="faceStatus" class="alert alert-info mb-3">
               Entrez votre email et activez la caméra.
             </div>
 
-            <!-- Email -->
             <div class="mb-3">
               <input type="text" id="faceEmail" class="form-control text-center"
                      placeholder="Votre adresse email">
             </div>
 
-            <!-- Bouton activer caméra -->
             <button class="btn btn-outline-secondary mb-3" id="btnStartCamera">
               <i class="bi bi-camera me-1"></i> Activer la caméra
             </button>
 
-            <!-- Vidéo webcam -->
             <div class="position-relative d-inline-block">
               <video id="faceVideo" width="320" height="240"
                      style="border-radius:12px; display:none; border:3px solid #6f42c1;"></video>
               <canvas id="faceCanvas" style="position:absolute; top:0; left:0; display:none;"></canvas>
             </div>
 
-            <!-- Bouton valider -->
             <div class="mt-3">
               <button class="btn btn-success w-100" id="btnVerifyFace" style="display:none;">
                 <i class="bi bi-check-circle me-1"></i> Vérifier mon visage
@@ -258,17 +268,12 @@
     </div>
   </footer>
 
-  <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
-  <!-- Vendor JS Files -->
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
-
-  <!-- Main JS File -->
   <script src="assets/js/main.js"></script>
 
-  <!-- Login Form Validation -->
   <script>
   document.getElementById('loginForm').addEventListener('submit', function (e) {
 
@@ -342,7 +347,6 @@
   });
   </script>
 
-  <!-- Face API -->
   <script src="assets/js/face-api.min.js"></script>
 
   <script>
@@ -408,7 +412,7 @@
     const formData = new FormData();
     formData.append('email', email);
 
-    const res  = await fetch('../../../controller/get_photo.php', { method: 'POST', body: formData });
+    const res  = await fetch('http://localhost/skillbridgeutilisateur/controller/get_photo.php', { method: 'POST', body: formData });
     const data = await res.json();
 
     if (!data.success) {
@@ -465,7 +469,7 @@
       loginData.append('user_nom',  data.user_nom);
       loginData.append('user_role', data.user_role);
 
-      const loginRes  = await fetch('../../../controller/face_login.php', { method: 'POST', body: loginData });
+      const loginRes  = await fetch('http://localhost/skillbridgeutilisateur/controller/face_login.php', { method: 'POST', body: loginData });
       const loginJson = await loginRes.json();
 
       if (loginJson.success) {
