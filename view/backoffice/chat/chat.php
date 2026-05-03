@@ -162,7 +162,7 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
                         <form id="sendForm" novalidate>
                             <div class="input-group">
                                 <textarea id="contenu" class="form-control" name="contenu" rows="2"
-                                          placeholder="Tapez votre message..." maxlength="1000"></textarea>
+                                          placeholder="Tapez votre message..."></textarea>
                                 <div class="input-group-append">
                                     <input type="file" id="photoInput" accept="image/*" hidden>
                                     <input type="file" id="fileInput" hidden>
@@ -182,7 +182,13 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
                             </div>
                             <div class="d-flex justify-content-between mt-1">
                                 <small id="moderationHint" class="text-warning"></small>
-                                <small id="count" class="text-muted">0 / 1000</small>
+                                <small id="count" class="text-muted">0 / 10</small>
+                            </div>
+                            <div id="charError" class="text-danger mt-1" style="display:none; font-size:0.85rem;">
+                                <i class="fas fa-exclamation-circle"></i> Maximum 10 caractères atteint.
+                            </div>
+                            <div id="badWordError" class="text-danger mt-1" style="display:none; font-size:0.85rem;">
+                                <i class="fas fa-ban"></i> Votre message contient un mot inapproprié.
                             </div>
                             <div id="uploadHint" class="upload-progress" style="display:none;"></div>
                         </form>
@@ -387,8 +393,12 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
         const text = (contenuEl.value || '').trim();
         moderationHint.textContent = '';
         if (!text) return;
-        if (text.length > 1000) {
-            flash('Message trop long (max 1000 caractères).', 'danger');
+        if (containsBadWord(text)) {
+            flash('<i class="fas fa-ban"></i> Votre message contient un mot inapproprié. Veuillez le modifier.', 'danger');
+            return;
+        }
+        if (text.length > MAX_CHARS) {
+            flash('Message trop long (max ' + MAX_CHARS + ' caractères).', 'danger');
             return;
         }
         const optId = 'opt-' + Date.now();
@@ -401,7 +411,7 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
         chatContainer.appendChild(opt);
         scrollBottom();
         contenuEl.value = '';
-        counterEl.textContent = '0 / 1000';
+        counterEl.textContent = '0 / ' + MAX_CHARS;
 
         const r = await ChatBus.send(text);
         if (!r.ok || !r.data || !r.data.success) {
@@ -416,8 +426,52 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
         }
     });
 
+
+    // Liste de mots interdits
+    var BAD_WORDS = [
+        'connard','connasse','salope','salop','pute','putain',
+        'merde','enculer','encule','baise','baiser','foutre',
+        'bordel','cretin','imbecile','abruti','fdp','ntm',
+        'nique','niquer','batard',
+        'fuck','fucking','fucker','shit','bitch','asshole',
+        'bastard','cunt','dick','cock','pussy','whore','slut',
+        'moron','stupid','dumbass','jackass','crap','piss','wanker','twat'
+    ];
+
+    function containsBadWord(text) {
+        var lower = ' ' + text.toLowerCase() + ' ';
+        for (var i = 0; i < BAD_WORDS.length; i++) {
+            if (lower.indexOf(' ' + BAD_WORDS[i] + ' ') !== -1 ||
+                lower.indexOf('\n' + BAD_WORDS[i] + '\n') !== -1 ||
+                lower.indexOf(' ' + BAD_WORDS[i] + '\n') !== -1 ||
+                lower.indexOf('\n' + BAD_WORDS[i] + ' ') !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+    var MAX_CHARS = 10;
+    var badWordErrorEl = document.getElementById('badWordError');
+    var charErrorEl = document.getElementById('charError');
     contenuEl.addEventListener('input', function () {
-        counterEl.textContent = contenuEl.value.length + ' / 1000';
+        // Physically block typing beyond MAX_CHARS
+        if (contenuEl.value.length > MAX_CHARS) {
+            contenuEl.value = contenuEl.value.substring(0, MAX_CHARS);
+            charErrorEl.style.display = 'block';
+            counterEl.style.color = 'red';
+            counterEl.style.fontWeight = 'bold';
+        } else {
+            charErrorEl.style.display = 'none';
+            counterEl.style.color = contenuEl.value.length === MAX_CHARS ? 'red' : '';
+            counterEl.style.fontWeight = contenuEl.value.length === MAX_CHARS ? 'bold' : '';
+        }
+        counterEl.textContent = contenuEl.value.length + ' / ' + MAX_CHARS;
+        // Mot interdit
+        if (containsBadWord(contenuEl.value)) {
+            badWordErrorEl.style.display = 'block';
+        } else {
+            badWordErrorEl.style.display = 'none';
+        }
     });
     contenuEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {

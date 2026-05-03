@@ -85,7 +85,7 @@ class ChatController {
             $errors[] = "Le message ne peut pas être vide.";
         } elseif (strlen(trim($contenu)) < 1) {
             $errors[] = "Le message doit contenir au moins 1 caractère.";
-        } elseif (strlen(trim($contenu)) > 1000) {
+        } elseif (strlen(trim($contenu)) > 10) {
             $errors[] = "Le message ne peut pas dépasser 1000 caractères.";
         }
 
@@ -118,7 +118,7 @@ class ChatController {
 
         if (empty(trim($contenu))) {
             $errors[] = "Le message ne peut pas être vide.";
-        } elseif (strlen(trim($contenu)) > 1000) {
+        } elseif (strlen(trim($contenu)) > 10) {
             $errors[] = "Le message ne peut pas dépasser 1000 caractères.";
         }
 

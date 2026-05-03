@@ -75,13 +75,13 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
                             // Récupérer la liste des conversations depuis le controller
                             $conversations = $chatController->listConversations()->fetchAll(PDO::FETCH_ASSOC);
                             ?>
-                            <form action="" method="POST">
+                            <form action="" method="POST" id="searchForm" novalidate>
                                 <div class="form-group row align-items-center">
                                     <label for="id_conversation" class="col-sm-2 col-form-label font-weight-bold">
                                         Sélectionnez une conversation :
                                     </label>
                                     <div class="col-sm-6">
-                                        <select name="id_conversation" id="id_conversation" class="form-control" required>
+                                        <select name="id_conversation" id="id_conversation" class="form-control">
                                             <option value="">-- Choisir une conversation --</option>
                                             <?php foreach ($conversations as $conv): ?>
                                                 <option value="<?= htmlspecialchars($conv['id_conversation']) ?>"
@@ -185,6 +185,34 @@ $templateBase = '../startbootstrap-sb-admin-2-gh-pages';
     <script src="<?= $templateBase ?>/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="<?= $templateBase ?>/vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="<?= $templateBase ?>/js/sb-admin-2.min.js"></script>
+
+    <script>
+        // Controle de saisie JavaScript (remplace l'attribut HTML5 "required")
+        document.getElementById('searchForm').addEventListener('submit', function (e) {
+            var select = document.getElementById('id_conversation');
+            var errorDiv = document.getElementById('js-search-error');
+
+            if (errorDiv) { errorDiv.remove(); }
+
+            if (!select.value || select.value === '') {
+                e.preventDefault();
+
+                var msg = document.createElement('div');
+                msg.id = 'js-search-error';
+                msg.className = 'alert alert-danger mt-2';
+                msg.innerHTML = '<i class="fas fa-exclamation-circle"></i> Veuillez selectionner une conversation avant de rechercher.';
+                select.parentNode.appendChild(msg);
+                select.classList.add('is-invalid');
+            } else {
+                select.classList.remove('is-invalid');
+            }
+        });
+
+        document.getElementById('id_conversation').addEventListener('change', function () {
+            this.classList.remove('is-invalid');
+            var errorDiv = document.getElementById('js-search-error');
+            if (errorDiv) { errorDiv.remove(); }
+        });
+    </script>
 </body>
 </html>
-
