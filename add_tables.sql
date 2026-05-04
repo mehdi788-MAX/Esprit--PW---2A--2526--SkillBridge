@@ -40,3 +40,33 @@ INSERT INTO `tests` (`title`, `category_id`, `duration`, `level`, `average_score
 ('Marketing Digital & SEO',     4, 60, 'Débutant', 85.00),
 ('Développement Backend Node.js',1, 60, 'Avancé',  79.00),
 ('Gestion de Projet Agile',     5, 60, 'Moyen',    88.00);
+
+-- --------------------------------------------------------
+-- NOUVELLES TABLES POUR L'INTÉGRATION IA (QUESTIONS ET RÉSULTATS)
+-- --------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `questions` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `test_id` INT(11) NOT NULL,
+  `question` TEXT NOT NULL,
+  `type` VARCHAR(50) DEFAULT 'qcm',
+  `option_a` TEXT, 
+  `option_b` TEXT, 
+  `option_c` TEXT, 
+  `option_d` TEXT,
+  `bonne_reponse` VARCHAR(5) NOT NULL,
+  `created_at` DATETIME DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `resultats` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `test_id` INT(11) NOT NULL,
+  `score` INT(11) NOT NULL,
+  `total` INT(11) NOT NULL,
+  `details` TEXT,
+  `created_at` DATETIME DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`test_id`) REFERENCES `tests`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

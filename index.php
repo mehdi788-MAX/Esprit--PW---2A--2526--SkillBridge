@@ -1,7 +1,9 @@
 <?php
 // index.php
-<<<<<<< HEAD
 // Point d'entrée de l'application
+
+// Configuration globale
+define('GEMINI_API_KEY', 'AIzaSyDfPEltbig7De0Oav8l9fXNkVSvs9Vac-Y');
 
 require_once "controllers/TestController.php";
 require_once "controllers/CategoryController.php";
@@ -31,6 +33,21 @@ switch ($action) {
     case 'delete':
         $testController->delete();
         break;
+    case 'generate_ai':
+        $testController->generateAI();
+        break;
+    case 'take_test':
+        $testController->takeTest();
+        break;
+    case 'submit_test':
+        $testController->submitTest();
+        break;
+    case 'export_pdf':
+        $testController->exportPdf();
+        break;
+    case 'history':
+        $testController->history();
+        break;
 
     // --- CATEGORIES ---
     case 'cat_store':
@@ -47,41 +64,6 @@ switch ($action) {
     case 'frontoffice':
     default:
         $testController->frontoffice();
-=======
-// Point d'entrée de l'application — dirige vers le bon controller/action
-
-require_once "controllers/TestController.php";
-
-// Lire l'action dans l'URL (ex: index.php?action=create)
-$action = isset($_GET['action']) ? $_GET['action'] : 'frontoffice';
-
-// Créer le controller
-$controller = new TestController();
-
-// Appeler la bonne méthode selon l'action
-switch ($action) {
-    case 'index':
-        $controller->index();
-        break;
-    case 'create':
-        $controller->create();
-        break;
-    case 'store':
-        $controller->store();
-        break;
-    case 'edit':
-        $controller->edit();
-        break;
-    case 'update':
-        $controller->update();
-        break;
-    case 'delete':
-        $controller->delete();
-        break;
-    case 'frontoffice':
-    default:
-        $controller->frontoffice();
->>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
         break;
 }
 ?>

@@ -1,14 +1,6 @@
 <?php
 // models/Category.php
-<<<<<<< HEAD
 // Gère toutes les opérations sur la table "categories"
-
-class Category {
-    private $conn;
-    private $table = "categories";
-
-=======
-// Ce fichier représente la table "categories" dans la base de données
 
 class Category {
     // La connexion à la base de données
@@ -16,31 +8,22 @@ class Category {
     private $table = "categories";
 
     // Propriétés de la catégorie
->>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public $id;
     public $name;
     public $created_at;
 
-<<<<<<< HEAD
-=======
     // Le constructeur reçoit la connexion
->>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function __construct($db) {
         $this->conn = $db;
     }
 
-<<<<<<< HEAD
     // READ — Récupérer toutes les catégories
-=======
-    // Récupérer toutes les catégories
->>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
     public function getAll() {
         $query = "SELECT * FROM " . $this->table . " ORDER BY name ASC";
         $stmt  = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
-<<<<<<< HEAD
 
     // READ — Récupérer une catégorie par ID
     public function getById() {
@@ -95,7 +78,5 @@ class Category {
         }
         return false;
     }
-=======
->>>>>>> c266bb3be7031baaa66b638b43aaf96cbdcebd0d
 }
 ?>
