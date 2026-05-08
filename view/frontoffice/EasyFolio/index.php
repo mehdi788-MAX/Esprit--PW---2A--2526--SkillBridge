@@ -300,152 +300,250 @@ $pickSkills = fn($csv, $max = 3) => $csv ? array_slice(array_filter(array_map('t
 
   <main class="main">
 
-  <?php if ($isLoggedIn): /* =================================================== DASHBOARD =================================================== */ ?>
+  <?php if ($isLoggedIn): /* =================================================== DASHBOARD (logged-in) =================================================== */
+    $firstName = explode(' ', $userNom)[0] ?: 'à toi';
+    $roleLabel = $isClient ? 'Client' : ($isFreelancer ? 'Freelancer' : 'Administrateur');
+    $roleIcon  = $isClient ? 'bi-briefcase-fill' : ($isFreelancer ? 'bi-tools' : 'bi-shield-check');
+    $roleColor = $isClient ? '37,99,235' : ($isFreelancer ? '249,115,22' : '124,58,237'); // RGB
+    // Image qui colle au rôle
+    $heroImg   = $isClient
+        ? 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=900&auto=format&fit=crop&q=80'
+        : ($isFreelancer
+            ? 'https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=900&auto=format&fit=crop&q=80'
+            : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80');
+  ?>
 
-    <section class="container my-5">
-      <!-- Welcome banner -->
-      <div class="dash-hero" data-aos="fade-up">
-        <span class="role-pill">
-          <i class="bi bi-<?= $isClient ? 'briefcase-fill' : ($isFreelancer ? 'tools' : 'shield-check') ?>"></i>
-          <?= $isClient ? 'Client' : ($isFreelancer ? 'Freelancer' : 'Administrateur') ?>
-        </span>
-        <h1 class="display-5 mt-3 mb-2">Bonjour <?= htmlspecialchars(explode(' ', $userNom)[0] ?: 'à toi') ?> 👋</h1>
-        <p class="lead opacity-90 mb-0">
-          <?php if ($isFreelancer): ?>
-            Voici votre espace freelancer. Mettez votre profil à jour, gérez vos conversations et restez disponible.
-          <?php elseif ($isClient): ?>
-            Voici votre espace client. Découvrez de nouveaux talents et continuez vos collaborations en cours.
-          <?php else: ?>
-            Voici votre espace SkillBridge.
-          <?php endif; ?>
-        </p>
-      </div>
-    </section>
-
-    <!-- Quick action cards -->
-    <section class="container mb-5">
-      <div class="row g-4">
-
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
-          <a href="../chat/conversations.php" class="action-card">
-            <div class="icon-wrap icon-blue"><i class="bi bi-chat-dots-fill"></i></div>
-            <h5 class="mb-1">Mes Conversations
-              <?php if ($dashboard['unread_count'] > 0): ?><span class="badge-count"><?= $dashboard['unread_count'] ?></span><?php endif; ?>
-            </h5>
-            <p class="text-muted small mb-0">Reprenez vos discussions là où vous les avez laissées.</p>
-            <div class="mt-3 small text-primary fw-semibold">Ouvrir <i class="bi bi-arrow-right ms-1"></i></div>
-          </a>
-        </div>
-
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
-          <a href="profil.php" class="action-card">
-            <div class="icon-wrap icon-orange"><i class="bi bi-person-circle"></i></div>
-            <h5 class="mb-1">Mon Profil</h5>
-            <div class="d-flex align-items-center gap-2 mb-2">
-              <div class="progress flex-grow-1" style="height:6px;">
-                <div class="progress-bar" role="progressbar" style="width:<?= $dashboard['profile_pct'] ?>%; background: linear-gradient(90deg, var(--sb-blue), var(--sb-orange));"></div>
-              </div>
-              <small class="fw-semibold"><?= $dashboard['profile_pct'] ?>%</small>
+    <!-- ================== HERO DASHBOARD ================== -->
+    <section class="hero-marketing">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6" data-aos="fade-right">
+            <span class="section-tag" style="background: rgba(<?= $roleColor ?>,.1); color: rgb(<?= $roleColor ?>);">
+              <i class="bi <?= $roleIcon ?> me-1"></i> Espace <?= $roleLabel ?>
+            </span>
+            <h1 class="display-3 mt-3 mb-4">
+              Bonjour <span class="accent"><?= htmlspecialchars($firstName) ?></span>,<br>
+              ravi de vous revoir.
+            </h1>
+            <p class="lead text-muted mb-4">
+              <?php if ($isFreelancer): ?>
+                Continuez vos conversations, mettez votre profil à jour et restez visible auprès des clients.
+              <?php elseif ($isClient): ?>
+                Continuez vos collaborations, découvrez de nouveaux talents et démarrez de nouveaux projets.
+              <?php else: ?>
+                Continuez votre travail d'administration sur SkillBridge.
+              <?php endif; ?>
+            </p>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+              <a href="../chat/conversations.php" class="btn btn-lg" style="background: linear-gradient(135deg, var(--sb-orange), var(--sb-blue)); color:#fff; font-weight:600; padding: 14px 28px; border-radius:14px;">
+                <i class="bi bi-chat-dots me-1"></i> Mes Conversations
+                <?php if ($dashboard['unread_count'] > 0): ?>
+                  <span class="badge bg-light text-dark ms-2"><?= $dashboard['unread_count'] ?> non lu<?= $dashboard['unread_count'] > 1 ? 's' : '' ?></span>
+                <?php endif; ?>
+              </a>
+              <a href="profil.php" class="btn btn-lg btn-outline-dark" style="border-radius:14px; padding: 14px 28px;">
+                <i class="bi bi-person-circle me-1"></i> Mon profil
+              </a>
             </div>
-            <p class="text-muted small mb-0"><?= $dashboard['profile_pct'] >= 80 ? 'Profil bien renseigné !' : 'Complétez votre profil pour gagner en visibilité.' ?></p>
-          </a>
-        </div>
+            <!-- Stats personnels -->
+            <div class="row g-2 mt-4">
+              <div class="col-4"><div class="stat-pill"><div class="num"><?= count($dashboard['conversations']) ?></div><div class="lbl">Conversations</div></div></div>
+              <div class="col-4"><div class="stat-pill"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Non lus</div></div></div>
+              <div class="col-4"><div class="stat-pill"><div class="num"><?= $dashboard['profile_pct'] ?>%</div><div class="lbl">Profil complété</div></div></div>
+            </div>
+          </div>
 
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
-          <a href="../chat/new_conversation.php" class="action-card">
-            <div class="icon-wrap icon-green"><i class="bi bi-plus-circle-fill"></i></div>
-            <h5 class="mb-1">Nouvelle conversation</h5>
-            <p class="text-muted small mb-0"><?= $isClient ? 'Contactez un freelancer pour démarrer un projet.' : 'Démarrez une discussion avec un client.' ?></p>
-            <div class="mt-3 small text-success fw-semibold">Démarrer <i class="bi bi-arrow-right ms-1"></i></div>
-          </a>
+          <div class="col-lg-6 d-none d-lg-block position-relative" data-aos="fade-left">
+            <div class="hero-img-wrap">
+              <img src="<?= $heroImg ?>" alt="Espace personnel <?= $roleLabel ?>" loading="eager">
+            </div>
+            <!-- Cards flottantes contextuelles -->
+            <div class="hero-floating-card" style="top:30px; left:-30px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-blue);"><i class="bi bi-bell-fill"></i></div>
+              <div>
+                <div class="fw-bold small"><?= $dashboard['unread_count'] ?> notification<?= $dashboard['unread_count'] !== 1 ? 's' : '' ?></div>
+                <div class="small text-muted" style="font-size:.75rem;"><?= $dashboard['unread_count'] > 0 ? 'À consulter' : 'Tout est lu' ?></div>
+              </div>
+            </div>
+            <div class="hero-floating-card" style="bottom:30px; right:-20px;">
+              <div style="width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-orange);"><i class="bi bi-graph-up-arrow"></i></div>
+              <div>
+                <div class="fw-bold small">Profil <?= $dashboard['profile_pct'] ?>%</div>
+                <div class="small text-muted" style="font-size:.75rem;"><?= $dashboard['profile_pct'] >= 80 ? 'Excellent !' : 'À compléter' ?></div>
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
-          <a href="#talents" class="action-card">
-            <div class="icon-wrap icon-purple"><i class="bi bi-stars"></i></div>
-            <h5 class="mb-1"><?= $isClient ? 'Trouver un talent' : 'Voir la communauté' ?></h5>
-            <p class="text-muted small mb-0"><?= $isClient ? 'Parcourez les freelancers disponibles.' : 'Découvrez les autres freelancers de SkillBridge.' ?></p>
-            <div class="mt-3 small fw-semibold" style="color: #7c3aed;">Découvrir <i class="bi bi-arrow-right ms-1"></i></div>
-          </a>
-        </div>
-
       </div>
     </section>
 
-    <!-- Recent conversations -->
-    <section class="container mb-5">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title h3 mb-0"><i class="bi bi-chat-text me-2 text-primary"></i> Conversations récentes</h2>
-        <a href="../chat/conversations.php" class="text-decoration-none small fw-semibold">Voir tout <i class="bi bi-arrow-right ms-1"></i></a>
+    <!-- ================== ACTIONS RAPIDES ================== -->
+    <section class="section-pad" style="background:#f8fafc;">
+      <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+          <span class="section-tag">Que voulez-vous faire ?</span>
+          <h2 class="section-title display-5 mb-3">Vos accès rapides</h2>
+          <p class="lead text-muted">Tout ce dont vous avez besoin pour avancer aujourd'hui.</p>
+        </div>
+        <div class="row g-4">
+
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <a href="../chat/conversations.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
+              <span class="step-num"><i class="bi bi-chat-dots-fill"></i></span>
+              <h4 class="fw-bold">Mes Conversations
+                <?php if ($dashboard['unread_count'] > 0): ?>
+                  <span class="badge ms-1" style="background:var(--sb-orange);"><?= $dashboard['unread_count'] ?></span>
+                <?php endif; ?>
+              </h4>
+              <p class="text-muted">Reprenez vos discussions là où vous les avez laissées.</p>
+              <span class="small fw-semibold" style="color:var(--sb-blue);">Ouvrir <i class="bi bi-arrow-right ms-1"></i></span>
+            </a>
+          </div>
+
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <a href="profil.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
+              <span class="step-num"><i class="bi bi-person-circle"></i></span>
+              <h4 class="fw-bold">Mon Profil</h4>
+              <div class="d-flex align-items-center gap-2 mb-2">
+                <div class="progress flex-grow-1" style="height:6px;">
+                  <div class="progress-bar" role="progressbar" style="width:<?= $dashboard['profile_pct'] ?>%; background: linear-gradient(90deg, var(--sb-blue), var(--sb-orange));"></div>
+                </div>
+                <small class="fw-semibold"><?= $dashboard['profile_pct'] ?>%</small>
+              </div>
+              <p class="text-muted small mb-2"><?= $dashboard['profile_pct'] >= 80 ? 'Profil bien renseigné !' : 'Complétez pour gagner en visibilité.' ?></p>
+              <span class="small fw-semibold" style="color:var(--sb-orange);">Modifier <i class="bi bi-arrow-right ms-1"></i></span>
+            </a>
+          </div>
+
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <a href="../chat/new_conversation.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
+              <span class="step-num" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="bi bi-plus-circle-fill"></i></span>
+              <h4 class="fw-bold">Nouvelle conversation</h4>
+              <p class="text-muted"><?= $isClient ? 'Contactez un freelancer pour démarrer un projet.' : 'Démarrez une discussion avec un client.' ?></p>
+              <span class="small fw-semibold" style="color:#10b981;">Démarrer <i class="bi bi-arrow-right ms-1"></i></span>
+            </a>
+          </div>
+
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
+            <a href="#talents" class="step-card text-decoration-none" style="display:block; color:inherit;">
+              <span class="step-num" style="background: linear-gradient(135deg, #7c3aed, #a855f7);"><i class="bi bi-stars"></i></span>
+              <h4 class="fw-bold"><?= $isClient ? 'Trouver un talent' : 'Voir la communauté' ?></h4>
+              <p class="text-muted"><?= $isClient ? 'Parcourez les freelancers disponibles.' : 'Découvrez les autres freelancers SkillBridge.' ?></p>
+              <span class="small fw-semibold" style="color:#7c3aed;">Découvrir <i class="bi bi-arrow-right ms-1"></i></span>
+            </a>
+          </div>
+
+        </div>
       </div>
-      <div class="bg-white border rounded-4 p-2" style="box-shadow:0 4px 12px rgba(15,23,42,.04);">
+    </section>
+
+    <!-- ================== CONVERSATIONS RÉCENTES ================== -->
+    <section class="section-pad">
+      <div class="container">
+        <div class="text-center mb-5" data-aos="fade-up">
+          <span class="section-tag" style="background: rgba(37,99,235,.08); color: var(--sb-blue);">Activité récente</span>
+          <h2 class="section-title display-5 mb-3">Conversations récentes</h2>
+          <p class="lead text-muted">Vos derniers échanges sur SkillBridge.</p>
+        </div>
+
         <?php if (empty($dashboard['conversations'])): ?>
-          <div class="text-center py-5 text-muted">
-            <i class="bi bi-chat-square-dots" style="font-size:2.5rem; color:#cbd5e1;"></i>
-            <p class="mt-2 mb-2">Aucune conversation pour l'instant.</p>
-            <a href="../chat/new_conversation.php" class="btn btn-sm btn-primary">Démarrer une conversation</a>
+          <div class="text-center py-5" data-aos="fade-up">
+            <div style="width:96px;height:96px;border-radius:24px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;">
+              <i class="bi bi-chat-square-dots" style="font-size:2.5rem; color:#94a3b8;"></i>
+            </div>
+            <h4 class="fw-bold">Aucune conversation pour l'instant</h4>
+            <p class="text-muted mb-3">Démarrez votre première discussion sur SkillBridge.</p>
+            <a href="../chat/new_conversation.php" class="btn btn-lg" style="background:linear-gradient(135deg, var(--sb-orange), var(--sb-blue));color:#fff;border-radius:14px;padding:12px 28px;font-weight:600;">
+              <i class="bi bi-plus-circle me-1"></i> Démarrer une conversation
+            </a>
           </div>
         <?php else: ?>
-          <?php foreach ($dashboard['conversations'] as $c):
-              $isU1     = ((int)$c['user1_id'] === $userId);
-              $otherFn  = $isU1 ? $c['u2_prenom'] : $c['u1_prenom'];
-              $otherLn  = $isU1 ? $c['u2_nom']    : $c['u1_nom'];
-              $otherPh  = $isU1 ? $c['u2_photo']  : $c['u1_photo'];
-              $otherFul = trim($otherFn . ' ' . $otherLn);
-              $avatarSrc = avatarUrl($otherPh, $otherFul, '2563EB', 96);
-              $preview = $c['last_message'] ?: 'Aucun message pour l\'instant.';
-              $unseen  = (int)$c['unseen'];
-          ?>
-            <a href="../chat/chat.php?id=<?= (int)$c['id_conversation'] ?>" class="conv-row">
-              <img src="<?= $avatarSrc ?>" alt="<?= htmlspecialchars($otherFul) ?>" class="avatar">
-              <div class="flex-grow-1 min-width-0">
-                <div class="name"><?= htmlspecialchars($otherFul) ?></div>
-                <div class="preview"><?= htmlspecialchars(mb_substr($preview, 0, 80)) ?></div>
+          <div class="row g-4">
+            <?php foreach ($dashboard['conversations'] as $c):
+                $isU1     = ((int)$c['user1_id'] === $userId);
+                $otherFn  = $isU1 ? $c['u2_prenom'] : $c['u1_prenom'];
+                $otherLn  = $isU1 ? $c['u2_nom']    : $c['u1_nom'];
+                $otherPh  = $isU1 ? $c['u2_photo']  : $c['u1_photo'];
+                $otherFul = trim($otherFn . ' ' . $otherLn);
+                $avatarSrc = avatarUrl($otherPh, $otherFul, '2563EB', 96);
+                $preview = $c['last_message'] ?: 'Aucun message pour l\'instant.';
+                $unseen  = (int)$c['unseen'];
+            ?>
+              <div class="col-md-6" data-aos="fade-up">
+                <a href="../chat/chat.php?id=<?= (int)$c['id_conversation'] ?>"
+                   class="step-card text-decoration-none d-flex gap-3 align-items-start"
+                   style="display:flex; color:inherit;">
+                  <img src="<?= $avatarSrc ?>" alt="<?= htmlspecialchars($otherFul) ?>"
+                       style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;">
+                  <div class="flex-grow-1 min-width-0">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                      <h5 class="fw-bold mb-0"><?= htmlspecialchars($otherFul) ?></h5>
+                      <?php if ($unseen > 0): ?>
+                        <span class="badge" style="background:var(--sb-orange);"><?= $unseen ?> non lu<?= $unseen > 1 ? 's' : '' ?></span>
+                      <?php endif; ?>
+                    </div>
+                    <p class="text-muted small mb-2" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                      <?= htmlspecialchars(mb_substr($preview, 0, 80)) ?>
+                    </p>
+                    <span class="small fw-semibold" style="color:var(--sb-blue);">
+                      Ouvrir la conversation <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                  </div>
+                </a>
               </div>
-              <?php if ($unseen > 0): ?><span class="unseen"><?= $unseen ?></span><?php endif; ?>
-              <i class="bi bi-chevron-right text-muted"></i>
+            <?php endforeach; ?>
+          </div>
+          <div class="text-center mt-4">
+            <a href="../chat/conversations.php" class="text-decoration-none fw-semibold" style="color:var(--sb-blue);">
+              Voir toutes mes conversations <i class="bi bi-arrow-right ms-1"></i>
             </a>
-          <?php endforeach; ?>
+          </div>
         <?php endif; ?>
       </div>
     </section>
 
-    <!-- Featured freelancers (only for clients/admin, never freelancer's self-list) -->
+    <!-- ================== TALENTS RECOMMANDÉS ================== -->
     <?php if (!empty($featured)): ?>
-      <section class="container mb-5" id="talents">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="section-title h3 mb-0"><i class="bi bi-stars me-2 text-warning"></i> <?= $isClient ? 'Talents recommandés pour vous' : 'Autres freelancers SkillBridge' ?></h2>
-        </div>
-        <div class="row g-4">
-          <?php foreach ($featured as $f):
-              $skills    = $pickSkills($f['competences'] ?? '', 3);
-              $bio       = htmlspecialchars(mb_substr((string)($f['bio'] ?? ''), 0, 110));
-              $location  = htmlspecialchars((string)($f['localisation'] ?? ''));
-              $fullName  = htmlspecialchars(trim($f['prenom'] . ' ' . $f['nom']));
-              $avatar    = avatarUrl($f['photo'], $fullName, 'F97316', 168);
-          ?>
-            <div class="col-md-6 col-lg-4" data-aos="fade-up">
-              <div class="talent-card">
-                <div class="talent-banner"></div>
-                <img src="<?= $avatar ?>" alt="<?= $fullName ?>" class="talent-avatar">
-                <div class="text-center px-3 pb-3 d-flex flex-column flex-grow-1">
-                  <h5 class="mb-1"><?= $fullName ?></h5>
-                  <?php if ($location): ?>
-                    <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <?= $location ?></div>
-                  <?php endif; ?>
-                  <?php if ($bio): ?><p class="small text-muted mb-3"><?= $bio ?>...</p><?php endif; ?>
-                  <?php if (!empty($skills)): ?>
-                    <div class="mb-3">
-                      <?php foreach ($skills as $s): ?><span class="skill-chip"><?= htmlspecialchars($s) ?></span><?php endforeach; ?>
-                    </div>
-                  <?php endif; ?>
-                  <a href="../chat/new_conversation.php?user2=<?= (int)$f['id'] ?>" class="btn btn-sm w-100 mt-auto" style="background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange)); color:#fff; font-weight:600;">
-                    <i class="bi bi-chat-dots me-1"></i> Contacter
-                  </a>
+      <section class="section-pad" id="talents" style="background:#f8fafc;">
+        <div class="container">
+          <div class="text-center mb-5" data-aos="fade-up">
+            <span class="section-tag" style="background: rgba(249,115,22,.1); color: var(--sb-orange);">Talents vérifiés</span>
+            <h2 class="section-title display-5 mb-3"><?= $isClient ? 'Talents recommandés pour vous' : 'Autres freelancers SkillBridge' ?></h2>
+            <p class="lead text-muted"><?= $isClient ? 'Quelques freelancers qui pourraient correspondre à vos besoins.' : 'Découvrez la communauté des freelancers SkillBridge.' ?></p>
+          </div>
+          <div class="row g-4">
+            <?php foreach ($featured as $f):
+                $skills    = $pickSkills($f['competences'] ?? '', 3);
+                $bio       = htmlspecialchars(mb_substr((string)($f['bio'] ?? ''), 0, 110));
+                $location  = htmlspecialchars((string)($f['localisation'] ?? ''));
+                $fullName  = htmlspecialchars(trim($f['prenom'] . ' ' . $f['nom']));
+                $avatar    = avatarUrl($f['photo'], $fullName, 'F97316', 168);
+            ?>
+              <div class="col-md-6 col-lg-4" data-aos="fade-up">
+                <div class="talent-card">
+                  <div class="talent-banner"></div>
+                  <img src="<?= $avatar ?>" alt="<?= $fullName ?>" class="talent-avatar">
+                  <div class="text-center px-3 pb-3 d-flex flex-column flex-grow-1">
+                    <h5 class="mb-1"><?= $fullName ?></h5>
+                    <?php if ($location): ?>
+                      <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <?= $location ?></div>
+                    <?php endif; ?>
+                    <?php if ($bio): ?><p class="small text-muted mb-3"><?= $bio ?>...</p><?php endif; ?>
+                    <?php if (!empty($skills)): ?>
+                      <div class="mb-3">
+                        <?php foreach ($skills as $s): ?><span class="skill-chip"><?= htmlspecialchars($s) ?></span><?php endforeach; ?>
+                      </div>
+                    <?php endif; ?>
+                    <a href="../chat/new_conversation.php?user2=<?= (int)$f['id'] ?>"
+                       class="btn btn-sm w-100 mt-auto"
+                       style="background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange)); color:#fff; font-weight:600; border-radius:10px;">
+                      <i class="bi bi-chat-dots me-1"></i> Contacter
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          <?php endforeach; ?>
+            <?php endforeach; ?>
+          </div>
         </div>
       </section>
     <?php endif; ?>
