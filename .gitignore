@@ -1,2 +1,6 @@
 database/
 .env
+uploads/chat/
+!uploads/chat/.gitkeep
+.DS_Store
+.playwright-mcp/

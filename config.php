@@ -46,7 +46,15 @@ if (!$useMySQL) {
                 role TEXT NOT NULL DEFAULT 'client' CHECK(role IN ('freelancer','client','admin')),
                 telephone VARCHAR(20),
                 photo VARCHAR(255),
-                date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP
+                date_inscription DATETIME DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER DEFAULT 1,
+                is_verified INTEGER DEFAULT 1,
+                verification_token VARCHAR(64),
+                reset_token VARCHAR(64),
+                reset_token_expiry DATETIME,
+                oauth_provider VARCHAR(20),
+                oauth_id VARCHAR(100),
+                face_descriptor TEXT
             );
 
             CREATE TABLE IF NOT EXISTS conversations (
@@ -100,6 +108,41 @@ if (!$useMySQL) {
                 price DECIMAL(10,2),
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (demande_id) REFERENCES demandes(id) ON DELETE CASCADE
+            );
+
+            -- Tables temps réel du module Chat (Gestion Chat)
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                type VARCHAR(50) NOT NULL,
+                conversation_id INTEGER,
+                message_id INTEGER,
+                payload_json TEXT,
+                is_read INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_notifications_user_unread
+                ON notifications(user_id, is_read, id);
+
+            CREATE TABLE IF NOT EXISTS typing_indicators (
+                conversation_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (conversation_id, user_id),
+                FOREIGN KEY (conversation_id) REFERENCES conversations(id_conversation) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS message_reactions (
+                message_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                emoji VARCHAR(20) NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (message_id, user_id),
+                FOREIGN KEY (message_id) REFERENCES messages(id_message) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
             );
         ");
 

@@ -97,7 +97,7 @@ class Utilisateur {
     // READ BY EMAIL
     // =====================
     public function readByEmail() {
-        $query = "SELECT id, nom, prenom, email, password, role, telephone, photo, is_active, date_inscription
+        $query = "SELECT id, nom, prenom, email, password, role, telephone, photo, is_active, is_verified, date_inscription
                   FROM " . $this->table . "
                   WHERE email = :email
                   LIMIT 1";

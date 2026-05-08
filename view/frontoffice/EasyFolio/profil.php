@@ -102,6 +102,7 @@ $bar_label = $percent < 40 ? 'Incomplet' : ($percent < 80 ? 'En cours' : ($perce
         <ul>
           <li><a href="index.html">Accueil</a></li>
           <li><a href="profil.php" class="active">Mon Profil</a></li>
+          <li><a href="../chat/conversations.php">Mes Conversations</a></li>
           <li><a href="../../../controller/utilisateurcontroller.php?action=logout">Déconnexion</a></li>
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
