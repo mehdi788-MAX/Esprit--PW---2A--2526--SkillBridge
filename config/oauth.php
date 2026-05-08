@@ -14,11 +14,17 @@ if (is_readable($envPath)) {
     }
 }
 
+// Racine du projet, auto-détectée — peut aussi être surchargée via OAUTH_BASE_URL
+// dans .env (utile si l'OAuth callback doit pointer vers un autre host que celui
+// du serveur PHP, par exemple en production).
+require_once __DIR__ . '/../config.php';
+$base = $env['OAUTH_BASE_URL'] ?? base_url();
+
 return [
     'google' => [
         'client_id'     => $env['GOOGLE_CLIENT_ID'] ?? '',
         'client_secret' => $env['GOOGLE_CLIENT_SECRET'] ?? '',
-        'redirect_uri'  => 'http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=google',
+        'redirect_uri'  => $base . '/controller/oauthcontroller.php?provider=google',
         'auth_url'      => 'https://accounts.google.com/o/oauth2/v2/auth',
         'token_url'     => 'https://oauth2.googleapis.com/token',
         'userinfo_url'  => 'https://www.googleapis.com/oauth2/v3/userinfo',
@@ -27,7 +33,7 @@ return [
     'github' => [
         'client_id'     => $env['GITHUB_CLIENT_ID'] ?? '',
         'client_secret' => $env['GITHUB_CLIENT_SECRET'] ?? '',
-        'redirect_uri'  => 'http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=github',
+        'redirect_uri'  => $base . '/controller/oauthcontroller.php?provider=github',
         'auth_url'      => 'https://github.com/login/oauth/authorize',
         'token_url'     => 'https://github.com/login/oauth/access_token',
         'userinfo_url'  => 'https://api.github.com/user',
@@ -36,7 +42,7 @@ return [
     'facebook' => [
         'client_id'     => $env['FACEBOOK_CLIENT_ID'] ?? '',
         'client_secret' => $env['FACEBOOK_CLIENT_SECRET'] ?? '',
-        'redirect_uri'  => 'http://localhost/SkillBridge/controller/oauthcontroller.php?provider=facebook',
+        'redirect_uri'  => $base . '/controller/oauthcontroller.php?provider=facebook',
         'auth_url'      => 'https://www.facebook.com/v18.0/dialog/oauth',
         'token_url'     => 'https://graph.facebook.com/v18.0/oauth/access_token',
         'userinfo_url'  => 'https://graph.facebook.com/me?fields=id,name,email,first_name,last_name',
@@ -45,7 +51,7 @@ return [
     'linkedin' => [
         'client_id'     => $env['LINKEDIN_CLIENT_ID'] ?? '',
         'client_secret' => $env['LINKEDIN_CLIENT_SECRET'] ?? '',
-        'redirect_uri'  => 'http://localhost/SkillBridge/controller/oauthcontroller.php?provider=linkedin',
+        'redirect_uri'  => $base . '/controller/oauthcontroller.php?provider=linkedin',
         'auth_url'      => 'https://www.linkedin.com/oauth/v2/authorization',
         'token_url'     => 'https://www.linkedin.com/oauth/v2/accessToken',
         'userinfo_url'  => 'https://api.linkedin.com/v2/userinfo',
@@ -54,7 +60,7 @@ return [
     'discord' => [
         'client_id'     => $env['DISCORD_CLIENT_ID'] ?? '',
         'client_secret' => $env['DISCORD_CLIENT_SECRET'] ?? '',
-        'redirect_uri'  => 'http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=discord',
+        'redirect_uri'  => $base . '/controller/oauthcontroller.php?provider=discord',
         'auth_url'      => 'https://discord.com/oauth2/authorize',
         'token_url'     => 'https://discord.com/api/oauth2/token',
         'userinfo_url'  => 'https://discord.com/api/users/@me',
