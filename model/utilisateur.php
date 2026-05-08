@@ -25,9 +25,11 @@ class Utilisateur {
     // CREATE
     // =====================
     public function create() {
+        // PHP date() au lieu de NOW() pour compatibilité SQLite ↔ MySQL
+        $now = date('Y-m-d H:i:s');
         $query = "INSERT INTO " . $this->table . "
                   (nom, prenom, email, password, role, telephone, date_inscription)
-                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, NOW())";
+                  VALUES (:nom, :prenom, :email, :password, :role, :telephone, :date_inscription)";
  
         $stmt = $this->conn->prepare($query);
  
@@ -44,7 +46,8 @@ class Utilisateur {
         $stmt->bindParam(':password',  $this->password);
         $stmt->bindParam(':role',      $this->role);
         $stmt->bindParam(':telephone', $this->telephone);
- 
+        $stmt->bindParam(':date_inscription', $now);
+
         if ($stmt->execute()) {
             $this->id = $this->conn->lastInsertId();
             return true;
@@ -328,12 +331,15 @@ class Utilisateur {
     }
 
     public function readByResetToken($token) {
+        // PHP date() au lieu de NOW() pour compatibilité SQLite ↔ MySQL
         $query = "SELECT * FROM " . $this->table . "
                   WHERE reset_token = :token
-                  AND reset_token_expiry > NOW()
+                  AND reset_token_expiry > :now
                   LIMIT 1";
+        $now = date('Y-m-d H:i:s');
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':token', $token);
+        $stmt->bindParam(':now',   $now);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }

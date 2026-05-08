@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($utilisateurModel->emailExists()) {
             $token     = bin2hex(random_bytes(32));
             $expiry    = date('Y-m-d H:i:s', strtotime('+1 hour'));
-            $resetLink = 'http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/reset-password.php?token=' . $token;
+            $resetLink = base_url() . '/view/frontoffice/EasyFolio/reset-password.php?token=' . $token;
 
             $utilisateurModel->setResetToken($token, $expiry);
 

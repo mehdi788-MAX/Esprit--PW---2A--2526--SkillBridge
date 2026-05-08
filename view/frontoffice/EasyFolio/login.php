@@ -77,6 +77,8 @@
 
                 <?php
                 session_start();
+                require_once __DIR__ . '/../../../config.php';
+                $BASE    = base_url(); // racine portable
                 $error   = $_SESSION['error'] ?? null;
                 $success = $_SESSION['success'] ?? null;
                 unset($_SESSION['error'], $_SESSION['success']);
@@ -166,17 +168,17 @@
                     <!-- Boutons OAuth -->
                     <div class="col-12 d-flex flex-column gap-2">
 
-                      <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=google"
+                      <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=google"
                          class="btn btn-outline-danger w-100">
                         <i class="bi bi-google me-2"></i> Continuer avec Google
                       </a>
 
-                      <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=github"
+                      <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=github"
                          class="btn btn-outline-dark w-100">
                         <i class="bi bi-github me-2"></i> Continuer avec GitHub
                       </a>
 
-                      <a href="http://localhost/skillbridgeutilisateur/controller/oauthcontroller.php?provider=discord"
+                      <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=discord"
                          class="btn w-100" style="border:1px solid #5865F2; color:#5865F2;">
                         <i class="bi bi-discord me-2"></i> Continuer avec Discord
                       </a>
@@ -412,7 +414,7 @@
     const formData = new FormData();
     formData.append('email', email);
 
-    const res  = await fetch('http://localhost/skillbridgeutilisateur/controller/get_photo.php', { method: 'POST', body: formData });
+    const res  = await fetch('<?= $BASE ?>/controller/get_photo.php', { method: 'POST', body: formData });
     const data = await res.json();
 
     if (!data.success) {
@@ -469,7 +471,7 @@
       loginData.append('user_nom',  data.user_nom);
       loginData.append('user_role', data.user_role);
 
-      const loginRes  = await fetch('http://localhost/skillbridgeutilisateur/controller/face_login.php', { method: 'POST', body: loginData });
+      const loginRes  = await fetch('<?= $BASE ?>/controller/face_login.php', { method: 'POST', body: loginData });
       const loginJson = await loginRes.json();
 
       if (loginJson.success) {
