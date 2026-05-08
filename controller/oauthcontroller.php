@@ -165,42 +165,38 @@ function normalizeEmail($userInfo, $provider, $token) {
 }
 
 function normalizePrenom($userInfo, $provider) {
+    if ($provider === 'github') {
+        // Si l'utilisateur a un display name, on l'utilise.
+        // Sinon (souvent null), on retombe sur le 'login' (username GitHub).
+        $name = $userInfo['name'] ?? '';
+        if ($name !== '') {
+            return explode(' ', $name)[0] ?? '';
+        }
+        return $userInfo['login'] ?? '';
+    }
     return match($provider) {
-        'google'   => $userInfo['given_name'] ?? '',
-        'github'   => explode(' ', $userInfo['name'] ?? '')[0] ?? '',
-        'facebook' => $userInfo['first_name'] ?? '',
-        'linkedin' => $userInfo['given_name'] ?? '',
+        'google'   => $userInfo['given_name']  ?? '',
+        'facebook' => $userInfo['first_name']  ?? '',
+        'linkedin' => $userInfo['given_name']  ?? '',
+        'discord'  => $userInfo['global_name'] ?? ($userInfo['username'] ?? ''),
         default    => '',
     };
 }
 
 function normalizeNom($userInfo, $provider) {
+    if ($provider === 'github') {
+        // Last name uniquement si display name multi-mots, sinon vide
+        $name = $userInfo['name'] ?? '';
+        if ($name !== '' && str_contains($name, ' ')) {
+            return explode(' ', $name, 2)[1] ?? '';
+        }
+        return ''; // pas de nom de famille fiable côté GitHub
+    }
     return match($provider) {
         'google'   => $userInfo['family_name'] ?? '',
-        'github'   => explode(' ', $userInfo['name'] ?? '', 2)[1] ?? '',
-        'facebook' => $userInfo['last_name'] ?? '',
+        'facebook' => $userInfo['last_name']   ?? '',
         'linkedin' => $userInfo['family_name'] ?? '',
+        'discord'  => '',
         default    => '',
     };
-    function normalizePrenom($userInfo, $provider) {
-    return match($provider) {
-        'google'   => $userInfo['given_name'] ?? '',
-        'github'   => explode(' ', $userInfo['name'] ?? '')[0] ?? '',
-        'facebook' => $userInfo['first_name'] ?? '',
-        'linkedin' => $userInfo['given_name'] ?? '',
-        'discord'  => $userInfo['username'] ?? '',  // ajoute cette ligne
-        default    => '',
-    };
-}
-
-function normalizeNom($userInfo, $provider) {
-    return match($provider) {
-        'google'   => $userInfo['family_name'] ?? '',
-        'github'   => explode(' ', $userInfo['name'] ?? '', 2)[1] ?? '',
-        'facebook' => $userInfo['last_name'] ?? '',
-        'linkedin' => $userInfo['family_name'] ?? '',
-        'discord'  => $userInfo['global_name'] ?? '',  // ajoute cette ligne
-        default    => '',
-    };
-}
 }
