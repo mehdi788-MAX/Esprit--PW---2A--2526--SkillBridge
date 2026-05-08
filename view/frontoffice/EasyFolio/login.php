@@ -79,6 +79,15 @@
                 session_start();
                 require_once __DIR__ . '/../../../config.php';
                 $BASE    = base_url(); // racine portable
+                // Charger la config OAuth et déterminer les providers disponibles
+                // (un provider sans client_id dans .env est masqué pour ne pas
+                //  afficher de boutons cassés.)
+                $oauthCfg  = @require __DIR__ . '/../../../config/oauth.php';
+                $oauthHas  = function ($p) use ($oauthCfg) {
+                    return is_array($oauthCfg) && !empty($oauthCfg[$p]['client_id']);
+                };
+                $hasAnyOAuth = $oauthHas('google') || $oauthHas('github') || $oauthHas('discord');
+
                 $error   = $_SESSION['error'] ?? null;
                 $success = $_SESSION['success'] ?? null;
                 unset($_SESSION['error'], $_SESSION['success']);
@@ -160,30 +169,38 @@
                       <button type="submit" class="btn btn-submit w-100">Se connecter</button>
                     </div>
 
+                    <?php if ($hasAnyOAuth): ?>
                     <!-- Séparateur -->
                     <div class="col-12 text-center my-2">
                       <span class="text-muted" style="font-size:0.9rem;">— ou continuer avec —</span>
                     </div>
 
-                    <!-- Boutons OAuth -->
+                    <!-- Boutons OAuth (masqués si client_id manquant dans .env) -->
                     <div class="col-12 d-flex flex-column gap-2">
 
+                      <?php if ($oauthHas('google')): ?>
                       <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=google"
                          class="btn btn-outline-danger w-100">
                         <i class="bi bi-google me-2"></i> Continuer avec Google
                       </a>
+                      <?php endif; ?>
 
+                      <?php if ($oauthHas('github')): ?>
                       <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=github"
                          class="btn btn-outline-dark w-100">
                         <i class="bi bi-github me-2"></i> Continuer avec GitHub
                       </a>
+                      <?php endif; ?>
 
+                      <?php if ($oauthHas('discord')): ?>
                       <a href="<?= $BASE ?>/controller/oauthcontroller.php?provider=discord"
                          class="btn w-100" style="border:1px solid #5865F2; color:#5865F2;">
                         <i class="bi bi-discord me-2"></i> Continuer avec Discord
                       </a>
+                      <?php endif; ?>
 
                     </div>
+                    <?php endif; ?>
 
                     <!-- Bouton reconnaissance faciale -->
                     <div class="col-12 text-center mt-2">
