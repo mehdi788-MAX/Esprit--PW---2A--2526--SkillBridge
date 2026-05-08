@@ -48,14 +48,16 @@ $templateBase = '../EasyFolio';
     <!-- Header -->
     <header id="header" class="header d-flex align-items-center sticky-top">
         <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-            <a href="#" class="logo d-flex align-items-center me-auto me-xl-0">
+            <a href="../EasyFolio/index.php" class="logo d-flex align-items-center me-auto me-xl-0">
                 <h1 class="sitename">SkillBridge</h1>
             </a>
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="<?= $templateBase ?>/index.html">Accueil</a></li>
+                    <li><a href="<?= $templateBase ?>/index.php">Accueil</a></li>
                     <li><a href="conversations.php" class="active">Mes Conversations</a></li>
                     <li><a href="new_conversation.php">Nouveau Chat</a></li>
+                    <li><a href="../EasyFolio/profil.php">Mon Profil</a></li>
+                    <li><a href="<?= base_url() ?>/controller/utilisateurcontroller.php?action=logout">Déconnexion</a></li>
                     <li id="bellSlot" style="display:flex;align-items:center;"></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -69,7 +71,7 @@ $templateBase = '../EasyFolio';
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h2>Mes Conversations</h2>
-                        <p class="text-muted">Bienvenue, Sarra Trabelsi</p>
+                        <p class="text-muted">Bienvenue, <?= htmlspecialchars($_SESSION['user_nom'] ?? 'sur SkillBridge') ?></p>
                     </div>
                     <a href="new_conversation.php" class="btn btn-primary">
                         <i class="bi bi-plus-circle"></i> Nouvelle Conversation

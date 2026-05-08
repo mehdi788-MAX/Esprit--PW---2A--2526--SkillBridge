@@ -104,12 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <header id="header" class="header d-flex align-items-center sticky-top">
     <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-      <a href="index.html" class="logo d-flex align-items-center me-auto me-xl-0">
+      <a href="index.php" class="logo d-flex align-items-center me-auto me-xl-0">
         <h1 class="sitename">SkillBridge</h1>
       </a>
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="index.html">Accueil</a></li>
+          <li><a href="index.php">Accueil</a></li>
           <li><a href="login.php">Connexion</a></li>
         </ul>
       </nav>
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <footer id="footer" class="footer">
     <div class="container">
       <div class="copyright text-center">
-        <p>© <strong class="px-1 sitename">SkillBridge</strong> All Rights Reserved</p>
+        <p>© <strong class="px-1 sitename">SkillBridge</strong> Tous droits réservés</p>
       </div>
     </div>
   </footer>

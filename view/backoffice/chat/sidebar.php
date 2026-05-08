@@ -8,7 +8,7 @@ $tpl = '..';
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
     <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?= $tpl ?>/index.html">
+    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="<?= $tpl ?>/index.php">
         <div class="sidebar-brand-text mx-3">Skill <sup>Bridge</sup></div>
     </a>
 

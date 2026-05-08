@@ -62,12 +62,12 @@ $templateBase = '../EasyFolio';
 <body class="index-page">
     <header id="header" class="header d-flex align-items-center sticky-top">
         <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-            <a href="#" class="logo d-flex align-items-center me-auto me-xl-0">
+            <a href="../EasyFolio/index.php" class="logo d-flex align-items-center me-auto me-xl-0">
                 <h1 class="sitename">SkillBridge</h1>
             </a>
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="<?= $templateBase ?>/index.html">Accueil</a></li>
+                    <li><a href="<?= $templateBase ?>/index.php">Accueil</a></li>
                     <li><a href="conversations.php">Mes Conversations</a></li>
                     <li><a href="new_conversation.php">Nouveau Chat</a></li>
                 </ul>
