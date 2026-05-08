@@ -227,6 +227,66 @@ switch ($action) {
         }
         exit;
 
+    // =====================================================
+    // OAUTH — finalisation : choix du rôle (Client / Freelancer)
+    // Création du compte avec le profil OAuth en attente.
+    // =====================================================
+    case 'oauth_complete_role':
+        if (!isset($_SESSION['pending_oauth'])) {
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
+            exit;
+        }
+        $pending = $_SESSION['pending_oauth'];
+        $role    = $_POST['role'] ?? '';
+
+        if (!in_array($role, ['client', 'freelancer'], true)) {
+            $_SESSION['error'] = "Veuillez choisir un rôle valide (Client ou Freelancer).";
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/oauth_role.php');
+            exit;
+        }
+
+        // Vérifier qu'aucun compte n'existe déjà avec cet email
+        // (sécurité : un autre flux a pu créer le compte entre-temps)
+        $utilisateur->email = $pending['email'];
+        if ($utilisateur->emailExists()) {
+            unset($_SESSION['pending_oauth']);
+            $_SESSION['error'] = "Un compte existe déjà avec cet email.";
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
+            exit;
+        }
+
+        $utilisateur->nom       = $pending['nom']    ?: '';
+        $utilisateur->prenom    = $pending['prenom'] ?: '';
+        $utilisateur->email     = $pending['email'];
+        // Mot de passe aléatoire — l'utilisateur se reconnecte via OAuth
+        $utilisateur->password  = bin2hex(random_bytes(32));
+        $utilisateur->role      = $role;
+        $utilisateur->telephone = '';
+
+        if ($utilisateur->create()) {
+            // Compte vérifié d'office (le provider OAuth a déjà confirmé l'email)
+            $pdo->prepare("UPDATE utilisateurs SET is_verified = 1, is_active = 1 WHERE id = ?")
+                ->execute([$utilisateur->id]);
+
+            $profil->utilisateur_id = $utilisateur->id;
+            $profil->bio            = '';
+            $profil->competences    = '';
+            $profil->localisation   = '';
+            $profil->site_web       = '';
+            $profil->create();
+
+            $_SESSION['user_id']   = $utilisateur->id;
+            $_SESSION['user_nom']  = trim($utilisateur->prenom . ' ' . $utilisateur->nom);
+            $_SESSION['user_role'] = $role;
+            unset($_SESSION['pending_oauth']);
+
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/profil.php');
+        } else {
+            $_SESSION['error'] = "Erreur lors de la création du compte.";
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/oauth_role.php');
+        }
+        exit;
+
     // =====================
     // MODIFIER PROFIL
     // =====================

@@ -87,33 +87,25 @@ if ($existing) {
     $_SESSION['user_id']   = $existing['id'];
     $_SESSION['user_nom']  = $existing['prenom'] . ' ' . $existing['nom'];
     $_SESSION['user_role'] = $existing['role'];
-} else {
-    $utilisateur->nom       = $nom ?: 'Utilisateur';
-    $utilisateur->prenom    = $prenom ?: ucfirst($provider);
-    $utilisateur->email     = $email;
-    $utilisateur->password  = bin2hex(random_bytes(32));
-    $utilisateur->role      = 'client';
-    $utilisateur->telephone = '';
 
-    if ($utilisateur->create()) {
-        $profil->utilisateur_id = $utilisateur->id;
-        $profil->bio            = '';
-        $profil->competences    = '';
-        $profil->localisation   = '';
-        $profil->site_web       = '';
-        $profil->create();
-
-        $_SESSION['user_id']   = $utilisateur->id;
-        $_SESSION['user_nom']  = $utilisateur->prenom . ' ' . $utilisateur->nom;
-        $_SESSION['user_role'] = 'client';
+    if ($existing['role'] === 'admin') {
+        header('Location: ../view/backoffice/users_list.php');
     } else {
-        $_SESSION['error'] = "Erreur lors de la création du compte.";
-        header('Location: ../view/frontoffice/EasyFolio/login.php');
-        exit;
+        header('Location: ../view/frontoffice/EasyFolio/profil.php');
     }
+    exit;
 }
 
-header('Location: ../view/frontoffice/EasyFolio/profil.php');
+// Nouveau compte OAuth : on ne crée PAS l'utilisateur ici.
+// On stocke le profil OAuth en session et on redirige vers la page
+// de choix du rôle (Client / Freelancer) pour finaliser l'inscription.
+$_SESSION['pending_oauth'] = [
+    'provider' => $provider,
+    'email'    => $email,
+    'prenom'   => $prenom ?: ($userInfo['login'] ?? ucfirst($provider)),
+    'nom'      => $nom ?: '',
+];
+header('Location: ../view/frontoffice/EasyFolio/oauth_role.php');
 exit;
 
 // =====================
