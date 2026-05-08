@@ -18,8 +18,8 @@ $_SESSION['user_nom']  = $user_nom;
 $_SESSION['user_role'] = $user_role;
 
 $redirect = $user_role === 'admin'
-    ? 'http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php'
-    : 'http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/profil.php';
+    ? '' . base_url() . '/view/backoffice/users_list.php'
+    : '' . base_url() . '/view/frontoffice/EasyFolio/profil.php';
 
 echo json_encode(['success' => true, 'redirect' => $redirect]);
 exit;

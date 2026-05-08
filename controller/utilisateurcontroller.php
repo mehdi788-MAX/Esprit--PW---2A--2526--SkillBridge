@@ -86,7 +86,7 @@ switch ($action) {
                 ->execute([$token, $utilisateur->id]);
 
             // Envoyer email de vérification
-            $verifyLink = 'http://localhost/skillbridgeutilisateur/controller/verify_email.php?token=' . $token;
+            $verifyLink = '' . base_url() . '/controller/verify_email.php?token=' . $token;
             $mail = new PHPMailer(true);
                 try {
     $mail->isSMTP();
@@ -135,10 +135,10 @@ switch ($action) {
                 
 
             $_SESSION['success'] = "Compte créé ! Vérifiez votre email pour activer votre compte.";
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
         } else {
             $_SESSION['error'] = "Erreur lors de la création du compte.";
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/register.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/register.php');
         }
         exit;
 
@@ -151,7 +151,7 @@ switch ($action) {
 
         if (empty($email) || empty($password)) {
             $_SESSION['error'] = "Email et mot de passe sont obligatoires.";
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
             exit;
         }
 
@@ -174,7 +174,7 @@ switch ($action) {
             $remaining = 900 - (time() - $attempts['time']);
             $minutes   = ceil($remaining / 60);
             $_SESSION['error'] = "Trop de tentatives échouées. Réessayez dans {$minutes} minute(s).";
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
             exit;
         }
 
@@ -188,13 +188,13 @@ switch ($action) {
 
             if (!$user['is_active']) {
                 $_SESSION['error'] = "desactivated";
-                header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+                header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
                 exit;
             }
 
             if (!$user['is_verified']) {
                 $_SESSION['error'] = "unverified";
-                header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+                header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
                 exit;
             }
 
@@ -203,9 +203,9 @@ switch ($action) {
             $_SESSION['user_role'] = $user['role'];
 
             if ($user['role'] === 'admin') {
-                header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+                header('Location: ' . base_url() . '/view/backoffice/users_list.php');
             } else {
-                header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/profil.php');
+                header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/profil.php');
             }
 
         } else {
@@ -223,7 +223,7 @@ switch ($action) {
                 $_SESSION['error'] = "Trop de tentatives échouées. Réessayez dans 15 minute(s).";
             }
 
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
         }
         exit;
 
@@ -232,7 +232,7 @@ switch ($action) {
     // =====================
     case 'update_profile':
         if (!isset($_SESSION['user_id'])) {
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
             exit;
         }
 
@@ -278,7 +278,7 @@ switch ($action) {
             $_SESSION['error'] = "Erreur lors de la mise à jour.";
         }
 
-        header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/profil.php');
+        header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/profil.php');
         exit;
 
     // =====================
@@ -286,14 +286,14 @@ switch ($action) {
     // =====================
     case 'toggle_active':
         if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
             exit;
         }
 
         $id = filter_var($_POST['id'] ?? 0, FILTER_VALIDATE_INT);
         if (!$id) {
             $_SESSION['error'] = "ID invalide.";
-            header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+            header('Location: ' . base_url() . '/view/backoffice/users_list.php');
             exit;
         }
 
@@ -308,7 +308,7 @@ switch ($action) {
             $_SESSION['error'] = "Erreur lors de la modification.";
         }
 
-        header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+        header('Location: ' . base_url() . '/view/backoffice/users_list.php');
         exit;
 
     // =====================
@@ -316,14 +316,14 @@ switch ($action) {
     // =====================
     case 'delete':
         if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'admin') {
-            header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+            header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
             exit;
         }
 
         $id = filter_var($_POST['id'] ?? 0, FILTER_VALIDATE_INT);
         if (!$id) {
             $_SESSION['error'] = "ID invalide.";
-            header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+            header('Location: ' . base_url() . '/view/backoffice/users_list.php');
             exit;
         }
 
@@ -337,7 +337,7 @@ switch ($action) {
             $_SESSION['error'] = "Erreur lors de la suppression.";
         }
 
-        header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+        header('Location: ' . base_url() . '/view/backoffice/users_list.php');
         exit;
 
     // =====================
@@ -345,11 +345,11 @@ switch ($action) {
     // =====================
     case 'logout':
         session_destroy();
-        header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+        header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
         exit;
 
     default:
-        header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+        header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
         exit;
 }
 ?>

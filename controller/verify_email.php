@@ -6,7 +6,7 @@ $token = $_GET['token'] ?? '';
 
 if (empty($token)) {
     $_SESSION['error'] = "Token invalide.";
-    header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+    header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
     exit;
 }
 
@@ -16,7 +16,7 @@ $user = $stmt->fetch();
 
 if (!$user) {
     $_SESSION['error'] = "Lien de vérification invalide ou déjà utilisé.";
-    header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/login.php');
+    header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/login.php');
     exit;
 }
 
@@ -33,8 +33,8 @@ $_SESSION['success'] = "✅ Email vérifié ! Bienvenue sur SkillBridge.";
 
 // Rediriger selon le rôle
 if ($user['role'] === 'admin') {
-    header('Location: http://localhost/skillbridgeutilisateur/view/backoffice/users_list.php');
+    header('Location: ' . base_url() . '/view/backoffice/users_list.php');
 } else {
-    header('Location: http://localhost/skillbridgeutilisateur/view/frontoffice/EasyFolio/profil.php');
+    header('Location: ' . base_url() . '/view/frontoffice/EasyFolio/profil.php');
 }
 exit;

@@ -1,4 +1,27 @@
 <?php
+// =====================================================
+// URL helper — détecte automatiquement la racine du projet
+// (ex. http://localhost/skillbridgeutilisateur OU
+//      http://localhost/MonProjet OU
+//      http://localhost:8000)
+// → permet de déployer le projet dans n'importe quel
+//   sous-dossier d'XAMPP sans modifier le code.
+// =====================================================
+if (!function_exists('base_url')) {
+    function base_url() {
+        static $cached = null;
+        if ($cached !== null) return $cached;
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host     = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $script   = $_SERVER['SCRIPT_NAME'] ?? '';
+        // Tronque tout ce qui suit /controller/, /view/, /api/ pour
+        // remonter à la racine logique du projet.
+        $base     = preg_replace('#/(controller|view|api|public)(/.*)?$#i', '', $script);
+        if ($base === $script) $base = '';
+        return $cached = $protocol . '://' . $host . $base;
+    }
+}
+
 // Database configuration - SkillBridge
 // Essayer MySQL (XAMPP) d'abord, sinon SQLite en fallback local
 $useMySQL = true;
