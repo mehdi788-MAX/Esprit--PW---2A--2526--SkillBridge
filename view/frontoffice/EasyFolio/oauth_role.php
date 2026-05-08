@@ -55,8 +55,7 @@ $providerIcon = [
         radial-gradient(1100px 600px at 110% -10%, rgba(249,115,22,.18), transparent 60%),
         radial-gradient(900px 500px at -10% 110%, rgba(37,99,235,.15), transparent 60%),
         #fff;
-      min-height: calc(100vh - 64px); padding: 60px 0;
-      display:flex; align-items:center;
+      min-height: calc(100vh - 64px); padding: 80px 0;
     }
     .section-tag {
       display:inline-flex; align-items:center; gap:6px;
@@ -227,5 +226,13 @@ $providerIcon = [
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
   <script src="assets/js/main.js"></script>
+  <script>
+    // Filet de sécurité : si main.js n'a pas initialisé AOS pour une raison
+    // quelconque, on l'initialise nous-mêmes pour que les éléments
+    // [data-aos] ne restent pas invisibles (opacity:0).
+    if (typeof AOS !== 'undefined') {
+      AOS.init({ duration: 600, once: true });
+    }
+  </script>
 </body>
 </html>
