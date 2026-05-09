@@ -78,6 +78,64 @@ if (!function_exists('uploads_url')) {
     }
 }
 
+/**
+ * URL "courte" de la page d'accueil — la racine du projet déclenche
+ * la redirection /index.php → frontoffice/EasyFolio/index.php.
+ * Usage : header('Location: ' . home_url())
+ */
+if (!function_exists('home_url')) {
+    function home_url() {
+        return base_url() . '/';
+    }
+}
+
+/**
+ * URL "courte" de l'espace administrateur — pointe vers /admin/index.php
+ * qui redirige vers backoffice/login.php (ou dashbord.php si déjà connecté).
+ * Usage : <a href="<?= admin_url() ?>">Admin</a>
+ */
+if (!function_exists('admin_url')) {
+    function admin_url() {
+        return base_url() . '/admin/';
+    }
+}
+
+/**
+ * Aperçu lisible d'un message de chat.
+ * Les pièces jointes sont stockées en base sous forme d'enveloppe JSON
+ * ({"kind":"file"|"image","url":"...","name":"...","mime":"..."}). On évite
+ * que ces JSON bruts apparaissent dans les listes "derniers échanges",
+ * la sidebar conversations ou les notifications — on les remplace par
+ * une libellé court avec icône texte.
+ */
+if (!function_exists('chat_message_preview')) {
+    function chat_message_preview($raw, $maxLen = 90) {
+        $raw = trim((string)$raw);
+        if ($raw === '') return '';
+        if ($raw !== '' && ($raw[0] === '{' || $raw[0] === '[')) {
+            $env = json_decode($raw, true);
+            if (is_array($env) && isset($env['kind'])) {
+                if ($env['kind'] === 'image') {
+                    return '📷 Photo';
+                }
+                if ($env['kind'] === 'file') {
+                    $name = trim((string)($env['name'] ?? 'Fichier'));
+                    if ($name === '') $name = 'Fichier';
+                    if (mb_strlen($name, 'UTF-8') > 40) {
+                        $name = mb_substr($name, 0, 37, 'UTF-8') . '…';
+                    }
+                    return '📎 ' . $name;
+                }
+            }
+        }
+        $clean = strip_tags($raw);
+        if (mb_strlen($clean, 'UTF-8') > $maxLen) {
+            $clean = mb_substr($clean, 0, $maxLen, 'UTF-8') . '…';
+        }
+        return $clean;
+    }
+}
+
 // Database configuration - SkillBridge
 // Essayer MySQL (XAMPP) d'abord, sinon SQLite en fallback local
 $useMySQL = true;
@@ -182,11 +240,13 @@ if (!$useMySQL) {
             CREATE TABLE IF NOT EXISTS propositions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 demande_id INTEGER NOT NULL,
+                user_id INTEGER,
                 freelancer_name VARCHAR(100),
                 message TEXT,
                 price DECIMAL(10,2),
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (demande_id) REFERENCES demandes(id) ON DELETE CASCADE
+                FOREIGN KEY (demande_id) REFERENCES demandes(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
             );
 
             -- Tables temps réel du module Chat (Gestion Chat)

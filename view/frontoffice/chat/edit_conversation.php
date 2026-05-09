@@ -150,7 +150,12 @@ $navAvatarSrc = !empty($myPhoto)
     <nav class="sb-nav">
       <a href="<?= $templateBase ?>/index.php">Accueil</a>
       <a href="conversations.php" class="active">Conversations</a>
-      <a href="new_conversation.php">Nouveau Chat</a>
+      <?php if (($currentUserRole ?? '') === 'freelancer'): ?>
+        <a href="<?= $templateBase ?>/browse_demandes.php">Demandes</a>
+        <a href="<?= $templateBase ?>/mes_propositions.php">Mes propositions</a>
+      <?php elseif (($currentUserRole ?? '') === 'client'): ?>
+        <a href="<?= $templateBase ?>/mes_demandes.php">Mes demandes</a>
+      <?php endif; ?>
     </nav>
     <div class="d-flex align-items-center gap-2">
       <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>

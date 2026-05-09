@@ -23,6 +23,12 @@ $total_unverified   = (int)$pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE 
 $total_conversations = (int)$pdo->query("SELECT COUNT(*) FROM conversations")->fetchColumn();
 $total_messages      = (int)$pdo->query("SELECT COUNT(*) FROM messages")->fetchColumn();
 
+// Marketplace KPIs (gestion demandes)
+$total_demandes      = (int)$pdo->query("SELECT COUNT(*) FROM demandes")->fetchColumn();
+$open_demandes       = (int)$pdo->query("SELECT COUNT(*) FROM demandes WHERE deadline >= '" . $today . "'")->fetchColumn();
+$total_propositions  = (int)$pdo->query("SELECT COUNT(*) FROM propositions")->fetchColumn();
+$avg_proposition_price = (float)$pdo->query("SELECT COALESCE(AVG(price), 0) FROM propositions")->fetchColumn();
+
 // ============ TODAY KPIs ============
 $today_signups = (int)$pdo->query("SELECT COUNT(*) FROM utilisateurs WHERE DATE(date_inscription) = '" . $today . "'")->fetchColumn();
 $today_messages = (int)$pdo->query("SELECT COUNT(*) FROM messages WHERE DATE(date_envoi) = '" . $today . "'")->fetchColumn();
@@ -266,6 +272,42 @@ include __DIR__ . '/_partials/header.php';
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Marketplace pulse (demandes / propositions) -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="head">
+      <span class="lbl">Demandes</span>
+      <span class="ic-sm t-sage"><i class="bi bi-file-earmark-text-fill"></i></span>
+    </div>
+    <div class="num"><?= $total_demandes ?></div>
+    <div class="sub"><span><?= $open_demandes ?> ouvertes (deadline ≥ aujourd'hui)</span></div>
+  </div>
+  <div class="kpi">
+    <div class="head">
+      <span class="lbl">Propositions</span>
+      <span class="ic-sm t-honey"><i class="bi bi-megaphone-fill"></i></span>
+    </div>
+    <div class="num"><?= $total_propositions ?></div>
+    <div class="sub"><span><?= $total_demandes > 0 ? round($total_propositions / max(1, $total_demandes), 1) : 0 ?> par demande en moyenne</span></div>
+  </div>
+  <div class="kpi">
+    <div class="head">
+      <span class="lbl">Demandes expirées</span>
+      <span class="ic-sm t-danger"><i class="bi bi-clock-history"></i></span>
+    </div>
+    <div class="num"><?= $total_demandes - $open_demandes ?></div>
+    <div class="sub"><span>deadline dépassée</span></div>
+  </div>
+  <div class="kpi">
+    <div class="head">
+      <span class="lbl">Prix moyen proposé</span>
+      <span class="ic-sm t-info"><i class="bi bi-cash-coin"></i></span>
+    </div>
+    <div class="num"><?= number_format($avg_proposition_price, 0, ',', ' ') ?> <small style="font-size:.95rem; color:var(--ink-mute); font-weight:600;">DT</small></div>
+    <div class="sub"><span>moyenne sur les propositions</span></div>
   </div>
 </div>
 

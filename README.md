@@ -179,7 +179,22 @@ uploads_url();        // → http://localhost/<projet>/uploads
 
 ## URLs principales
 
-### Frontoffice (zone publique)
+### Raccourcis (recommandés)
+
+Le projet expose des URLs propres à la racine pour éviter d'avoir à taper les chemins complets `/view/...` :
+
+| Raccourci | Redirige vers |
+|---|---|
+| `/` ou `/skillbridge/` | `view/frontoffice/EasyFolio/index.php` |
+| `/admin` ou `/skillbridge/admin/` | `view/backoffice/login.php` *(ou dashbord si déjà connecté)* |
+| `/login` | `view/frontoffice/EasyFolio/login.php` |
+| `/register` | `view/frontoffice/EasyFolio/register.php` |
+| `/profil` | `view/frontoffice/EasyFolio/profil.php` |
+| `/chat` | `view/frontoffice/chat/conversations.php` |
+
+> Sous Apache/XAMPP, les raccourcis `/login`, `/register`, `/profil`, `/chat` sont activés par `.htaccess` (mod_rewrite requis). Sous le serveur intégré PHP, seuls `/` et `/admin/` sont actifs — les autres URLs canoniques restent valides.
+
+### Frontoffice (chemins canoniques)
 
 | Page | URL |
 |---|---|
@@ -190,8 +205,10 @@ uploads_url();        // → http://localhost/<projet>/uploads
 | Mon profil | `view/frontoffice/EasyFolio/profil.php` |
 | Mes conversations | `view/frontoffice/chat/conversations.php` |
 | Nouveau chat | `view/frontoffice/chat/new_conversation.php` |
+| Demandes (client) | `view/frontoffice/EasyFolio/mes_demandes.php` |
+| Demandes (freelancer) | `view/frontoffice/EasyFolio/browse_demandes.php` |
 
-### Backoffice (admin)
+### Backoffice (chemins canoniques)
 
 | Page | URL |
 |---|---|

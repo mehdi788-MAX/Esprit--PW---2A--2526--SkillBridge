@@ -105,6 +105,43 @@ if ($isLoggedIn) {
     } catch (Throwable $e) {}
 }
 
+// ---------- Demandes / Propositions data ----------
+$market = [
+    'total_demandes'    => 0,   // # de demandes du client (si client) — sinon # global
+    'open_demandes'     => 0,   // # global utilisé pour la marketing page
+    'my_propositions'   => 0,   // # de propositions du freelancer
+    'received_props'    => 0,   // # de propositions reçues (client)
+    'latest_demandes'   => [],  // 3 dernières demandes pour les freelancers
+    'my_demandes'       => [],  // 3 dernières demandes du client (avec compte de propositions)
+];
+try {
+    require_once __DIR__ . '/../../../controller/DemandeController.php';
+    $marketCtrl = new DemandeController();
+
+    // Total global (utile pour la marketing landing + partagé partout)
+    $market['open_demandes'] = (int)$pdo->query("SELECT COUNT(*) FROM demandes")->fetchColumn();
+
+    if ($isLoggedIn && $isClient) {
+        $market['total_demandes']  = (int)$pdo->query("SELECT COUNT(*) FROM demandes WHERE user_id = " . (int)$userId)->fetchColumn();
+        $market['received_props']  = (int)$pdo->query("SELECT COUNT(*) FROM propositions p JOIN demandes d ON d.id = p.demande_id WHERE d.user_id = " . (int)$userId)->fetchColumn();
+        $stmt = $marketCtrl->listDemandesByUser($userId, 'recent', null);
+        $myDem = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        $myDem = array_slice($myDem, 0, 3);
+        foreach ($myDem as &$d) {
+            $d['prop_count'] = $marketCtrl->countPropositionsByDemande((int)$d['id']);
+        }
+        unset($d);
+        $market['my_demandes'] = $myDem;
+    } elseif ($isLoggedIn && $isFreelancer) {
+        $market['my_propositions'] = (int)$pdo->query("SELECT COUNT(*) FROM propositions WHERE user_id = " . (int)$userId)->fetchColumn();
+        $stmt = $marketCtrl->listDemandes('recent', null);
+        $latest = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+        // Exclure ses propres demandes (au cas où un freelancer publie aussi)
+        $latest = array_values(array_filter($latest, fn($d) => (int)($d['user_id'] ?? 0) !== $userId));
+        $market['latest_demandes'] = array_slice($latest, 0, 3);
+    }
+} catch (Throwable $e) {}
+
 $userPhoto     = $dashboard['photo'] ?? '';
 $userFirstName = trim(explode(' ', $userNom)[0] ?? '') ?: 'Profil';
 
@@ -301,9 +338,10 @@ $faq = [
     .btn-honey:hover { background: var(--honey-d); color: var(--ink); transform: translateY(-2px); }
 
     /* hero stats — soft inline */
-    .hero-stats { display:flex; gap: 36px; margin-top: 44px; }
+    .hero-stats { display:flex; gap: 36px; margin-top: 44px; flex-wrap: wrap; }
     .hero-stats .cell .num { font-weight:800; font-size: 1.6rem; color: var(--ink); letter-spacing: -.02em; line-height:1; }
     .hero-stats .cell .lbl { font-size: .8rem; color: var(--ink-mute); margin-top: 6px; font-weight: 500; }
+    @media (max-width: 575.98px) { .hero-stats { gap: 22px; } }
 
     /* hero visual: avatar cluster + photo */
     .hero-visual { position: relative; min-height: 460px; }
@@ -563,6 +601,80 @@ $faq = [
       font-size: .72rem; padding: 4px 10px; border-radius: 999px;
     }
 
+    /* ----------------- Demande / Proposition cards (logged-in) ----------------- */
+    .demande-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    @media (max-width: 991.98px) { .demande-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 575.98px)  { .demande-grid { grid-template-columns: 1fr; } }
+    .demande-card {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 18px;
+      padding: 22px 22px 20px; text-decoration: none; color: var(--ink);
+      display: flex; flex-direction: column; gap: 10px; transition: all .18s ease;
+      position: relative; overflow: hidden;
+    }
+    .demande-card:hover { transform: translateY(-2px); border-color: var(--sage); color: var(--ink); box-shadow: 0 22px 44px -28px rgba(31,95,77,.28); }
+    .demande-card .top {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      font-size:.78rem; color: var(--ink-mute); letter-spacing:.04em;
+    }
+    .demande-card .price-pill {
+      background: var(--sage-soft); color: var(--sage); font-weight: 800;
+      padding: 4px 11px; border-radius: 999px; font-size: .82rem;
+    }
+    .demande-card h4 {
+      font-size: 1.12rem; font-weight: 800; color: var(--ink);
+      letter-spacing: -.012em; line-height: 1.25; margin: 0;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .demande-card p {
+      font-size: .88rem; color: var(--ink-mute); margin: 0; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .demande-card .meta {
+      margin-top: auto; padding-top: 10px; border-top: 1px dashed var(--rule);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: .82rem; color: var(--ink-soft); gap: 10px;
+    }
+    .demande-card .meta .deadline { display: inline-flex; align-items: center; gap: 6px; }
+    .demande-card .meta .props {
+      display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--sage);
+    }
+
+    /* role banner highlighting the new feature */
+    .market-banner {
+      background: linear-gradient(135deg, var(--sage) 0%, #2A7B65 100%);
+      color: var(--paper); border-radius: 22px; padding: 28px 32px;
+      display: grid; grid-template-columns: 1fr auto; gap: 22px; align-items: center;
+      box-shadow: 0 24px 48px -28px rgba(31,95,77,.45);
+      position: relative; overflow: hidden;
+    }
+    .market-banner::before {
+      content: ''; position: absolute; right: -60px; top: -60px; width: 220px; height: 220px;
+      border-radius: 50%; background: rgba(245,200,66,.18);
+    }
+    .market-banner .mb-eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(245,200,66,.22); color: var(--honey);
+      padding: 5px 12px; border-radius: 999px;
+      font-size: .76rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .market-banner h3 {
+      color: var(--paper); font-size: 1.55rem; font-weight: 800;
+      letter-spacing: -.018em; margin: 0 0 8px; line-height: 1.2;
+    }
+    .market-banner p { color: rgba(255,255,255,.78); margin: 0; max-width: 520px; line-height: 1.55; font-size: .95rem; }
+    .market-banner .mb-cta {
+      background: var(--honey); color: var(--ink); padding: 14px 22px;
+      border-radius: 14px; font-weight: 700; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+      transition: transform .15s, box-shadow .15s; z-index: 1;
+    }
+    .market-banner .mb-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -12px rgba(245,200,66,.55); color: var(--ink); }
+    @media (max-width: 767.98px) {
+      .market-banner { grid-template-columns: 1fr; padding: 24px; }
+      .market-banner .mb-cta { width: 100%; justify-content: center; }
+    }
+
     /* profile completion nudge banner */
     .complete-banner {
       background: var(--paper); border: 1px solid var(--rule); border-radius: 22px;
@@ -647,6 +759,12 @@ $faq = [
         <?php if ($isLoggedIn): ?>
           <a href="index.php" class="active">Accueil</a>
           <a href="../chat/conversations.php">Conversations<?php if ($dashboard['unread_count'] > 0): ?> <span style="color:var(--honey-d);">·<?= $dashboard['unread_count'] ?></span><?php endif; ?></a>
+          <?php if ($isClient): ?>
+            <a href="mes_demandes.php">Mes demandes</a>
+          <?php elseif ($isFreelancer): ?>
+            <a href="browse_demandes.php">Demandes</a>
+            <a href="mes_propositions.php">Mes propositions</a>
+          <?php endif; ?>
           <a href="#talents">Talents</a>
         <?php else: ?>
           <a href="#how-it-works">Méthode</a>
@@ -702,30 +820,62 @@ $faq = [
             </h1>
             <p class="lead-x" style="max-width:520px;">
               <?php if ($isFreelancer): ?>
-                Continuez vos conversations, mettez à jour votre profil et restez visible auprès des clients.
+                Parcourez les <strong>demandes ouvertes</strong>, envoyez vos <strong>propositions</strong> et reprenez vos conversations — tout depuis un seul espace.
               <?php elseif ($isClient): ?>
-                Continuez vos collaborations, découvrez de nouveaux talents et lancez vos projets.
+                Publiez une <strong>demande</strong>, recevez des <strong>propositions</strong> ciblées de freelancers vérifiés et collaborez en messagerie temps réel.
               <?php else: ?>
                 Pilotez la plateforme depuis votre espace administrateur.
               <?php endif; ?>
             </p>
 
             <div class="hero-cta-row">
-              <a href="../chat/conversations.php" class="btn-sage">
-                <i class="bi bi-chat-dots"></i> Mes Conversations
-                <?php if ($dashboard['unread_count'] > 0): ?>
-                  <span style="background:var(--honey); color:var(--ink); padding: 2px 9px; border-radius: 999px; font-size:.78rem; font-weight:700;"><?= $dashboard['unread_count'] ?></span>
-                <?php endif; ?>
-              </a>
-              <a href="profil.php" class="btn-ghost">
-                <i class="bi bi-person-circle"></i> Mon profil
-              </a>
+              <?php if ($isClient): ?>
+                <a href="add_demande.php" class="btn-sage">
+                  <i class="bi bi-plus-circle"></i> Publier une demande
+                </a>
+                <a href="../chat/conversations.php" class="btn-ghost">
+                  <i class="bi bi-chat-dots"></i> Mes Conversations
+                  <?php if ($dashboard['unread_count'] > 0): ?>
+                    <span style="background:var(--honey); color:var(--ink); padding: 2px 9px; border-radius: 999px; font-size:.78rem; font-weight:700; margin-left:6px;"><?= $dashboard['unread_count'] ?></span>
+                  <?php endif; ?>
+                </a>
+              <?php elseif ($isFreelancer): ?>
+                <a href="browse_demandes.php" class="btn-sage">
+                  <i class="bi bi-collection"></i> Voir les demandes
+                  <?php if ($market['open_demandes'] > 0): ?>
+                    <span style="background:var(--honey); color:var(--ink); padding: 2px 9px; border-radius: 999px; font-size:.78rem; font-weight:700; margin-left:6px;"><?= $market['open_demandes'] ?></span>
+                  <?php endif; ?>
+                </a>
+                <a href="../chat/conversations.php" class="btn-ghost">
+                  <i class="bi bi-chat-dots"></i> Conversations
+                  <?php if ($dashboard['unread_count'] > 0): ?>
+                    <span style="background:var(--honey); color:var(--ink); padding: 2px 9px; border-radius: 999px; font-size:.78rem; font-weight:700; margin-left:6px;"><?= $dashboard['unread_count'] ?></span>
+                  <?php endif; ?>
+                </a>
+              <?php else: ?>
+                <a href="../chat/conversations.php" class="btn-sage">
+                  <i class="bi bi-chat-dots"></i> Mes Conversations
+                </a>
+                <a href="profil.php" class="btn-ghost">
+                  <i class="bi bi-person-circle"></i> Mon profil
+                </a>
+              <?php endif; ?>
             </div>
 
             <div class="hero-stats">
-              <div class="cell"><div class="num"><?= count($dashboard['conversations']) ?></div><div class="lbl">Conversations</div></div>
-              <div class="cell"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Non lus</div></div>
-              <div class="cell"><div class="num"><?= $dashboard['profile_pct'] ?>%</div><div class="lbl">Profil complété</div></div>
+              <?php if ($isClient): ?>
+                <div class="cell"><div class="num"><?= (int)$market['total_demandes'] ?></div><div class="lbl">Mes demandes</div></div>
+                <div class="cell"><div class="num"><?= (int)$market['received_props'] ?></div><div class="lbl">Propositions reçues</div></div>
+                <div class="cell"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Messages non lus</div></div>
+              <?php elseif ($isFreelancer): ?>
+                <div class="cell"><div class="num"><?= (int)$market['open_demandes'] ?></div><div class="lbl">Demandes ouvertes</div></div>
+                <div class="cell"><div class="num"><?= (int)$market['my_propositions'] ?></div><div class="lbl">Mes propositions</div></div>
+                <div class="cell"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Messages non lus</div></div>
+              <?php else: ?>
+                <div class="cell"><div class="num"><?= count($dashboard['conversations']) ?></div><div class="lbl">Conversations</div></div>
+                <div class="cell"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Non lus</div></div>
+                <div class="cell"><div class="num"><?= $dashboard['profile_pct'] ?>%</div><div class="lbl">Profil</div></div>
+              <?php endif; ?>
             </div>
           </div>
 
@@ -778,26 +928,70 @@ $faq = [
           <h2 class="display-l">Que voulez-vous faire <span class="accent">aujourd'hui</span> ?</h2>
         </div>
         <div class="actions-grid">
-          <a href="../chat/new_conversation.php" class="action-card dark" data-aos="fade-up">
-            <div class="ic"><i class="bi bi-plus-lg"></i></div>
-            <h5>Nouvelle conversation</h5>
-            <p><?= $isClient ? 'Contactez un freelancer.' : 'Initiez un échange avec un client.' ?></p>
-          </a>
-          <a href="../chat/conversations.php" class="action-card" data-aos="fade-up" data-aos-delay="80">
-            <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
-            <h5>Mes conversations</h5>
-            <p>Reprenez vos discussions.</p>
-          </a>
-          <a href="profil.php" class="action-card honey" data-aos="fade-up" data-aos-delay="160">
-            <div class="ic"><i class="bi bi-person-circle"></i></div>
-            <h5>Mon profil <span style="color:var(--honey-d); font-weight:700;">(<?= $dashboard['profile_pct'] ?>%)</span></h5>
-            <div class="progress-track"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
-          </a>
-          <a href="#talents" class="action-card" data-aos="fade-up" data-aos-delay="240">
-            <div class="ic"><i class="bi bi-stars"></i></div>
-            <h5><?= $isClient ? 'Trouver un talent' : 'Voir la communauté' ?></h5>
-            <p>Profils vérifiés.</p>
-          </a>
+          <?php if ($isClient): ?>
+            <a href="add_demande.php" class="action-card dark" data-aos="fade-up">
+              <div class="ic"><i class="bi bi-file-earmark-plus"></i></div>
+              <h5>Publier une demande</h5>
+              <p>Décrivez votre besoin, recevez des propositions.</p>
+            </a>
+            <a href="mes_demandes.php" class="action-card" data-aos="fade-up" data-aos-delay="80">
+              <div class="ic"><i class="bi bi-clipboard2-check-fill"></i></div>
+              <h5>Mes demandes <span style="color:var(--sage); font-weight:700;">(<?= (int)$market['total_demandes'] ?>)</span></h5>
+              <p><?= (int)$market['received_props'] ?> proposition<?= $market['received_props'] > 1 ? 's' : '' ?> reçue<?= $market['received_props'] > 1 ? 's' : '' ?>.</p>
+            </a>
+            <a href="../chat/conversations.php" class="action-card honey" data-aos="fade-up" data-aos-delay="160">
+              <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
+              <h5>Mes conversations</h5>
+              <p><?= $dashboard['unread_count'] > 0 ? $dashboard['unread_count'].' non lu'.($dashboard['unread_count']>1?'s':'') : 'Reprenez vos discussions.' ?></p>
+            </a>
+            <a href="profil.php" class="action-card" data-aos="fade-up" data-aos-delay="240">
+              <div class="ic"><i class="bi bi-person-circle"></i></div>
+              <h5>Mon profil <span style="color:var(--sage); font-weight:700;">(<?= $dashboard['profile_pct'] ?>%)</span></h5>
+              <div class="progress-track"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
+            </a>
+          <?php elseif ($isFreelancer): ?>
+            <a href="browse_demandes.php" class="action-card dark" data-aos="fade-up">
+              <div class="ic"><i class="bi bi-search"></i></div>
+              <h5>Parcourir les demandes</h5>
+              <p><?= (int)$market['open_demandes'] ?> demande<?= $market['open_demandes'] > 1 ? 's' : '' ?> en ligne.</p>
+            </a>
+            <a href="mes_propositions.php" class="action-card" data-aos="fade-up" data-aos-delay="80">
+              <div class="ic"><i class="bi bi-megaphone-fill"></i></div>
+              <h5>Mes propositions <span style="color:var(--sage); font-weight:700;">(<?= (int)$market['my_propositions'] ?>)</span></h5>
+              <p>Suivez vos offres envoyées.</p>
+            </a>
+            <a href="../chat/conversations.php" class="action-card honey" data-aos="fade-up" data-aos-delay="160">
+              <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
+              <h5>Mes conversations</h5>
+              <p><?= $dashboard['unread_count'] > 0 ? $dashboard['unread_count'].' non lu'.($dashboard['unread_count']>1?'s':'') : 'Reprenez vos discussions.' ?></p>
+            </a>
+            <a href="profil.php" class="action-card" data-aos="fade-up" data-aos-delay="240">
+              <div class="ic"><i class="bi bi-person-circle"></i></div>
+              <h5>Mon profil <span style="color:var(--sage); font-weight:700;">(<?= $dashboard['profile_pct'] ?>%)</span></h5>
+              <div class="progress-track"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
+            </a>
+          <?php else: ?>
+            <a href="../chat/new_conversation.php" class="action-card dark" data-aos="fade-up">
+              <div class="ic"><i class="bi bi-plus-lg"></i></div>
+              <h5>Nouvelle conversation</h5>
+              <p>Initiez un échange.</p>
+            </a>
+            <a href="../chat/conversations.php" class="action-card" data-aos="fade-up" data-aos-delay="80">
+              <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
+              <h5>Mes conversations</h5>
+              <p>Reprenez vos discussions.</p>
+            </a>
+            <a href="profil.php" class="action-card honey" data-aos="fade-up" data-aos-delay="160">
+              <div class="ic"><i class="bi bi-person-circle"></i></div>
+              <h5>Mon profil <span style="color:var(--honey-d); font-weight:700;">(<?= $dashboard['profile_pct'] ?>%)</span></h5>
+              <div class="progress-track"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
+            </a>
+            <a href="#talents" class="action-card" data-aos="fade-up" data-aos-delay="240">
+              <div class="ic"><i class="bi bi-stars"></i></div>
+              <h5>Voir la communauté</h5>
+              <p>Profils vérifiés.</p>
+            </a>
+          <?php endif; ?>
         </div>
       </div>
     </section>
@@ -831,14 +1025,15 @@ $faq = [
                 $otherPh  = $isU1 ? $c['u2_photo']  : $c['u1_photo'];
                 $otherFul = trim($otherFn . ' ' . $otherLn);
                 $avatarSrc = avatarUrl($otherPh, $otherFul, '1F5F4D', 96);
-                $preview = $c['last_message'] ?: 'Aucun message pour l\'instant.';
-                $unseen  = (int)$c['unseen'];
+                $rawPreview = $c['last_message'] ?? '';
+                $preview    = $rawPreview !== '' ? chat_message_preview($rawPreview, 90) : 'Aucun message pour l\'instant.';
+                $unseen     = (int)$c['unseen'];
             ?>
               <a href="../chat/chat.php?id=<?= (int)$c['id_conversation'] ?>" class="conv-row">
                 <img src="<?= $avatarSrc ?>" alt="<?= htmlspecialchars($otherFul) ?>" class="ava">
                 <div>
                   <div class="name"><?= htmlspecialchars($otherFul) ?></div>
-                  <div class="preview"><?= htmlspecialchars(mb_substr($preview, 0, 90)) ?></div>
+                  <div class="preview"><?= htmlspecialchars($preview) ?></div>
                 </div>
                 <div class="d-flex align-items-center gap-3">
                   <?php if ($unseen > 0): ?><span class="pill"><?= $unseen ?></span><?php endif; ?>
@@ -850,6 +1045,112 @@ $faq = [
         <?php endif; ?>
       </div>
     </section>
+
+    <?php if ($isClient): ?>
+      <!-- Marketplace : mes demandes -->
+      <section class="s-pad">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 section-head" data-aos="fade-up" style="margin-bottom: 32px;">
+            <div>
+              <span class="eyebrow honey"><span class="dot"></span> Marketplace · Demandes</span>
+              <h2 class="display-l mt-3">Vos <span class="accent">demandes</span> ouvertes.</h2>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="add_demande.php" class="btn-sage"><i class="bi bi-plus-circle"></i> Nouvelle demande</a>
+              <a href="mes_demandes.php" class="btn-ghost"><i class="bi bi-arrow-up-right"></i> Tout voir</a>
+            </div>
+          </div>
+
+          <?php if (empty($market['my_demandes'])): ?>
+            <div class="market-banner" data-aos="fade-up">
+              <div>
+                <span class="mb-eyebrow"><i class="bi bi-stars"></i> Nouveau</span>
+                <h3>Publiez votre première demande.</h3>
+                <p>Décrivez votre projet — titre, budget, échéance — et recevez en quelques heures des propositions ciblées de freelancers vérifiés.</p>
+              </div>
+              <a href="add_demande.php" class="mb-cta">Publier maintenant <i class="bi bi-arrow-right"></i></a>
+            </div>
+          <?php else: ?>
+            <div class="demande-grid">
+              <?php foreach ($market['my_demandes'] as $d):
+                  $deadline = !empty($d['deadline']) ? date('d M Y', strtotime($d['deadline'])) : null;
+                  $price    = isset($d['price']) ? number_format((float)$d['price'], 0, ',', ' ') : '—';
+                  $count    = (int)($d['prop_count'] ?? 0);
+              ?>
+                <a href="demande_propositions.php?id=<?= (int)$d['id'] ?>" class="demande-card" data-aos="fade-up">
+                  <div class="top">
+                    <span style="text-transform:uppercase; font-weight:700; letter-spacing:.06em;">Demande</span>
+                    <span class="price-pill"><?= htmlspecialchars($price) ?> DT</span>
+                  </div>
+                  <h4><?= htmlspecialchars(html_entity_decode($d['title'])) ?></h4>
+                  <p><?= htmlspecialchars(html_entity_decode($d['description'])) ?></p>
+                  <div class="meta">
+                    <?php if ($deadline): ?>
+                      <span class="deadline"><i class="bi bi-calendar-event"></i> <?= htmlspecialchars($deadline) ?></span>
+                    <?php else: ?>
+                      <span class="deadline"><i class="bi bi-clock-history"></i> Sans échéance</span>
+                    <?php endif; ?>
+                    <span class="props"><i class="bi bi-megaphone-fill"></i> <?= $count ?> proposition<?= $count > 1 ? 's' : '' ?></span>
+                  </div>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+      </section>
+    <?php elseif ($isFreelancer): ?>
+      <!-- Marketplace : demandes ouvertes -->
+      <section class="s-pad">
+        <div class="container">
+          <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 section-head" data-aos="fade-up" style="margin-bottom: 32px;">
+            <div>
+              <span class="eyebrow honey"><span class="dot"></span> Marketplace · Opportunités</span>
+              <h2 class="display-l mt-3">Demandes <span class="accent">ouvertes</span>.</h2>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <a href="browse_demandes.php" class="btn-sage"><i class="bi bi-collection"></i> Toutes les demandes</a>
+              <a href="mes_propositions.php" class="btn-ghost"><i class="bi bi-megaphone"></i> Mes propositions</a>
+            </div>
+          </div>
+
+          <?php if (empty($market['latest_demandes'])): ?>
+            <div class="market-banner" data-aos="fade-up">
+              <div>
+                <span class="mb-eyebrow"><i class="bi bi-hourglass-split"></i> Bientôt</span>
+                <h3>Aucune demande ouverte pour le moment.</h3>
+                <p>Revenez plus tard — les nouvelles missions s'affichent dès qu'un client publie. Complétez votre profil pour ne rien manquer.</p>
+              </div>
+              <a href="profil.php" class="mb-cta">Compléter mon profil <i class="bi bi-arrow-right"></i></a>
+            </div>
+          <?php else: ?>
+            <div class="demande-grid">
+              <?php foreach ($market['latest_demandes'] as $d):
+                  $deadline = !empty($d['deadline']) ? date('d M Y', strtotime($d['deadline'])) : null;
+                  $price    = isset($d['price']) ? number_format((float)$d['price'], 0, ',', ' ') : '—';
+                  $created  = !empty($d['created_at']) ? date('d M', strtotime($d['created_at'])) : '';
+              ?>
+                <a href="add_proposition.php?demande_id=<?= (int)$d['id'] ?>" class="demande-card" data-aos="fade-up">
+                  <div class="top">
+                    <span style="text-transform:uppercase; font-weight:700; letter-spacing:.06em;"><?= $created ? 'Publié le '.htmlspecialchars($created) : 'Nouveau' ?></span>
+                    <span class="price-pill"><?= htmlspecialchars($price) ?> DT</span>
+                  </div>
+                  <h4><?= htmlspecialchars(html_entity_decode($d['title'])) ?></h4>
+                  <p><?= htmlspecialchars(html_entity_decode($d['description'])) ?></p>
+                  <div class="meta">
+                    <?php if ($deadline): ?>
+                      <span class="deadline"><i class="bi bi-calendar-event"></i> <?= htmlspecialchars($deadline) ?></span>
+                    <?php else: ?>
+                      <span class="deadline"><i class="bi bi-clock-history"></i> Sans échéance</span>
+                    <?php endif; ?>
+                    <span class="props"><i class="bi bi-send-fill"></i> Proposer</span>
+                  </div>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+        </div>
+      </section>
+    <?php endif; ?>
 
   <?php else: /* =================== MARKETING ============================== */ ?>
 
@@ -863,11 +1164,13 @@ $faq = [
           <div data-aos="fade-up">
             <span class="eyebrow"><span class="dot"></span> Marketplace freelance · Tunisie</span>
             <h1 class="display-x mt-3 mb-3">
-              Trouvez le talent <span class="accent">parfait</span><br>
-              pour votre projet.
+              Publiez. Recevez des <span class="accent">propositions</span>.<br>
+              Collaborez.
             </h1>
-            <p class="lead-x" style="max-width:520px;">
-              SkillBridge connecte clients et freelancers vérifiés. Publiez un projet, recevez des offres ciblées, collaborez en messagerie temps réel — tout au même endroit.
+            <p class="lead-x" style="max-width:540px;">
+              SkillBridge réunit clients et freelancers vérifiés.
+              Publiez votre <strong>demande</strong>, comparez les <strong>propositions</strong> et discutez en messagerie temps réel —
+              tout au même endroit.
             </p>
 
             <div class="hero-cta-row">
@@ -882,6 +1185,7 @@ $faq = [
             <div class="hero-stats">
               <div class="cell"><div class="num"><?= max(1, $stats['freelancers']) ?>+</div><div class="lbl">Freelancers</div></div>
               <div class="cell"><div class="num"><?= max(1, $stats['clients']) ?>+</div><div class="lbl">Clients</div></div>
+              <div class="cell"><div class="num"><?= max(1, $market['open_demandes']) ?>+</div><div class="lbl">Demandes ouvertes</div></div>
               <div class="cell"><div class="num"><?= max(1, $stats['conversations']) ?>+</div><div class="lbl">Collaborations</div></div>
             </div>
           </div>
@@ -928,24 +1232,24 @@ $faq = [
         <div class="section-head text-center mx-auto" data-aos="fade-up">
           <span class="eyebrow"><span class="dot"></span> Méthode</span>
           <h2 class="display-x">Démarrez en <span class="accent">trois étapes</span>.</h2>
-          <p class="lead-x">De l'inscription à la première mission, sans friction inutile.</p>
+          <p class="lead-x">De la demande à la collaboration, un parcours pensé pour aller droit au but.</p>
         </div>
 
         <div class="method-grid">
           <div class="method-card" data-aos="fade-up">
             <div class="num">1</div>
-            <h3>Créez votre compte</h3>
-            <p>Inscription en quelques secondes — email, Google, GitHub, Discord, ou reconnaissance faciale. Choisissez votre rôle.</p>
+            <h3>Publiez votre demande</h3>
+            <p>Côté client : décrivez votre projet — titre, budget, échéance, description. La demande est aussitôt visible des freelancers vérifiés.</p>
           </div>
           <div class="method-card featured" data-aos="fade-up" data-aos-delay="100">
             <div class="num">2</div>
-            <h3>Présentez-vous</h3>
-            <p>Côté client : parcourez les freelancers vérifiés. Côté freelancer : créez un profil distinctif avec compétences, bio et localisation.</p>
+            <h3>Recevez des propositions</h3>
+            <p>Côté freelancer : parcourez les demandes ouvertes et envoyez votre proposition (message + tarif). Côté client : comparez les offres reçues.</p>
           </div>
           <div class="method-card" data-aos="fade-up" data-aos-delay="200">
             <div class="num">3</div>
             <h3>Collaborez en direct</h3>
-            <p>Messagerie temps réel — messages, fichiers, photos, réactions emoji. Tout reste sécurisé sur la plateforme.</p>
+            <p>Une fois la proposition retenue, ouvrez la conversation : messagerie temps réel, fichiers, photos, réactions emoji — tout au même endroit.</p>
           </div>
         </div>
       </div>
@@ -1013,19 +1317,19 @@ $faq = [
 
         <div class="why-grid">
           <div class="why-card" data-aos="fade-up">
+            <div class="ic"><i class="bi bi-file-earmark-text-fill"></i></div>
+            <h5>Demandes & propositions</h5>
+            <p>Publiez votre besoin, recevez des propositions ciblées avec tarif et message — sans appel d'offres laborieux.</p>
+          </div>
+          <div class="why-card honey" data-aos="fade-up" data-aos-delay="80">
             <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
             <h5>Messagerie temps réel</h5>
             <p>Discussions instantanées, accusés de réception, indicateurs de saisie, réactions emoji.</p>
           </div>
-          <div class="why-card honey" data-aos="fade-up" data-aos-delay="80">
+          <div class="why-card" data-aos="fade-up" data-aos-delay="160">
             <div class="ic"><i class="bi bi-shield-lock-fill"></i></div>
             <h5>Auth sécurisée</h5>
             <p>Email, OAuth (Google, GitHub, Discord), ou reconnaissance faciale.</p>
-          </div>
-          <div class="why-card" data-aos="fade-up" data-aos-delay="160">
-            <div class="ic"><i class="bi bi-bell-fill"></i></div>
-            <h5>Notifications live</h5>
-            <p>Cloche et toasts en direct dès qu'un message vous concerne.</p>
           </div>
           <div class="why-card honey" data-aos="fade-up" data-aos-delay="240">
             <div class="ic"><i class="bi bi-person-badge-fill"></i></div>

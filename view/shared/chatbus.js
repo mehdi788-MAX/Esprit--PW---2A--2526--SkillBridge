@@ -120,6 +120,29 @@
     });
   }
 
+  // Persist the last-seen notification id per user so navigating between
+  // pages doesn't re-toast notifications already received in earlier polls.
+  function notifCursorKey() {
+    return state.user ? ('sb-chatbus-since-' + state.user) : '';
+  }
+  function loadStoredCursor() {
+    try {
+      const k = notifCursorKey();
+      if (!k) return 0;
+      const v = parseInt(window.localStorage.getItem(k) || '0', 10);
+      return isNaN(v) ? 0 : v;
+    } catch (e) { return 0; }
+  }
+  function saveStoredCursor(id) {
+    try {
+      const k = notifCursorKey();
+      if (!k) return;
+      const cur = loadStoredCursor();
+      const next = Math.max(cur, parseInt(id, 10) || 0);
+      if (next > cur) window.localStorage.setItem(k, String(next));
+    } catch (e) {}
+  }
+
   function on(event, fn) {
     if (!state.handlers[event]) state.handlers[event] = [];
     state.handlers[event].push(fn);
@@ -179,11 +202,18 @@
           }
         });
         state.sinceNotif = data.last_notif_id;
+        saveStoredCursor(state.sinceNotif);
+        broadcastSync({ type: 'cursor', sinceNotif: state.sinceNotif });
         // Si la conversation active a reçu des notifs, on les marque vues
         // pour ne pas accumuler le badge pendant qu'on est dedans.
         if (hasCurrentConvNotif) {
           postForm('mark-read', { conv: state.conv }).catch(() => {});
         }
+      } else if (typeof data.last_notif_id === 'number' && data.last_notif_id > state.sinceNotif) {
+        // Server has nothing new for us, but reports a higher max id (e.g. notifs
+        // marked read elsewhere). Advance the cursor so we never replay them.
+        state.sinceNotif = data.last_notif_id;
+        saveStoredCursor(state.sinceNotif);
       }
 
       // Unread total + recent (pour le panneau)
@@ -603,6 +633,11 @@
         if (data.type === 'mark-read' || data.type === 'seen') {
           // Sibling tab cleared something — re-poll to pick up the new state
           poll();
+        } else if (data.type === 'cursor') {
+          // A sibling tab advanced the notification cursor; mirror it here so
+          // we don't re-toast the same notifs in this tab on the next poll.
+          const next = parseInt(data.sinceNotif, 10) || 0;
+          if (next > state.sinceNotif) state.sinceNotif = next;
         }
       });
     } catch (e) {}
@@ -1092,7 +1127,17 @@
     state.apiBase = opts.apiBase || '/api/chat.php';
     state.user    = parseInt(opts.user, 10) || 0;
     state.conv    = parseInt(opts.conv, 10) || 0;
-    state.sinceNotif = parseInt(opts.sinceNotif || 0, 10);
+    // Restore the per-user notification cursor from localStorage so navigation
+    // between pages doesn't replay toasts for notifications already received.
+    // The server-rendered hint (opts.sinceNotif) is used only as a floor on
+    // the very first session for this user.
+    const optCursor    = parseInt(opts.sinceNotif || 0, 10) || 0;
+    state.sinceNotif   = Math.max(optCursor, loadStoredCursor());
+    if (state.sinceNotif > optCursor) {
+      // No-op: the stored cursor wins (already-seen notifs stay silent).
+    } else if (state.sinceNotif > 0) {
+      saveStoredCursor(state.sinceNotif);
+    }
     if (opts.activeMs) state.activeMs = opts.activeMs;
     if (opts.idleMs)   state.idleMs = opts.idleMs;
 

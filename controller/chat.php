@@ -354,7 +354,7 @@ switch ($action) {
                 'actor_id'   => $me,
                 'actor_name' => actorName($pdo, $me),
                 'emoji'      => $emoji,
-                'preview'    => mb_substr(strip_tags((string)$auth['contenu']), 0, 60, 'UTF-8'),
+                'preview'    => chat_message_preview((string)$auth['contenu'], 60),
             ], JSON_UNESCAPED_UNICODE);
             $n->create();
         }
@@ -392,7 +392,7 @@ switch ($action) {
             $n->payload_json = json_encode([
                 'actor_id'   => $me,
                 'actor_name' => actorName($pdo, $me),
-                'preview'    => mb_substr(strip_tags($contenu), 0, 80, 'UTF-8'),
+                'preview'    => chat_message_preview($contenu, 80),
             ], JSON_UNESCAPED_UNICODE);
             $n->create();
         }
@@ -426,7 +426,7 @@ switch ($action) {
             $n->payload_json = json_encode([
                 'actor_id'   => $me,
                 'actor_name' => actorName($pdo, $me),
-                'preview'    => mb_substr(strip_tags((string)$row['contenu']), 0, 80, 'UTF-8'),
+                'preview'    => chat_message_preview((string)$row['contenu'], 80),
             ], JSON_UNESCAPED_UNICODE);
             $n->create();
         }

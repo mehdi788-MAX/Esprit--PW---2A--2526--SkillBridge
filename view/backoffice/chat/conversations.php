@@ -130,7 +130,7 @@ include __DIR__ . '/../_partials/header.php';
           </td>
           <td style="max-width: 280px;">
             <?php if (!empty($conv['dernier_message'])): ?>
-              <span style="color: var(--ink-2); font-size: .88rem;"><?= htmlspecialchars(mb_substr($conv['dernier_message'], 0, 70, 'UTF-8')) ?><?= mb_strlen($conv['dernier_message'], 'UTF-8') > 70 ? '…' : '' ?></span>
+              <span style="color: var(--ink-2); font-size: .88rem;"><?= htmlspecialchars(chat_message_preview($conv['dernier_message'], 70)) ?></span>
             <?php else: ?>
               <span style="color: var(--ink-soft); font-style: italic; font-size: .82rem;">Aucun message</span>
             <?php endif; ?>

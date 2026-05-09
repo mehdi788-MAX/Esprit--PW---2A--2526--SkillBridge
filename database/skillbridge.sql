@@ -94,12 +94,15 @@ CREATE TABLE `demandes` (
 CREATE TABLE `propositions` (
     `id`               INT AUTO_INCREMENT PRIMARY KEY,
     `demande_id`       INT            NOT NULL,
+    `user_id`          INT            NULL,
     `freelancer_name`  VARCHAR(100)   NULL,
     `message`          TEXT           NULL,
     `price`            DECIMAL(10,2)  NULL,
     `created_at`       DATETIME       DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_demande` (`demande_id`),
-    FOREIGN KEY (`demande_id`) REFERENCES `demandes`(`id`) ON DELETE CASCADE
+    INDEX `idx_demande`            (`demande_id`),
+    INDEX `idx_propositions_user`  (`user_id`),
+    FOREIGN KEY (`demande_id`) REFERENCES `demandes`(`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_propositions_user` FOREIGN KEY (`user_id`) REFERENCES `utilisateurs`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================

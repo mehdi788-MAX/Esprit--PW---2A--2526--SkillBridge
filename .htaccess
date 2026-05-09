@@ -1,0 +1,52 @@
+# =====================================================
+# SkillBridge — racine du projet (Apache / XAMPP)
+# -----------------------------------------------------
+# Objectif : rendre l'accès au site fluide.
+#   /                 → view/frontoffice/EasyFolio/index.php  (via index.php)
+#   /admin   ou /admin/ → view/backoffice/login.php           (via admin/index.php)
+#   /chat              → view/frontoffice/chat/conversations.php
+#
+# Les URL longues (/view/frontoffice/...) restent valides ;
+# ces règles ajoutent simplement des raccourcis lisibles.
+# Pour le serveur intégré PHP (php -S), ces règles sont ignorées
+# mais index.php / admin/index.php gèrent quand même le routage.
+# =====================================================
+
+# Pas d'index automatique d'un dossier sans index.php
+Options -Indexes
+
+# Page d'accueil par défaut
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Évite les boucles : si la requête cible déjà un fichier ou un dossier réel, on laisse passer.
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Raccourci /chat → liste des conversations frontoffice
+    RewriteRule ^chat/?$ view/frontoffice/chat/conversations.php [L]
+
+    # Raccourci /login et /register pour l'inscription frontoffice
+    RewriteRule ^login/?$    view/frontoffice/EasyFolio/login.php    [L]
+    RewriteRule ^register/?$ view/frontoffice/EasyFolio/register.php [L]
+    RewriteRule ^profil/?$   view/frontoffice/EasyFolio/profil.php   [L]
+
+    # Raccourci /admin/* → backoffice (les sous-pages admin/foo passent par admin/index.php
+    # par défaut ; on autorise aussi /admin/dashboard etc. au cas où.)
+    RewriteRule ^admin/dashboard/?$ view/backoffice/dashbord.php  [L]
+    RewriteRule ^admin/logout/?$    view/backoffice/logout.php    [L]
+</IfModule>
+
+# Cache léger pour les assets statiques (images, JS, CSS) — accélère l'expérience.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/png  "access plus 7 days"
+    ExpiresByType image/jpeg "access plus 7 days"
+    ExpiresByType image/webp "access plus 7 days"
+    ExpiresByType image/svg+xml "access plus 7 days"
+    ExpiresByType text/css "access plus 1 day"
+    ExpiresByType application/javascript "access plus 1 day"
+</IfModule>

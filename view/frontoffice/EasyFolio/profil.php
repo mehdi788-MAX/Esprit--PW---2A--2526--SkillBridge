@@ -341,7 +341,12 @@ $navAvatarSrc = !empty($utilisateur['photo'])
       <nav class="sb-nav">
         <a href="index.php">Accueil</a>
         <a href="../chat/conversations.php">Conversations</a>
-        <a href="#" class="active">Mon profil</a>
+        <?php if ($is_freelancer): ?>
+          <a href="browse_demandes.php">Demandes</a>
+          <a href="mes_propositions.php">Mes propositions</a>
+        <?php else: ?>
+          <a href="mes_demandes.php">Mes demandes</a>
+        <?php endif; ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>

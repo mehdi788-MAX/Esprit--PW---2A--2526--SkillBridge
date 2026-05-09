@@ -77,6 +77,13 @@ $navGroups = [
             ['key' => 'chat_new',           'icon' => 'bi-plus-circle-fill',      'label' => 'Nouvelle conversation','url' => $BOCHAT . '/add_conversation.php'],
         ],
     ],
+    [
+        'heading' => 'Marketplace',
+        'items'   => [
+            ['key' => 'demandes_list',      'icon' => 'bi-file-earmark-text-fill', 'label' => 'Demandes',        'url' => $BO . '/demandes_list.php'],
+            ['key' => 'propositions_list',  'icon' => 'bi-megaphone-fill',         'label' => 'Propositions',    'url' => $BO . '/propositions_list.php'],
+        ],
+    ],
 ];
 ?>
 <!DOCTYPE html>
