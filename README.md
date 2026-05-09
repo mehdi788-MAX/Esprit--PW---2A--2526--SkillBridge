@@ -1,16 +1,18 @@
 <div align="center">
+  <img src="view/frontoffice/EasyFolio/assets/img/skillbridge-logo.png" alt="SkillBridge" height="80">
 
-# 🌉 SkillBridge
+  # SkillBridge
 
-**Marketplace freelance · Tunisie**
+  **Marketplace freelance · Tunisie**
 
-*Publiez votre demande · Recevez des propositions ciblées · Collaborez en messagerie temps réel — tout au même endroit.*
+  *Publiez votre demande · Recevez des propositions ciblées · Collaborez en messagerie temps réel — tout au même endroit.*
 
-![PHP](https://img.shields.io/badge/PHP-8.x-1F5F4D?style=flat-square&logo=php&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-XAMPP-F5C842?style=flat-square&logo=mysql&logoColor=0F0F0F)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5-1F5F4D?style=flat-square&logo=bootstrap&logoColor=white)
-![Ollama](https://img.shields.io/badge/AI-Ollama%20local-F5C842?style=flat-square&logoColor=0F0F0F)
-![Status](https://img.shields.io/badge/Status-Production%20Ready-1F5F4D?style=flat-square)
+  ![PHP](https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white)
+  ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
+  ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
+  ![Ollama](https://img.shields.io/badge/AI-Ollama%20local-F5C842?logoColor=0F0F0F)
+  ![License](https://img.shields.io/badge/license-Academic-1F5F4D)
+  ![Status](https://img.shields.io/badge/status-Production%20Ready-1F5F4D)
 
 </div>
 
