@@ -11,7 +11,7 @@ $isClient     = $userRole === 'client';
 $isFreelancer = $userRole === 'freelancer';
 
 // ---------- Avatar URL helper (CDN fallback) ----------
-function avatarUrl(?string $localPhoto, string $name, string $bgHex = 'F97316', int $size = 120): string {
+function avatarUrl(?string $localPhoto, string $name, string $bgHex = '1F5F4D', int $size = 120): string {
     if (!empty($localPhoto)) return 'assets/img/profile/' . htmlspecialchars($localPhoto);
     $clean = preg_replace('/[^A-Za-zÀ-ÿ\s]/u', '', $name) ?: 'SkillBridge';
     $url   = 'https://ui-avatars.com/api/?name=' . urlencode($clean)
@@ -43,11 +43,15 @@ try {
     $featured = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 } catch (Throwable $e) {}
 
+// "Talent of the week" — first featured freelancer, used as a hero accent card
+$weekTalent = $featured[0] ?? null;
+
 // ---------- Dashboard data (logged-in only) ----------
 $dashboard = [
     'unread_count'    => 0,
     'conversations'   => [],
     'profile_pct'     => 0,
+    'photo'           => '',
 ];
 if ($isLoggedIn) {
     try {
@@ -86,6 +90,7 @@ if ($isLoggedIn) {
         $stmt->execute([':id' => $userId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
+            $dashboard['photo'] = $row['photo'] ?? '';
             $checks = [
                 !empty($row['photo']),
                 !empty($row['telephone']),
@@ -100,276 +105,644 @@ if ($isLoggedIn) {
     } catch (Throwable $e) {}
 }
 
+$userPhoto     = $dashboard['photo'] ?? '';
+$userFirstName = trim(explode(' ', $userNom)[0] ?? '') ?: 'Profil';
+
 $pickSkills = fn($csv, $max = 3) => $csv ? array_slice(array_filter(array_map('trim', explode(',', $csv))), 0, $max) : [];
+
+// Categories palette — alternating sage filled / paper / honey filled / paper
+$cats = [
+    ['bi-code-slash',     'Développement',  'Web, mobile, API, intégrations',          'sage'],
+    ['bi-palette-fill',   'Design / UI',    'Identité, maquettes, prototypes',         'paper'],
+    ['bi-megaphone-fill', 'Marketing',      'Campagnes, SEO, contenu',                 'honey'],
+    ['bi-pencil-square',  'Rédaction',      'Articles, traductions, copywriting',      'paper'],
+];
+
+$faq = [
+    ['L\'inscription est-elle gratuite ?',
+     'Oui, créer un compte sur SkillBridge est totalement gratuit, que vous soyez client ou freelancer. Inscription par email, Google, GitHub, Discord ou reconnaissance faciale.'],
+    ['Comment contacter un freelancer ?',
+     'Une fois connecté, ouvrez le profil d\'un freelancer et cliquez sur "Contacter". Une conversation est créée et vous pouvez démarrer immédiatement la discussion.'],
+    ['Puis-je partager des fichiers et photos ?',
+     'Oui, jusqu\'à 10 Mo par fichier (JPG/PNG/WebP, PDF, Word, Excel, ZIP, etc.). Stockage sécurisé, accessible uniquement aux participants.'],
+    ['Comment fonctionne la connexion par reconnaissance faciale ?',
+     'À l\'inscription, vous enregistrez votre visage. Aux connexions suivantes, vous activez la caméra et la plateforme vous reconnaît automatiquement.'],
+    ['Mot de passe oublié, que faire ?',
+     'Cliquez sur "Mot de passe oublié ?" depuis la connexion. Un lien de réinitialisation arrive par email, valable 1 heure.'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>SkillBridge — La marketplace freelance qui matche les bons talents</title>
+  <title>SkillBridge — Marketplace freelance</title>
   <meta name="description" content="SkillBridge connecte clients et freelancers vérifiés. Publiez un projet, recevez des offres et collaborez via une messagerie temps réel.">
 
   <link href="assets/img/favicon.png" rel="icon">
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Type: Manrope (single distinctive sans, weights 400-800) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/css/main.css" rel="stylesheet">
 
   <style>
+    /* ===========================================================
+       SkillBridge — "Sage & Honey" design system
+       =========================================================== */
     :root {
-      --sb-blue:   #2563eb;
-      --sb-orange: #f97316;
-      --sb-dark:   #0f172a;
-      --sb-soft:   #f8fafc;
-    }
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+      /* base */
+      --bg:          #F7F4ED;
+      --paper:       #FFFFFF;
+      --ink:         #0F0F0F;
+      --ink-2:       #2A2A2A;
+      --ink-mute:    #5C5C5C;
+      --ink-soft:    #A3A3A3;
+      --rule:        #E8E2D5;
 
-    /* ---------- Hero (logged-out) ---------- */
-    .hero-marketing {
-      background:
-        radial-gradient(1200px 600px at 110% -10%, rgba(249,115,22,.18), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(37,99,235,.15), transparent 60%),
-        #fff;
-      padding: 80px 0 60px;
-    }
-    .hero-marketing h1 { font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: var(--sb-dark); }
-    .hero-marketing h1 .accent { background: linear-gradient(90deg, var(--sb-orange), var(--sb-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .hero-img-wrap { border-radius: 28px; overflow: hidden; box-shadow: 0 30px 60px -20px rgba(15,23,42,.3); }
-    .hero-img-wrap img { display: block; width: 100%; height: auto; }
-    .hero-floating-card {
-      position: absolute; background: #fff; border-radius: 14px; padding: 12px 16px;
-      box-shadow: 0 20px 40px -10px rgba(15,23,42,.18); display: flex; gap: 10px; align-items: center;
-    }
+      /* primary */
+      --sage:        #1F5F4D;
+      --sage-d:      #134438;
+      --sage-soft:   #E8F0EC;
+      --sage-tint:   #F1F6F3;
 
-    /* ---------- Dashboard hero (logged-in) ---------- */
-    .dash-hero {
-      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #f97316 100%);
-      color: #fff; border-radius: 22px; padding: 40px 38px;
-      box-shadow: 0 30px 60px -25px rgba(37,99,235,.5);
-    }
-    .dash-hero h1 { font-weight: 800; letter-spacing: -.01em; }
-    .role-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,.18); padding: 4px 12px; border-radius: 999px;
-      font-size: .8rem; font-weight: 600; backdrop-filter: blur(8px);
+      /* pop */
+      --honey:       #F5C842;
+      --honey-d:     #E0B033;
+      --honey-soft:  #FBF1D0;
+
+      /* legacy hooks (kept so old code doesn't break) */
+      --sb-orange: var(--honey);
+      --sb-blue:   var(--sage);
+      --sb-dark:   var(--ink);
     }
 
-    /* ---------- Action cards ---------- */
-    .action-card {
-      background:#fff; border:1px solid #e2e8f0; border-radius:18px;
-      padding: 26px; transition: all .25s ease; height: 100%;
-      display: flex; flex-direction: column; text-decoration: none; color: inherit;
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      letter-spacing: -.005em;
+      -webkit-font-smoothing: antialiased;
     }
-    .action-card:hover {
-      transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(15,23,42,.12);
-      border-color: var(--sb-blue); color: inherit;
+    ::selection { background: var(--sage); color: var(--honey); }
+
+    h1, h2, h3, h4, h5, h6 { font-family: 'Manrope', sans-serif; font-weight: 700; letter-spacing: -.022em; color: var(--ink); }
+    .display-x { font-size: clamp(2.4rem, 4.6vw, 4.2rem); line-height: 1.05; font-weight: 800; letter-spacing: -.03em; }
+    .display-l { font-size: clamp(1.9rem, 3vw, 2.6rem); line-height: 1.1;  letter-spacing: -.02em; font-weight: 800; }
+    .display-m { font-size: clamp(1.4rem, 2vw, 1.8rem); line-height: 1.15; letter-spacing: -.015em; font-weight: 700; }
+    .lead-x    { font-size: clamp(1.02rem, 1.2vw, 1.12rem); line-height: 1.6; color: var(--ink-mute); font-weight: 400; }
+    .accent    { font-style: italic; font-weight: 700; color: var(--sage); }
+
+    /* eyebrow tag */
+    .eyebrow {
+      display:inline-flex; align-items:center; gap:8px;
+      font-size: .8rem; font-weight: 600; letter-spacing: -.005em;
+      color: var(--sage); padding: 6px 12px;
+      background: var(--sage-soft); border-radius: 999px;
     }
-    .action-card .icon-wrap {
-      width: 52px; height: 52px; border-radius: 13px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; margin-bottom: 16px;
+    .eyebrow .dot { width:6px; height:6px; border-radius:50%; background: var(--sage); }
+    .eyebrow.honey { color: #92660A; background: var(--honey-soft); }
+    .eyebrow.honey .dot { background: var(--honey-d); }
+
+    /* ----------------- Header ----------------- */
+    .sb-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,244,237,.85); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--rule);
     }
-    .action-card .icon-blue   { background: rgba(37,99,235,.1);  color: var(--sb-blue); }
-    .action-card .icon-orange { background: rgba(249,115,22,.1); color: var(--sb-orange); }
-    .action-card .icon-green  { background: rgba(16,185,129,.1); color: #10b981; }
-    .action-card .icon-purple { background: rgba(124,58,237,.1); color: #7c3aed; }
-    .action-card .badge-count {
-      display:inline-block; background: var(--sb-orange); color:#fff;
-      font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:999px; margin-left:6px;
+    .sb-header .container { display:flex; align-items:center; justify-content:space-between; padding: 14px 0; }
+    .sb-logo { display:inline-flex; align-items:center; text-decoration:none; color: var(--ink); }
+    .sb-logo .logo-img { height: 38px; width: auto; display: block; }
+    .sb-footer .foot-logo .logo-img { height: 44px; width: auto; display: block; filter: brightness(0) invert(1); }
+
+    .sb-nav { display:flex; align-items:center; gap: 28px; }
+    .sb-nav a { color: var(--ink-mute); text-decoration:none; font-weight:500; font-size:.92rem; transition: color .15s; }
+    .sb-nav a:hover, .sb-nav a.active { color: var(--ink); }
+    .sb-nav a.active { color: var(--sage); }
+
+    .sb-cta {
+      display:inline-flex; align-items:center; gap:8px;
+      background: var(--ink); color: var(--bg); padding: 10px 20px; border-radius: 999px;
+      text-decoration:none; font-weight:600; font-size:.92rem; transition: all .2s ease;
+    }
+    .sb-cta:hover { background: var(--sage); color: var(--paper); transform: translateY(-1px); }
+
+    .sb-bell-btn {
+      width:42px; height:42px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+      background: transparent; color: var(--ink); position: relative; transition: all .2s;
+    }
+    .sb-bell-btn:hover { background: var(--paper); }
+
+    .sb-profile-chip {
+      display:inline-flex; align-items:center; gap:8px;
+      padding: 4px 14px 4px 4px; border-radius: 999px;
+      background: var(--paper); border: 1px solid var(--rule);
+      color: var(--ink); text-decoration:none; font-weight:600; font-size:.9rem;
+      transition: all .2s;
+    }
+    .sb-profile-chip:hover { border-color: var(--sage); transform: translateY(-1px); }
+    .sb-profile-chip.is-active { border-color: var(--sage); background: var(--sage-soft); color: var(--sage); }
+    .sb-profile-chip .avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; }
+
+    @media (max-width: 991.98px) {
+      .sb-nav { display: none; }
     }
 
-    /* ---------- Stats pill (hero, logged-out) ---------- */
-    .stat-pill {
-      background:#fff; border:1px solid #e2e8f0; border-radius:14px;
-      padding:18px 14px; text-align:center;
+    /* ----------------- Soft decoration blobs ----------------- */
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(60px); opacity: .55; pointer-events: none; z-index: 0;
     }
-    .stat-pill .num { font-size:1.8rem; font-weight:800; line-height:1;
-      background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange));
-      -webkit-background-clip: text; background-clip: text; color: transparent; }
-    .stat-pill .lbl { font-size:.78rem; color:#64748b; margin-top:4px; font-weight:500; }
+    .blob.sage  { background: var(--sage-soft); }
+    .blob.honey { background: var(--honey-soft); }
 
-    /* ---------- Step / Feature card ---------- */
-    .step-card, .feature-card {
-      background:#fff; border-radius:18px; padding:30px 26px; height:100%;
-      border:1px solid #e2e8f0; transition: all .22s ease;
+    /* ----------------- Hero ----------------- */
+    .hero {
+      position: relative; padding: 80px 0 64px; overflow: hidden;
     }
-    .step-card:hover, .feature-card:hover { transform: translateY(-4px); box-shadow:0 20px 40px -15px rgba(15,23,42,.1); }
-    .step-num {
-      width:48px; height:48px; border-radius:14px;
-      background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange)); color:#fff;
-      display:inline-flex; align-items:center; justify-content:center;
-      font-weight:800; font-size:1.25rem; margin-bottom:16px;
+    .hero .blob-1 { width: 380px; height: 380px; left: -100px; top: -120px; }
+    .hero .blob-2 { width: 360px; height: 360px; right: -80px; bottom: -60px; }
+    .hero .container { position: relative; z-index: 1; }
+
+    .hero-grid { display:grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center; }
+    @media (max-width: 991.98px) { .hero-grid { grid-template-columns: 1fr; gap: 48px; } }
+
+    .hero-cta-row { display:flex; flex-wrap:wrap; gap: 12px; margin-top: 32px; }
+    .btn-sage {
+      display:inline-flex; align-items:center; gap:10px;
+      background: var(--sage); color: var(--paper);
+      padding: 14px 24px; border-radius: 12px; border: none;
+      text-decoration: none; font-weight: 600; font-size: .98rem;
+      transition: all .2s ease;
     }
-    .feature-card .feature-icon {
-      width:54px; height:54px; border-radius:14px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.5rem; margin-bottom:14px;
-      background: rgba(249,115,22,.1); color: var(--sb-orange);
+    .btn-sage:hover { background: var(--sage-d); color: var(--paper); transform: translateY(-2px); box-shadow: 0 14px 28px -12px rgba(31,95,77,.4); }
+    .btn-ghost {
+      display:inline-flex; align-items:center; gap:10px;
+      background: var(--paper); color: var(--ink);
+      padding: 14px 24px; border-radius: 12px;
+      border: 1px solid var(--rule);
+      text-decoration: none; font-weight: 600; font-size: .98rem;
+      transition: all .2s ease;
+    }
+    .btn-ghost:hover { border-color: var(--ink); transform: translateY(-2px); }
+    .btn-honey {
+      display:inline-flex; align-items:center; gap:10px;
+      background: var(--honey); color: var(--ink);
+      padding: 14px 24px; border-radius: 12px; border: none;
+      text-decoration: none; font-weight: 700; font-size: .98rem;
+      transition: all .2s ease;
+    }
+    .btn-honey:hover { background: var(--honey-d); color: var(--ink); transform: translateY(-2px); }
+
+    /* hero stats — soft inline */
+    .hero-stats { display:flex; gap: 36px; margin-top: 44px; }
+    .hero-stats .cell .num { font-weight:800; font-size: 1.6rem; color: var(--ink); letter-spacing: -.02em; line-height:1; }
+    .hero-stats .cell .lbl { font-size: .8rem; color: var(--ink-mute); margin-top: 6px; font-weight: 500; }
+
+    /* hero visual: avatar cluster + photo */
+    .hero-visual { position: relative; min-height: 460px; }
+    .hero-photo {
+      position: relative; width: 100%; max-width: 460px; margin-left: auto;
+      border-radius: 28px; overflow: hidden;
+      border: 1px solid var(--rule);
+      box-shadow: 0 30px 60px -25px rgba(31,95,77,.22);
+    }
+    .hero-photo img { display: block; width: 100%; aspect-ratio: 4/5; object-fit: cover; }
+
+    /* "talent of the week" floating card */
+    .talent-mini {
+      position: absolute; left: -10px; bottom: 30px;
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 18px;
+      padding: 14px 18px 14px 14px; display: flex; gap: 12px; align-items: center;
+      box-shadow: 0 24px 40px -20px rgba(15,15,15,.18);
+      max-width: 280px;
+    }
+    .talent-mini img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .talent-mini .label { font-size: .68rem; color: var(--sage); font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+    .talent-mini .name  { font-weight: 700; color: var(--ink); font-size: .95rem; line-height: 1.15; }
+    .talent-mini .role  { color: var(--ink-mute); font-size: .8rem; }
+
+    /* signal card top right */
+    .signal-card {
+      position: absolute; right: -8px; top: 22px;
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 14px;
+      padding: 10px 14px; display:flex; gap:10px; align-items:center;
+      box-shadow: 0 18px 30px -18px rgba(15,15,15,.16);
+    }
+    .signal-card .pulse {
+      width:10px; height:10px; border-radius:50%; background: var(--sage);
+      box-shadow: 0 0 0 4px var(--sage-soft);
+      animation: pulseDot 2s ease-out infinite;
+    }
+    @keyframes pulseDot { 0%,100% { box-shadow: 0 0 0 4px var(--sage-soft); } 50% { box-shadow: 0 0 0 8px transparent; } }
+    .signal-card .txt { font-size: .8rem; color: var(--ink); font-weight: 600; }
+
+    @media (max-width: 991.98px) {
+      .hero-photo { margin: 0 auto; }
+      .talent-mini { left: 8px; bottom: 16px; }
+      .signal-card { right: 8px; top: 12px; }
     }
 
-    /* ---------- Freelancer card ---------- */
+    /* ----------------- Section ----------------- */
+    section.s-pad { padding: 80px 0; position: relative; }
+
+    .section-head { max-width: 720px; margin-bottom: 48px; }
+    .section-head h2 { margin-top: 14px; }
+    .section-head p { margin-top: 12px; }
+
+    /* ----------------- 3-step method ----------------- */
+    .method-grid { display:grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+    @media (max-width: 991.98px) { .method-grid { grid-template-columns: 1fr; } }
+    .method-card {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 22px;
+      padding: 32px 28px; transition: all .25s ease;
+      position: relative; overflow: hidden;
+    }
+    .method-card:hover { transform: translateY(-3px); border-color: var(--sage); box-shadow: 0 24px 50px -25px rgba(31,95,77,.18); }
+    .method-card .num {
+      width: 44px; height: 44px; border-radius: 14px; background: var(--sage-soft); color: var(--sage);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.05rem; margin-bottom: 18px;
+    }
+    .method-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 8px; line-height: 1.2; }
+    .method-card p  { color: var(--ink-mute); font-size: .95rem; line-height: 1.55; margin: 0; }
+    .method-card.featured .num { background: var(--honey-soft); color: #92660A; }
+
+    /* ----------------- Talent card ----------------- */
+    .talent-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    @media (max-width: 991.98px) { .talent-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 575.98px) { .talent-grid { grid-template-columns: 1fr; } }
+
     .talent-card {
-      background:#fff; border:1px solid #e2e8f0; border-radius:18px;
-      overflow:hidden; height:100%; transition:all .22s ease;
-      display:flex; flex-direction:column;
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 22px;
+      padding: 28px 24px; text-align: center;
+      display: flex; flex-direction: column;
+      transition: all .25s ease;
     }
-    .talent-card:hover { transform:translateY(-5px); box-shadow:0 24px 50px -20px rgba(15,23,42,.16); }
-    .talent-banner {
-      height: 64px; background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange));
+    .talent-card:hover { transform: translateY(-4px); border-color: var(--sage); box-shadow: 0 24px 50px -25px rgba(31,95,77,.18); }
+    .talent-card .ava-wrap {
+      width: 92px; height: 92px; margin: 0 auto 14px;
+      border-radius: 50%; padding: 4px; background: var(--sage-soft);
+      position: relative;
     }
-    .talent-avatar {
-      width:84px; height:84px; border-radius:50%; object-fit:cover;
-      border:4px solid #fff; margin: -42px auto 8px; display:block;
-      box-shadow: 0 8px 20px rgba(15,23,42,.1);
+    .talent-card .ava-wrap img {
+      width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+      border: 3px solid var(--paper);
     }
-    .skill-chip {
-      display:inline-block; padding:3px 10px; margin:2px;
-      border:1px solid #e2e8f0; border-radius:999px;
-      font-size:.72rem; color:#475569; background:#f8fafc; font-weight:500;
-    }
-
-    /* ---------- Category card ---------- */
-    .category-card {
-      background:#fff; border:1px solid #e2e8f0; border-radius:18px;
-      padding:28px 22px; text-align:center; height:100%;
-      transition:all .22s ease; cursor:pointer; text-decoration:none; color: inherit;
-    }
-    .category-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -15px rgba(15,23,42,.12); border-color: var(--sb-orange); color: inherit; }
-    .category-card .cat-icon {
-      width: 60px; height: 60px; border-radius: 16px; margin: 0 auto 14px;
+    .talent-card .verified {
+      position: absolute; right: 0; bottom: 0;
+      width: 28px; height: 28px; border-radius: 50%; background: var(--honey);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.7rem;
+      border: 3px solid var(--paper);
+      color: var(--ink); font-size: .78rem;
     }
+    .talent-card h4 { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+    .talent-card .loc { color: var(--ink-mute); font-size: .85rem; margin-bottom: 12px; }
+    .talent-card .bio { color: var(--ink-mute); font-size: .88rem; line-height: 1.5; margin: 0 0 14px; }
+    .talent-card .skills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 18px; }
+    .talent-card .skill {
+      font-size: .78rem; font-weight: 500; color: var(--ink);
+      padding: 4px 11px; border-radius: 999px;
+      background: var(--bg); border: 1px solid var(--rule);
+    }
+    .talent-card .btn-talent {
+      margin-top: auto; padding: 11px 16px; border-radius: 10px;
+      background: var(--ink); color: var(--paper);
+      text-decoration: none; font-weight: 600; font-size: .9rem;
+      transition: all .2s;
+      display: inline-flex; align-items:center; justify-content:center; gap: 8px;
+    }
+    .talent-card .btn-talent:hover { background: var(--sage); color: var(--paper); }
 
-    /* ---------- Conversation row ---------- */
+    /* ----------------- Why grid (clean 4 cards) ----------------- */
+    .why-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
+    @media (max-width: 991.98px) { .why-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 575.98px) { .why-grid { grid-template-columns: 1fr; } }
+    .why-card {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 20px;
+      padding: 28px 24px; transition: all .2s ease;
+    }
+    .why-card:hover { transform: translateY(-2px); border-color: var(--sage); }
+    .why-card .ic {
+      width: 44px; height: 44px; border-radius: 12px;
+      display:flex; align-items:center; justify-content:center; font-size: 1.1rem;
+      background: var(--sage-soft); color: var(--sage);
+      margin-bottom: 16px;
+    }
+    .why-card.honey .ic { background: var(--honey-soft); color: #92660A; }
+    .why-card h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; line-height: 1.2; }
+    .why-card p { color: var(--ink-mute); font-size: .9rem; line-height: 1.5; margin: 0; }
+
+    /* ----------------- Categories ----------------- */
+    .cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    @media (max-width: 991.98px) { .cat-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 575.98px) { .cat-grid { grid-template-columns: 1fr; } }
+    .cat-card {
+      border-radius: 22px; padding: 28px 24px; text-decoration: none;
+      display: flex; flex-direction: column; gap: 14px; min-height: 220px;
+      transition: all .25s ease; border: 1px solid var(--rule);
+      position: relative; overflow: hidden;
+    }
+    .cat-card:hover { transform: translateY(-4px); box-shadow: 0 24px 50px -25px rgba(31,95,77,.22); }
+    .cat-card.cat-paper { background: var(--paper); color: var(--ink); }
+    .cat-card.cat-paper:hover { border-color: var(--sage); }
+    .cat-card.cat-paper .cat-ic { background: var(--sage-soft); color: var(--sage); }
+    .cat-card.cat-paper .cat-arrow { color: var(--sage); }
+
+    .cat-card.cat-sage { background: var(--sage); color: var(--paper); border-color: var(--sage); }
+    .cat-card.cat-sage .cat-ic { background: rgba(255,255,255,.14); color: var(--honey); }
+    .cat-card.cat-sage .cat-arrow { color: var(--honey); }
+
+    .cat-card.cat-honey { background: var(--honey); color: var(--ink); border-color: var(--honey); }
+    .cat-card.cat-honey .cat-ic { background: var(--ink); color: var(--honey); }
+    .cat-card.cat-honey .cat-arrow { color: var(--ink); }
+
+    .cat-card .cat-ic {
+      width: 46px; height: 46px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.25rem;
+    }
+    .cat-card .cat-title { font-weight: 700; font-size: 1.18rem; line-height: 1.15; letter-spacing: -.01em; }
+    .cat-card .cat-desc  { font-size: .9rem; opacity: .82; line-height: 1.5; flex-grow: 1; }
+    .cat-card .cat-arrow { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .85rem; }
+
+    /* ----------------- FAQ ----------------- */
+    .faq-list { max-width: 780px; margin: 0 auto; }
+    .faq-item {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 16px;
+      margin-bottom: 12px; overflow: hidden; transition: all .2s ease;
+    }
+    .faq-item:hover { border-color: var(--sage); }
+    .faq-item[open] { border-color: var(--sage); box-shadow: 0 8px 20px -10px rgba(31,95,77,.18); }
+    .faq-item summary {
+      padding: 22px 26px; cursor: pointer; list-style: none;
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      font-weight: 700; color: var(--ink); font-size: 1.02rem;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary .plus {
+      width: 32px; height: 32px; border-radius: 50%; background: var(--sage-soft);
+      color: var(--sage); display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1.2rem; transition: all .25s ease; flex-shrink: 0;
+    }
+    .faq-item[open] summary .plus { background: var(--sage); color: var(--paper); transform: rotate(45deg); }
+    .faq-item p { padding: 0 26px 24px; color: var(--ink-mute); line-height: 1.6; margin: 0; font-size: .95rem; }
+
+    /* ----------------- Dual CTA ----------------- */
+    .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 991.98px) { .dual-grid { grid-template-columns: 1fr; } }
+    .dual-card {
+      border-radius: 28px; padding: 48px 44px;
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; min-height: 320px;
+    }
+    .dual-card.d-sage  { background: var(--sage);  color: var(--paper); }
+    .dual-card.d-honey { background: var(--honey); color: var(--ink); }
+    .dual-card .role-badge {
+      display: inline-flex; padding: 6px 14px; border-radius: 999px;
+      font-weight: 600; font-size: .78rem; letter-spacing: -.005em;
+      width: fit-content; margin-bottom: 22px;
+    }
+    .dual-card.d-sage  .role-badge { background: rgba(255,255,255,.18); color: var(--paper); }
+    .dual-card.d-honey .role-badge { background: rgba(15,15,15,.1); color: var(--ink); }
+    .dual-card h3 { font-size: clamp(1.6rem, 2.4vw, 2.1rem); line-height: 1.1; margin-bottom: 14px; color: inherit; font-weight: 800; letter-spacing: -.02em; }
+    .dual-card.d-sage  h3 .accent { color: var(--honey); font-style: italic; }
+    .dual-card.d-honey h3 .accent { color: var(--sage); font-style: italic; }
+    .dual-card p { margin-bottom: 28px; line-height: 1.55; }
+    .dual-card.d-sage  p { color: rgba(255,255,255,.82); }
+    .dual-card.d-honey p { color: var(--ink-mute); }
+    .dual-card .icon-deco {
+      position: absolute; right: 36px; top: 36px;
+      font-size: 4.5rem; opacity: .14; pointer-events: none;
+    }
+    .dual-card .btn-action {
+      align-self: flex-start; margin-top: auto; padding: 14px 24px; border-radius: 12px;
+      font-weight: 700; font-size: .95rem; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 10px; transition: all .2s ease;
+    }
+    .dual-card.d-sage  .btn-action { background: var(--honey); color: var(--ink); }
+    .dual-card.d-sage  .btn-action:hover { background: var(--paper); transform: translateY(-2px); }
+    .dual-card.d-honey .btn-action { background: var(--ink); color: var(--paper); }
+    .dual-card.d-honey .btn-action:hover { background: var(--sage); transform: translateY(-2px); }
+
+    /* ----------------- CTA ----------------- */
+    .cta-block {
+      background: var(--sage); color: var(--paper);
+      border-radius: 28px; padding: 60px 56px;
+      position: relative; overflow: hidden;
+    }
+    .cta-block .blob-cta {
+      position: absolute; right: -100px; top: -100px;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: rgba(245,200,66,.18); filter: blur(40px);
+      pointer-events: none;
+    }
+    .cta-block h2 { color: var(--paper); }
+    .cta-block .accent { color: var(--honey); }
+    .cta-block .lead-x { color: rgba(255,255,255,.78); }
+    @media (max-width: 767.98px) { .cta-block { padding: 44px 30px; } }
+
+    /* ----------------- Conversation list (logged-in) ----------------- */
+    .conv-list { display:flex; flex-direction:column; gap: 8px; }
     .conv-row {
-      display:flex; align-items:center; gap:14px; padding:14px;
-      border-radius:14px; transition: background .15s; text-decoration:none; color:inherit;
+      display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; align-items: center;
+      padding: 14px 16px; background: var(--paper); border: 1px solid var(--rule); border-radius: 14px;
+      text-decoration: none; color: var(--ink); transition: all .15s;
     }
-    .conv-row:hover { background:#f8fafc; color:inherit; }
-    .conv-row .avatar { width:48px; height:48px; border-radius:50%; object-fit:cover; flex-shrink:0; }
-    .conv-row .name { font-weight:600; color: var(--sb-dark); }
-    .conv-row .preview { color:#64748b; font-size:.88rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .conv-row .unseen {
-      background: var(--sb-orange); color:#fff; padding:2px 8px;
-      border-radius:999px; font-size:.7rem; font-weight:700;
+    .conv-row:hover { border-color: var(--sage); transform: translateX(2px); color: var(--ink); }
+    .conv-row .ava { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+    .conv-row .name { font-weight: 700; color: var(--ink); font-size: .98rem; }
+    .conv-row .preview { font-size: .88rem; color: var(--ink-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 460px; }
+    .conv-row .pill {
+      background: var(--honey); color: var(--ink); font-weight: 700;
+      font-size: .72rem; padding: 4px 10px; border-radius: 999px;
     }
 
-    /* ---------- Section spacing ---------- */
-    .section-pad { padding: 70px 0; }
-    .section-tag {
-      display: inline-block; padding: 4px 14px; border-radius: 999px;
-      background: rgba(37,99,235,.08); color: var(--sb-blue);
-      font-weight: 600; font-size: .82rem; margin-bottom: 12px;
+    /* profile completion nudge banner */
+    .complete-banner {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 22px;
+      padding: 24px 28px; display: flex; align-items: center; gap: 24px;
+      box-shadow: 0 18px 36px -22px rgba(31,95,77,.18);
+      position: relative; overflow: hidden;
     }
-    h2.section-title { font-weight: 800; letter-spacing: -.01em; color: var(--sb-dark); }
+    .complete-banner::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--honey);
+    }
+    .complete-banner .cb-icon {
+      width: 56px; height: 56px; border-radius: 16px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--honey-soft); color: #92660A; font-size: 1.5rem;
+    }
+    .complete-banner .cb-body { flex: 1; min-width: 0; }
+    .complete-banner .cb-ttl { font-weight: 800; font-size: 1.1rem; color: var(--ink); margin-bottom: 4px; }
+    .complete-banner .cb-sub { color: var(--ink-mute); font-size: .9rem; margin: 0 0 10px; }
+    .complete-banner .cb-bar { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; max-width: 360px; }
+    .complete-banner .cb-bar > span { display: block; height: 100%; background: var(--sage); border-radius: 999px; transition: width .8s ease; }
+    .complete-banner .cb-pct { font-weight: 700; color: var(--sage); font-size: .85rem; margin-top: 6px; }
+    .complete-banner .cb-cta {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ink); color: var(--paper); padding: 12px 22px; border-radius: 12px;
+      text-decoration: none; font-weight: 700; font-size: .92rem; transition: all .2s;
+    }
+    .complete-banner .cb-cta:hover { background: var(--sage); color: var(--paper); transform: translateY(-2px); }
+    @media (max-width: 767.98px) {
+      .complete-banner { flex-direction: column; align-items: flex-start; padding: 22px; }
+      .complete-banner .cb-cta { width: 100%; justify-content: center; }
+    }
+
+    /* dashboard quick actions */
+    .actions-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+    @media (max-width: 991.98px) { .actions-grid { grid-template-columns: repeat(2,1fr); } }
+    .action-card {
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 20px;
+      padding: 24px 22px; text-decoration: none; color: var(--ink); transition: all .2s;
+      display: flex; flex-direction: column;
+    }
+    .action-card:hover { transform: translateY(-3px); border-color: var(--sage); color: var(--ink); box-shadow: 0 20px 40px -20px rgba(31,95,77,.18); }
+    .action-card .ic { width: 42px; height: 42px; border-radius: 12px; display:flex; align-items:center; justify-content:center; font-size: 1.05rem; margin-bottom: 14px; background: var(--sage-soft); color: var(--sage); }
+    .action-card.honey .ic { background: var(--honey-soft); color: #92660A; }
+    .action-card.dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .action-card.dark:hover { color: var(--paper); }
+    .action-card.dark .ic { background: var(--honey); color: var(--ink); }
+    .action-card.dark p { color: rgba(255,255,255,.7); }
+    .action-card h5 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .action-card p  { font-size: .85rem; color: var(--ink-mute); margin: 0; }
+
+    /* progress bar (sage) */
+    .progress-track { height: 6px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 10px; }
+    .progress-track > span { display:block; height: 100%; background: var(--sage); border-radius: 999px; transition: width .8s ease; }
+
+    /* ----------------- Footer ----------------- */
+    .sb-footer { background: var(--ink); color: rgba(255,255,255,.7); padding: 56px 0 32px; }
+    .sb-footer h6 { color: var(--paper); font-size: .82rem; font-weight: 700; letter-spacing: -.005em; margin-bottom: 14px; }
+    .sb-footer a { color: rgba(255,255,255,.65); text-decoration: none; transition: color .15s; font-size: .9rem; }
+    .sb-footer a:hover { color: var(--honey); }
+    .sb-footer .foot-logo { display:inline-flex; align-items:center; gap:8px; }
+    .sb-footer .foot-logo .mark-circle { background: var(--honey); color: var(--sage); }
+    .sb-footer .foot-logo .name { color: var(--paper); font-weight: 800; font-size: 1.1rem; }
+    .sb-footer .copy { color: rgba(255,255,255,.45); font-size: .82rem; }
+
+    /* legacy hooks left so other code referencing these doesn't break */
+    .navmenu a.active { color: var(--sage) !important; }
+    .nav-profile-chip > a { background: var(--sage-soft); color: var(--ink); }
   </style>
 </head>
 
-<body class="index-page">
+<body>
 
   <!-- ================== HEADER ================== -->
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-      <a href="index.php" class="logo d-flex align-items-center me-auto me-xl-0">
-        <h1 class="sitename">SkillBridge</h1>
+  <header class="sb-header">
+    <div class="container">
+      <a href="index.php" class="sb-logo">
+        <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="index.php" class="active">Accueil</a></li>
-          <?php if ($isLoggedIn): ?>
-            <li><a href="../chat/conversations.php">Mes Conversations<?php if ($dashboard['unread_count'] > 0): ?> <span class="badge bg-danger"><?= $dashboard['unread_count'] ?></span><?php endif; ?></a></li>
-            <li><a href="profil.php">Mon Profil</a></li>
-            <li><a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout">Déconnexion</a></li>
-          <?php else: ?>
-            <li><a href="#how-it-works">Comment ça marche</a></li>
-            <li><a href="#featured">Freelancers</a></li>
-            <li><a href="#why">Pourquoi nous</a></li>
-            <li><a href="login.php">Connexion</a></li>
-            <li><a href="register.php">Inscription</a></li>
-          <?php endif; ?>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+
+      <nav class="sb-nav">
+        <?php if ($isLoggedIn): ?>
+          <a href="index.php" class="active">Accueil</a>
+          <a href="../chat/conversations.php">Conversations<?php if ($dashboard['unread_count'] > 0): ?> <span style="color:var(--honey-d);">·<?= $dashboard['unread_count'] ?></span><?php endif; ?></a>
+          <a href="#talents">Talents</a>
+        <?php else: ?>
+          <a href="#how-it-works">Méthode</a>
+          <a href="#talents">Talents</a>
+          <a href="#why">Plateforme</a>
+          <a href="#faq">FAQ</a>
+        <?php endif; ?>
       </nav>
+
+      <div class="d-flex align-items-center gap-2">
+        <?php if ($isLoggedIn): ?>
+          <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>
+          <a href="profil.php" class="sb-profile-chip" title="Mon Profil">
+            <?php $navAvatar = avatarUrl($userPhoto, $userNom, '1F5F4D', 80); ?>
+            <img src="<?= $navAvatar ?>" alt="" class="avatar"
+                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($userFirstName) ?>&background=1F5F4D&color=fff&bold=true&size=80';">
+            <span><?= htmlspecialchars($userFirstName) ?></span>
+          </a>
+          <a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout" class="sb-cta d-none d-md-inline-flex">
+            <i class="bi bi-box-arrow-right"></i><span>Quitter</span>
+          </a>
+        <?php else: ?>
+          <a href="login.php" style="text-decoration:none; color:var(--ink); font-weight:600; padding:8px 14px; font-size:.92rem;">Connexion</a>
+          <a href="register.php" class="sb-cta">
+            <span>Commencer</span><i class="bi bi-arrow-right"></i>
+          </a>
+        <?php endif; ?>
+      </div>
     </div>
   </header>
 
-  <main class="main">
+  <main>
 
-  <?php if ($isLoggedIn): /* =================================================== DASHBOARD (logged-in) =================================================== */
-    $firstName = explode(' ', $userNom)[0] ?: 'à toi';
-    $roleLabel = $isClient ? 'Client' : ($isFreelancer ? 'Freelancer' : 'Administrateur');
-    $roleIcon  = $isClient ? 'bi-briefcase-fill' : ($isFreelancer ? 'bi-tools' : 'bi-shield-check');
-    $roleColor = $isClient ? '37,99,235' : ($isFreelancer ? '249,115,22' : '124,58,237'); // RGB
-    // Image qui colle au rôle
+  <?php if ($isLoggedIn): /* =================== DASHBOARD ====================== */
     $heroImg   = $isClient
         ? 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=900&auto=format&fit=crop&q=80'
-        : ($isFreelancer
-            ? 'https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=900&auto=format&fit=crop&q=80'
-            : 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80');
+        : 'https://images.unsplash.com/photo-1531497865144-0464ef8fb9a9?w=900&auto=format&fit=crop&q=80';
+    $roleLabel = $isClient ? 'Client' : ($isFreelancer ? 'Freelancer' : 'Administrateur');
   ?>
 
-    <!-- ================== HERO DASHBOARD ================== -->
-    <section class="hero-marketing">
+    <!-- Hero (logged-in) -->
+    <section class="hero">
+      <div class="blob sage  blob-1"></div>
+      <div class="blob honey blob-2"></div>
       <div class="container">
-        <div class="row align-items-center g-5">
-          <div class="col-lg-6" data-aos="fade-right">
-            <span class="section-tag" style="background: rgba(<?= $roleColor ?>,.1); color: rgb(<?= $roleColor ?>);">
-              <i class="bi <?= $roleIcon ?> me-1"></i> Espace <?= $roleLabel ?>
-            </span>
-            <h1 class="display-3 mt-3 mb-4">
-              Bonjour <span class="accent"><?= htmlspecialchars($firstName) ?></span>,<br>
-              ravi de vous revoir.
+        <div class="hero-grid">
+
+          <div data-aos="fade-up">
+            <span class="eyebrow"><span class="dot"></span> Espace <?= htmlspecialchars($roleLabel) ?></span>
+            <h1 class="display-x mt-3 mb-3">
+              Bonjour, <span class="accent"><?= htmlspecialchars($userFirstName) ?></span>.
+              <br>Ravi de vous revoir.
             </h1>
-            <p class="lead text-muted mb-4">
+            <p class="lead-x" style="max-width:520px;">
               <?php if ($isFreelancer): ?>
-                Continuez vos conversations, mettez votre profil à jour et restez visible auprès des clients.
+                Continuez vos conversations, mettez à jour votre profil et restez visible auprès des clients.
               <?php elseif ($isClient): ?>
-                Continuez vos collaborations, découvrez de nouveaux talents et démarrez de nouveaux projets.
+                Continuez vos collaborations, découvrez de nouveaux talents et lancez vos projets.
               <?php else: ?>
-                Continuez votre travail d'administration sur SkillBridge.
+                Pilotez la plateforme depuis votre espace administrateur.
               <?php endif; ?>
             </p>
-            <div class="d-flex flex-wrap gap-2 mb-4">
-              <a href="../chat/conversations.php" class="btn btn-lg" style="background: linear-gradient(135deg, var(--sb-orange), var(--sb-blue)); color:#fff; font-weight:600; padding: 14px 28px; border-radius:14px;">
-                <i class="bi bi-chat-dots me-1"></i> Mes Conversations
+
+            <div class="hero-cta-row">
+              <a href="../chat/conversations.php" class="btn-sage">
+                <i class="bi bi-chat-dots"></i> Mes Conversations
                 <?php if ($dashboard['unread_count'] > 0): ?>
-                  <span class="badge bg-light text-dark ms-2"><?= $dashboard['unread_count'] ?> non lu<?= $dashboard['unread_count'] > 1 ? 's' : '' ?></span>
+                  <span style="background:var(--honey); color:var(--ink); padding: 2px 9px; border-radius: 999px; font-size:.78rem; font-weight:700;"><?= $dashboard['unread_count'] ?></span>
                 <?php endif; ?>
               </a>
-              <a href="profil.php" class="btn btn-lg btn-outline-dark" style="border-radius:14px; padding: 14px 28px;">
-                <i class="bi bi-person-circle me-1"></i> Mon profil
+              <a href="profil.php" class="btn-ghost">
+                <i class="bi bi-person-circle"></i> Mon profil
               </a>
             </div>
-            <!-- Stats personnels -->
-            <div class="row g-2 mt-4">
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= count($dashboard['conversations']) ?></div><div class="lbl">Conversations</div></div></div>
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Non lus</div></div></div>
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= $dashboard['profile_pct'] ?>%</div><div class="lbl">Profil complété</div></div></div>
+
+            <div class="hero-stats">
+              <div class="cell"><div class="num"><?= count($dashboard['conversations']) ?></div><div class="lbl">Conversations</div></div>
+              <div class="cell"><div class="num"><?= $dashboard['unread_count'] ?></div><div class="lbl">Non lus</div></div>
+              <div class="cell"><div class="num"><?= $dashboard['profile_pct'] ?>%</div><div class="lbl">Profil complété</div></div>
             </div>
           </div>
 
-          <div class="col-lg-6 d-none d-lg-block position-relative" data-aos="fade-left">
-            <div class="hero-img-wrap">
-              <img src="<?= $heroImg ?>" alt="Espace personnel <?= $roleLabel ?>" loading="eager">
+          <div class="hero-visual d-none d-lg-block" data-aos="fade-left">
+            <div class="hero-photo">
+              <img src="<?= $heroImg ?>" alt="Espace personnel <?= htmlspecialchars($roleLabel) ?>">
             </div>
-            <!-- Cards flottantes contextuelles -->
-            <div class="hero-floating-card" style="top:30px; left:-30px;">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-blue);"><i class="bi bi-bell-fill"></i></div>
-              <div>
-                <div class="fw-bold small"><?= $dashboard['unread_count'] ?> notification<?= $dashboard['unread_count'] !== 1 ? 's' : '' ?></div>
-                <div class="small text-muted" style="font-size:.75rem;"><?= $dashboard['unread_count'] > 0 ? 'À consulter' : 'Tout est lu' ?></div>
-              </div>
+            <div class="signal-card">
+              <span class="pulse"></span>
+              <span class="txt"><?= $dashboard['unread_count'] > 0 ? $dashboard['unread_count'].' non lu'.($dashboard['unread_count']>1?'s':'') : 'Tout est lu' ?></span>
             </div>
-            <div class="hero-floating-card" style="bottom:30px; right:-20px;">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-orange);"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="talent-mini">
+              <img src="<?= avatarUrl($userPhoto, $userNom, '1F5F4D', 96) ?>" alt="">
               <div>
-                <div class="fw-bold small">Profil <?= $dashboard['profile_pct'] ?>%</div>
-                <div class="small text-muted" style="font-size:.75rem;"><?= $dashboard['profile_pct'] >= 80 ? 'Excellent !' : 'À compléter' ?></div>
+                <div class="label">Profil</div>
+                <div class="name"><?= $dashboard['profile_pct'] ?>% complété</div>
+                <div class="role"><?= $dashboard['profile_pct'] >= 80 ? 'Excellent !' : 'À compléter' ?></div>
               </div>
             </div>
           </div>
@@ -377,486 +750,417 @@ $pickSkills = fn($csv, $max = 3) => $csv ? array_slice(array_filter(array_map('t
       </div>
     </section>
 
-    <!-- ================== ACTIONS RAPIDES ================== -->
-    <section class="section-pad" style="background:#f8fafc;">
+    <?php if ($dashboard['profile_pct'] < 80): ?>
+    <!-- Profile completion nudge -->
+    <section style="padding: 0 0 12px;">
       <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag">Que voulez-vous faire ?</span>
-          <h2 class="section-title display-5 mb-3">Vos accès rapides</h2>
-          <p class="lead text-muted">Tout ce dont vous avez besoin pour avancer aujourd'hui.</p>
+        <div class="complete-banner" data-aos="fade-up">
+          <div class="cb-icon"><i class="bi bi-stars"></i></div>
+          <div class="cb-body">
+            <div class="cb-ttl">Complétez votre profil pour gagner en visibilité.</div>
+            <p class="cb-sub">Plus votre profil est rempli, plus vous attirez de <?= $isClient ? 'freelancers' : 'clients' ?>. Bio, compétences, photo — quelques minutes suffisent.</p>
+            <div class="cb-bar"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
+            <div class="cb-pct"><?= $dashboard['profile_pct'] ?>% complété</div>
+          </div>
+          <a href="profil.php" class="cb-cta">
+            Compléter <i class="bi bi-arrow-right"></i>
+          </a>
         </div>
-        <div class="row g-4">
+      </div>
+    </section>
+    <?php endif; ?>
 
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
-            <a href="../chat/conversations.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
-              <span class="step-num"><i class="bi bi-chat-dots-fill"></i></span>
-              <h4 class="fw-bold">Mes Conversations
-                <?php if ($dashboard['unread_count'] > 0): ?>
-                  <span class="badge ms-1" style="background:var(--sb-orange);"><?= $dashboard['unread_count'] ?></span>
-                <?php endif; ?>
-              </h4>
-              <p class="text-muted">Reprenez vos discussions là où vous les avez laissées.</p>
-              <span class="small fw-semibold" style="color:var(--sb-blue);">Ouvrir <i class="bi bi-arrow-right ms-1"></i></span>
-            </a>
-          </div>
-
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
-            <a href="profil.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
-              <span class="step-num"><i class="bi bi-person-circle"></i></span>
-              <h4 class="fw-bold">Mon Profil</h4>
-              <div class="d-flex align-items-center gap-2 mb-2">
-                <div class="progress flex-grow-1" style="height:6px;">
-                  <div class="progress-bar" role="progressbar" style="width:<?= $dashboard['profile_pct'] ?>%; background: linear-gradient(90deg, var(--sb-blue), var(--sb-orange));"></div>
-                </div>
-                <small class="fw-semibold"><?= $dashboard['profile_pct'] ?>%</small>
-              </div>
-              <p class="text-muted small mb-2"><?= $dashboard['profile_pct'] >= 80 ? 'Profil bien renseigné !' : 'Complétez pour gagner en visibilité.' ?></p>
-              <span class="small fw-semibold" style="color:var(--sb-orange);">Modifier <i class="bi bi-arrow-right ms-1"></i></span>
-            </a>
-          </div>
-
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
-            <a href="../chat/new_conversation.php" class="step-card text-decoration-none" style="display:block; color:inherit;">
-              <span class="step-num" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="bi bi-plus-circle-fill"></i></span>
-              <h4 class="fw-bold">Nouvelle conversation</h4>
-              <p class="text-muted"><?= $isClient ? 'Contactez un freelancer pour démarrer un projet.' : 'Démarrez une discussion avec un client.' ?></p>
-              <span class="small fw-semibold" style="color:#10b981;">Démarrer <i class="bi bi-arrow-right ms-1"></i></span>
-            </a>
-          </div>
-
-          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="400">
-            <a href="#talents" class="step-card text-decoration-none" style="display:block; color:inherit;">
-              <span class="step-num" style="background: linear-gradient(135deg, #7c3aed, #a855f7);"><i class="bi bi-stars"></i></span>
-              <h4 class="fw-bold"><?= $isClient ? 'Trouver un talent' : 'Voir la communauté' ?></h4>
-              <p class="text-muted"><?= $isClient ? 'Parcourez les freelancers disponibles.' : 'Découvrez les autres freelancers SkillBridge.' ?></p>
-              <span class="small fw-semibold" style="color:#7c3aed;">Découvrir <i class="bi bi-arrow-right ms-1"></i></span>
-            </a>
-          </div>
-
+    <!-- Quick actions -->
+    <section class="s-pad">
+      <div class="container">
+        <div class="section-head" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> Accès rapides</span>
+          <h2 class="display-l">Que voulez-vous faire <span class="accent">aujourd'hui</span> ?</h2>
+        </div>
+        <div class="actions-grid">
+          <a href="../chat/new_conversation.php" class="action-card dark" data-aos="fade-up">
+            <div class="ic"><i class="bi bi-plus-lg"></i></div>
+            <h5>Nouvelle conversation</h5>
+            <p><?= $isClient ? 'Contactez un freelancer.' : 'Initiez un échange avec un client.' ?></p>
+          </a>
+          <a href="../chat/conversations.php" class="action-card" data-aos="fade-up" data-aos-delay="80">
+            <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
+            <h5>Mes conversations</h5>
+            <p>Reprenez vos discussions.</p>
+          </a>
+          <a href="profil.php" class="action-card honey" data-aos="fade-up" data-aos-delay="160">
+            <div class="ic"><i class="bi bi-person-circle"></i></div>
+            <h5>Mon profil <span style="color:var(--honey-d); font-weight:700;">(<?= $dashboard['profile_pct'] ?>%)</span></h5>
+            <div class="progress-track"><span style="width:<?= $dashboard['profile_pct'] ?>%;"></span></div>
+          </a>
+          <a href="#talents" class="action-card" data-aos="fade-up" data-aos-delay="240">
+            <div class="ic"><i class="bi bi-stars"></i></div>
+            <h5><?= $isClient ? 'Trouver un talent' : 'Voir la communauté' ?></h5>
+            <p>Profils vérifiés.</p>
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- ================== CONVERSATIONS RÉCENTES ================== -->
-    <section class="section-pad">
+    <!-- Recent conversations -->
+    <section class="s-pad" style="background: var(--paper); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);">
       <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag" style="background: rgba(37,99,235,.08); color: var(--sb-blue);">Activité récente</span>
-          <h2 class="section-title display-5 mb-3">Conversations récentes</h2>
-          <p class="lead text-muted">Vos derniers échanges sur SkillBridge.</p>
+        <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 section-head" data-aos="fade-up" style="margin-bottom: 32px;">
+          <div>
+            <span class="eyebrow"><span class="dot"></span> Activité récente</span>
+            <h2 class="display-l mt-3">Vos derniers <span class="accent">échanges</span>.</h2>
+          </div>
+          <a href="../chat/conversations.php" class="btn-ghost"><i class="bi bi-arrow-up-right"></i> Tout voir</a>
         </div>
 
         <?php if (empty($dashboard['conversations'])): ?>
           <div class="text-center py-5" data-aos="fade-up">
-            <div style="width:96px;height:96px;border-radius:24px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px;">
-              <i class="bi bi-chat-square-dots" style="font-size:2.5rem; color:#94a3b8;"></i>
+            <div style="width:80px;height:80px;border-radius:24px;background:var(--sage-soft);display:inline-flex;align-items:center;justify-content:center;margin-bottom:18px; color: var(--sage);">
+              <i class="bi bi-chat-square-dots" style="font-size:2.2rem;"></i>
             </div>
-            <h4 class="fw-bold">Aucune conversation pour l'instant</h4>
-            <p class="text-muted mb-3">Démarrez votre première discussion sur SkillBridge.</p>
-            <a href="../chat/new_conversation.php" class="btn btn-lg" style="background:linear-gradient(135deg, var(--sb-orange), var(--sb-blue));color:#fff;border-radius:14px;padding:12px 28px;font-weight:600;">
-              <i class="bi bi-plus-circle me-1"></i> Démarrer une conversation
-            </a>
+            <h4 class="display-m">Aucune conversation pour l'instant.</h4>
+            <p class="text-muted mb-4">Démarrez votre première discussion sur SkillBridge.</p>
+            <a href="../chat/new_conversation.php" class="btn-sage"><i class="bi bi-plus-circle"></i> Démarrer</a>
           </div>
         <?php else: ?>
-          <div class="row g-4">
+          <div class="conv-list" data-aos="fade-up">
             <?php foreach ($dashboard['conversations'] as $c):
                 $isU1     = ((int)$c['user1_id'] === $userId);
                 $otherFn  = $isU1 ? $c['u2_prenom'] : $c['u1_prenom'];
                 $otherLn  = $isU1 ? $c['u2_nom']    : $c['u1_nom'];
                 $otherPh  = $isU1 ? $c['u2_photo']  : $c['u1_photo'];
                 $otherFul = trim($otherFn . ' ' . $otherLn);
-                $avatarSrc = avatarUrl($otherPh, $otherFul, '2563EB', 96);
+                $avatarSrc = avatarUrl($otherPh, $otherFul, '1F5F4D', 96);
                 $preview = $c['last_message'] ?: 'Aucun message pour l\'instant.';
                 $unseen  = (int)$c['unseen'];
             ?>
-              <div class="col-md-6" data-aos="fade-up">
-                <a href="../chat/chat.php?id=<?= (int)$c['id_conversation'] ?>"
-                   class="step-card text-decoration-none d-flex gap-3 align-items-start"
-                   style="display:flex; color:inherit;">
-                  <img src="<?= $avatarSrc ?>" alt="<?= htmlspecialchars($otherFul) ?>"
-                       style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-                  <div class="flex-grow-1 min-width-0">
-                    <div class="d-flex justify-content-between align-items-start mb-1">
-                      <h5 class="fw-bold mb-0"><?= htmlspecialchars($otherFul) ?></h5>
-                      <?php if ($unseen > 0): ?>
-                        <span class="badge" style="background:var(--sb-orange);"><?= $unseen ?> non lu<?= $unseen > 1 ? 's' : '' ?></span>
-                      <?php endif; ?>
-                    </div>
-                    <p class="text-muted small mb-2" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                      <?= htmlspecialchars(mb_substr($preview, 0, 80)) ?>
-                    </p>
-                    <span class="small fw-semibold" style="color:var(--sb-blue);">
-                      Ouvrir la conversation <i class="bi bi-arrow-right ms-1"></i>
-                    </span>
-                  </div>
-                </a>
-              </div>
+              <a href="../chat/chat.php?id=<?= (int)$c['id_conversation'] ?>" class="conv-row">
+                <img src="<?= $avatarSrc ?>" alt="<?= htmlspecialchars($otherFul) ?>" class="ava">
+                <div>
+                  <div class="name"><?= htmlspecialchars($otherFul) ?></div>
+                  <div class="preview"><?= htmlspecialchars(mb_substr($preview, 0, 90)) ?></div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <?php if ($unseen > 0): ?><span class="pill"><?= $unseen ?></span><?php endif; ?>
+                  <i class="bi bi-arrow-right" style="color:var(--ink-soft); font-size:1.1rem;"></i>
+                </div>
+              </a>
             <?php endforeach; ?>
-          </div>
-          <div class="text-center mt-4">
-            <a href="../chat/conversations.php" class="text-decoration-none fw-semibold" style="color:var(--sb-blue);">
-              Voir toutes mes conversations <i class="bi bi-arrow-right ms-1"></i>
-            </a>
           </div>
         <?php endif; ?>
       </div>
     </section>
 
-    <!-- ================== TALENTS RECOMMANDÉS ================== -->
-    <?php if (!empty($featured)): ?>
-      <section class="section-pad" id="talents" style="background:#f8fafc;">
-        <div class="container">
-          <div class="text-center mb-5" data-aos="fade-up">
-            <span class="section-tag" style="background: rgba(249,115,22,.1); color: var(--sb-orange);">Talents vérifiés</span>
-            <h2 class="section-title display-5 mb-3"><?= $isClient ? 'Talents recommandés pour vous' : 'Autres freelancers SkillBridge' ?></h2>
-            <p class="lead text-muted"><?= $isClient ? 'Quelques freelancers qui pourraient correspondre à vos besoins.' : 'Découvrez la communauté des freelancers SkillBridge.' ?></p>
-          </div>
-          <div class="row g-4">
-            <?php foreach ($featured as $f):
-                $skills    = $pickSkills($f['competences'] ?? '', 3);
-                $bio       = htmlspecialchars(mb_substr((string)($f['bio'] ?? ''), 0, 110));
-                $location  = htmlspecialchars((string)($f['localisation'] ?? ''));
-                $fullName  = htmlspecialchars(trim($f['prenom'] . ' ' . $f['nom']));
-                $avatar    = avatarUrl($f['photo'], $fullName, 'F97316', 168);
-            ?>
-              <div class="col-md-6 col-lg-4" data-aos="fade-up">
-                <div class="talent-card">
-                  <div class="talent-banner"></div>
-                  <img src="<?= $avatar ?>" alt="<?= $fullName ?>" class="talent-avatar">
-                  <div class="text-center px-3 pb-3 d-flex flex-column flex-grow-1">
-                    <h5 class="mb-1"><?= $fullName ?></h5>
-                    <?php if ($location): ?>
-                      <div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <?= $location ?></div>
-                    <?php endif; ?>
-                    <?php if ($bio): ?><p class="small text-muted mb-3"><?= $bio ?>...</p><?php endif; ?>
-                    <?php if (!empty($skills)): ?>
-                      <div class="mb-3">
-                        <?php foreach ($skills as $s): ?><span class="skill-chip"><?= htmlspecialchars($s) ?></span><?php endforeach; ?>
-                      </div>
-                    <?php endif; ?>
-                    <a href="../chat/new_conversation.php?user2=<?= (int)$f['id'] ?>"
-                       class="btn btn-sm w-100 mt-auto"
-                       style="background: linear-gradient(135deg, var(--sb-blue), var(--sb-orange)); color:#fff; font-weight:600; border-radius:10px;">
-                      <i class="bi bi-chat-dots me-1"></i> Contacter
-                    </a>
-                  </div>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-      </section>
-    <?php endif; ?>
+  <?php else: /* =================== MARKETING ============================== */ ?>
 
-  <?php else: /* =================================================== MARKETING (LOGGED-OUT) =================================================== */ ?>
-
-    <!-- ================== HERO MARKETING ================== -->
-    <section class="hero-marketing">
+    <!-- Hero (marketing) -->
+    <section class="hero">
+      <div class="blob sage  blob-1"></div>
+      <div class="blob honey blob-2"></div>
       <div class="container">
-        <div class="row align-items-center g-5">
-          <div class="col-lg-6" data-aos="fade-right">
-            <span class="section-tag" style="background: rgba(249,115,22,.1); color: var(--sb-orange);">
-              <i class="bi bi-rocket-takeoff me-1"></i> Marketplace freelance
-            </span>
-            <h1 class="display-3 mt-3 mb-4">
-              Trouvez le <span class="accent">talent parfait</span><br>
+        <div class="hero-grid">
+
+          <div data-aos="fade-up">
+            <span class="eyebrow"><span class="dot"></span> Marketplace freelance · Tunisie</span>
+            <h1 class="display-x mt-3 mb-3">
+              Trouvez le talent <span class="accent">parfait</span><br>
               pour votre projet.
             </h1>
-            <p class="lead text-muted mb-4">
-              SkillBridge connecte clients et freelancers vérifiés. Publiez un projet, recevez des offres ciblées et collaborez via une <strong>messagerie temps réel</strong>.
+            <p class="lead-x" style="max-width:520px;">
+              SkillBridge connecte clients et freelancers vérifiés. Publiez un projet, recevez des offres ciblées, collaborez en messagerie temps réel — tout au même endroit.
             </p>
-            <div class="d-flex flex-wrap gap-2 mb-4">
-              <a href="register.php" class="btn btn-lg" style="background: linear-gradient(135deg, var(--sb-orange), var(--sb-blue)); color:#fff; font-weight:600; padding: 14px 28px; border-radius:14px;">
-                <i class="bi bi-rocket-takeoff me-1"></i> Commencer gratuitement
+
+            <div class="hero-cta-row">
+              <a href="register.php" class="btn-sage">
+                Commencer gratuitement <i class="bi bi-arrow-right"></i>
               </a>
-              <a href="#how-it-works" class="btn btn-lg btn-outline-dark" style="border-radius:14px; padding: 14px 28px;">
-                Comment ça marche <i class="bi bi-arrow-down ms-1"></i>
+              <a href="#how-it-works" class="btn-ghost">
+                Comment ça marche
               </a>
             </div>
-            <!-- Stats -->
-            <div class="row g-2 mt-4">
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= max(1, $stats['freelancers']) ?>+</div><div class="lbl">Freelancers</div></div></div>
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= max(1, $stats['clients']) ?>+</div><div class="lbl">Clients</div></div></div>
-              <div class="col-4"><div class="stat-pill"><div class="num"><?= max(1, $stats['conversations']) ?>+</div><div class="lbl">Collaborations</div></div></div>
+
+            <div class="hero-stats">
+              <div class="cell"><div class="num"><?= max(1, $stats['freelancers']) ?>+</div><div class="lbl">Freelancers</div></div>
+              <div class="cell"><div class="num"><?= max(1, $stats['clients']) ?>+</div><div class="lbl">Clients</div></div>
+              <div class="cell"><div class="num"><?= max(1, $stats['conversations']) ?>+</div><div class="lbl">Collaborations</div></div>
             </div>
           </div>
 
-          <div class="col-lg-6 d-none d-lg-block position-relative" data-aos="fade-left">
-            <div class="hero-img-wrap">
-              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80"
-                   alt="Équipe collaborant sur un projet" loading="eager">
+          <div class="hero-visual d-none d-lg-block" data-aos="fade-left">
+            <div class="hero-photo">
+              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=900&auto=format&fit=crop&q=80" alt="Équipe collaborant sur un projet">
             </div>
-            <!-- Floating cards on top of the image -->
-            <div class="hero-floating-card" style="top:30px; left:-30px;">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-blue);"><i class="bi bi-shield-check"></i></div>
-              <div>
-                <div class="fw-bold small">Profils vérifiés</div>
-                <div class="small text-muted" style="font-size:.75rem;">Email + identité</div>
+            <div class="signal-card">
+              <span class="pulse"></span>
+              <span class="txt">Profils vérifiés</span>
+            </div>
+            <?php if ($weekTalent): $wtName = trim($weekTalent['prenom'].' '.$weekTalent['nom']);
+                                    $wtAva  = avatarUrl($weekTalent['photo'], $wtName, '1F5F4D', 96);
+                                    $wtRole = !empty($weekTalent['competences']) ? explode(',', $weekTalent['competences'])[0] : 'Freelancer'; ?>
+              <div class="talent-mini">
+                <img src="<?= $wtAva ?>" alt="">
+                <div>
+                  <div class="label">Talent du moment</div>
+                  <div class="name"><?= htmlspecialchars($wtName) ?></div>
+                  <div class="role"><?= htmlspecialchars(trim($wtRole)) ?></div>
+                </div>
               </div>
-            </div>
-            <div class="hero-floating-card" style="bottom:30px; right:-20px;">
-              <div style="width:38px;height:38px;border-radius:10px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;color:var(--sb-orange);"><i class="bi bi-chat-dots-fill"></i></div>
-              <div>
-                <div class="fw-bold small">Chat temps réel</div>
-                <div class="small text-muted" style="font-size:.75rem;">Messages instantanés</div>
+            <?php else: ?>
+              <div class="talent-mini">
+                <div style="width:46px;height:46px;border-radius:50%;background:var(--sage-soft);display:flex;align-items:center;justify-content:center;color:var(--sage);font-size:1.2rem;flex-shrink:0;">
+                  <i class="bi bi-chat-dots-fill"></i>
+                </div>
+                <div>
+                  <div class="label">Chat temps réel</div>
+                  <div class="name">Messagerie instantanée</div>
+                  <div class="role">Fichiers, photos, réactions</div>
+                </div>
               </div>
-            </div>
+            <?php endif; ?>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================== COMMENT ÇA MARCHE ================== -->
-    <section id="how-it-works" class="section-pad" style="background:#f8fafc;">
+    <!-- Method (3 steps) -->
+    <section class="s-pad" id="how-it-works">
       <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag">Démarrer en 3 étapes</span>
-          <h2 class="section-title display-5 mb-3">Comment ça marche</h2>
-          <p class="lead text-muted">De l'inscription à la première mission, SkillBridge vous accompagne.</p>
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> Méthode</span>
+          <h2 class="display-x">Démarrez en <span class="accent">trois étapes</span>.</h2>
+          <p class="lead-x">De l'inscription à la première mission, sans friction inutile.</p>
         </div>
-        <div class="row g-4">
-          <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
-            <div class="step-card">
-              <span class="step-num">1</span>
-              <h4 class="fw-bold">Créez votre compte</h4>
-              <p class="text-muted">Inscription en quelques secondes — email, Google, GitHub ou même reconnaissance faciale. Choisissez votre rôle (client ou freelancer).</p>
-            </div>
+
+        <div class="method-grid">
+          <div class="method-card" data-aos="fade-up">
+            <div class="num">1</div>
+            <h3>Créez votre compte</h3>
+            <p>Inscription en quelques secondes — email, Google, GitHub, Discord, ou reconnaissance faciale. Choisissez votre rôle.</p>
           </div>
-          <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
-            <div class="step-card">
-              <span class="step-num">2</span>
-              <h4 class="fw-bold">Trouvez ou présentez-vous</h4>
-              <p class="text-muted">Côté <strong style="color:var(--sb-blue)">client</strong> : parcourez les freelancers vérifiés. Côté <strong style="color:var(--sb-orange)">freelancer</strong> : créez un profil qui vous distingue.</p>
-            </div>
+          <div class="method-card featured" data-aos="fade-up" data-aos-delay="100">
+            <div class="num">2</div>
+            <h3>Présentez-vous</h3>
+            <p>Côté client : parcourez les freelancers vérifiés. Côté freelancer : créez un profil distinctif avec compétences, bio et localisation.</p>
           </div>
-          <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
-            <div class="step-card">
-              <span class="step-num">3</span>
-              <h4 class="fw-bold">Collaborez en direct</h4>
-              <p class="text-muted">Échanges via la messagerie temps réel : messages, fichiers, photos, réactions. Tout reste sur la plateforme.</p>
-            </div>
+          <div class="method-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="num">3</div>
+            <h3>Collaborez en direct</h3>
+            <p>Messagerie temps réel — messages, fichiers, photos, réactions emoji. Tout reste sécurisé sur la plateforme.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ================== FREELANCERS EN VEDETTE ================== -->
-    <?php if (!empty($featured)): ?>
-    <section id="featured" class="section-pad">
+  <?php endif; /* end split */ ?>
+
+  <!-- Talents (shared) -->
+  <?php if (!empty($featured)): ?>
+    <section class="s-pad" id="talents" style="background: var(--paper); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);">
       <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag" style="background: rgba(249,115,22,.1); color: var(--sb-orange);">Talents vérifiés</span>
-          <h2 class="section-title display-5 mb-3">Freelancers en vedette</h2>
-          <p class="lead text-muted">Quelques-uns des talents disponibles dès aujourd'hui.</p>
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow honey"><span class="dot"></span> Talents vérifiés</span>
+          <h2 class="display-x">
+            <?php if ($isClient): ?>Recommandés <span class="accent">pour vous</span>.
+            <?php elseif ($isLoggedIn): ?>La <span class="accent">communauté</span>.
+            <?php else: ?>Quelques <span class="accent">talents</span> disponibles.<?php endif; ?>
+          </h2>
+          <p class="lead-x">Profils vérifiés, disponibles dès aujourd'hui.</p>
         </div>
-        <div class="row g-4">
-          <?php foreach ($featured as $f):
+
+        <div class="talent-grid">
+          <?php foreach ($featured as $i => $f):
               $skills    = $pickSkills($f['competences'] ?? '', 3);
-              $bio       = htmlspecialchars(mb_substr((string)($f['bio'] ?? ''), 0, 110));
+              $bio       = htmlspecialchars(mb_substr((string)($f['bio'] ?? ''), 0, 80));
               $location  = htmlspecialchars((string)($f['localisation'] ?? ''));
               $fullName  = htmlspecialchars(trim($f['prenom'] . ' ' . $f['nom']));
-              $avatar    = avatarUrl($f['photo'], $fullName, 'F97316', 168);
+              $avatar    = avatarUrl($f['photo'], $fullName, '1F5F4D', 168);
+              $contactHref = $isLoggedIn ? "../chat/new_conversation.php?user2=" . (int)$f['id'] : 'register.php';
+              $contactLabel = $isLoggedIn ? 'Contacter' : 'Se connecter pour contacter';
           ?>
-            <div class="col-md-6 col-lg-4" data-aos="fade-up">
-              <div class="talent-card">
-                <div class="talent-banner"></div>
-                <img src="<?= $avatar ?>" alt="<?= $fullName ?>" class="talent-avatar">
-                <div class="text-center px-3 pb-3 d-flex flex-column flex-grow-1">
-                  <h5 class="mb-1"><?= $fullName ?></h5>
-                  <?php if ($location): ?><div class="small text-muted mb-2"><i class="bi bi-geo-alt"></i> <?= $location ?></div><?php endif; ?>
-                  <?php if ($bio): ?><p class="small text-muted mb-3"><?= $bio ?>...</p><?php endif; ?>
-                  <?php if (!empty($skills)): ?>
-                    <div class="mb-3">
-                      <?php foreach ($skills as $s): ?><span class="skill-chip"><?= htmlspecialchars($s) ?></span><?php endforeach; ?>
-                    </div>
-                  <?php endif; ?>
-                  <a href="register.php" class="btn btn-sm btn-outline-primary w-100 mt-auto" style="border-radius:10px;">
-                    Se connecter pour contacter
-                  </a>
+            <article class="talent-card" data-aos="fade-up" data-aos-delay="<?= ($i % 3) * 80 ?>">
+              <div class="ava-wrap">
+                <img src="<?= $avatar ?>" alt="<?= $fullName ?>">
+                <span class="verified" title="Profil vérifié"><i class="bi bi-check-lg"></i></span>
+              </div>
+              <h4><?= $fullName ?></h4>
+              <?php if ($location): ?><div class="loc"><i class="bi bi-geo-alt-fill" style="color: var(--sage);"></i> <?= $location ?></div><?php endif; ?>
+              <?php if ($bio): ?><p class="bio"><?= $bio ?>…</p><?php endif; ?>
+              <?php if (!empty($skills)): ?>
+                <div class="skills">
+                  <?php foreach ($skills as $s): ?><span class="skill"><?= htmlspecialchars($s) ?></span><?php endforeach; ?>
                 </div>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    </section>
-    <?php endif; ?>
-
-    <!-- ================== POURQUOI SKILLBRIDGE ================== -->
-    <section id="why" class="section-pad" style="background:#f8fafc;">
-      <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag">Pourquoi SkillBridge</span>
-          <h2 class="section-title display-5 mb-3">Une plateforme pensée pour les pros</h2>
-          <p class="lead text-muted">Toutes les fonctionnalités dont vous avez besoin pour bien collaborer.</p>
-        </div>
-        <div class="row g-4">
-          <?php
-            $features = [
-              ['bi-chat-dots-fill',     'Messagerie temps réel',      'Discussions instantanées avec accusés de réception, indicateur de saisie, réactions emoji et partage de fichiers.'],
-              ['bi-shield-lock-fill',   'Authentification sécurisée', 'Connexion classique, OAuth Google / GitHub / Discord, ou reconnaissance faciale.'],
-              ['bi-bell-fill',          'Notifications instantanées', 'Cloche + toasts en direct dès qu\'un message ou changement vous concerne.'],
-              ['bi-person-badge-fill',  'Profils vérifiés',           'Email vérifié, photos, bio, compétences et localisation pour collaborer en confiance.'],
-            ];
-            foreach ($features as $i => [$icon, $title, $desc]):
-          ?>
-            <div class="col-md-6 col-lg-3" data-aos="zoom-in" data-aos-delay="<?= ($i + 1) * 100 ?>">
-              <div class="feature-card">
-                <div class="feature-icon"><i class="bi <?= $icon ?>"></i></div>
-                <h5 class="fw-bold mb-2"><?= $title ?></h5>
-                <p class="text-muted small mb-0"><?= $desc ?></p>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================== CATÉGORIES ================== -->
-    <section class="section-pad">
-      <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag">Explorez par domaine</span>
-          <h2 class="section-title display-5 mb-3">Catégories de services</h2>
-          <p class="lead text-muted">Tous les domaines couverts par les freelancers SkillBridge.</p>
-        </div>
-        <div class="row g-4">
-          <?php
-            $cats = [
-              ['bi-code-slash',     'Développement web &amp; mobile', 'Sites, apps, intégrations, API.',         '#2563eb', 'rgba(37,99,235,.1)'],
-              ['bi-palette-fill',   'Design &amp; UI/UX',             'Identité, maquettes, prototypes.',        '#f97316', 'rgba(249,115,22,.1)'],
-              ['bi-megaphone-fill', 'Marketing digital &amp; SEO',    'Campagnes, référencement, content.',      '#10b981', 'rgba(16,185,129,.1)'],
-              ['bi-pencil-square',  'Rédaction &amp; traduction',     'Articles, traductions, copywriting.',     '#7c3aed', 'rgba(124,58,237,.1)'],
-            ];
-            foreach ($cats as $i => [$icon, $title, $desc, $color, $bg]):
-          ?>
-            <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="<?= ($i + 1) * 100 ?>">
-              <a href="register.php" class="category-card">
-                <div class="cat-icon" style="background: <?= $bg ?>; color: <?= $color ?>;"><i class="bi <?= $icon ?>"></i></div>
-                <h6 class="fw-bold mb-2"><?= $title ?></h6>
-                <p class="small text-muted mb-0"><?= $desc ?></p>
+              <?php endif; ?>
+              <a href="<?= $contactHref ?>" class="btn-talent">
+                <i class="bi bi-chat-dots"></i> <?= $contactLabel ?>
               </a>
-            </div>
+            </article>
           <?php endforeach; ?>
         </div>
       </div>
     </section>
+  <?php endif; ?>
 
-    <!-- ================== FAQ ================== -->
-    <section id="faq" class="section-pad" style="background:#f8fafc;">
+  <?php if (!$isLoggedIn): ?>
+
+    <!-- Why (clean 4-grid) -->
+    <section class="s-pad" id="why">
       <div class="container">
-        <div class="text-center mb-5" data-aos="fade-up">
-          <span class="section-tag">Vous vous demandez ?</span>
-          <h2 class="section-title display-5 mb-3">Questions fréquentes</h2>
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> Plateforme</span>
+          <h2 class="display-x">Pensée pour les <span class="accent">pros</span>.</h2>
+          <p class="lead-x">Toutes les fonctionnalités essentielles pour collaborer en confiance — sans abonnement, sans intermédiaires opaques.</p>
         </div>
-        <div class="row justify-content-center"><div class="col-lg-9">
-          <div class="accordion" id="faqAccordion">
-            <?php
-              $faq = [
-                ['L\'inscription est-elle gratuite ?',
-                 'Oui, créer un compte sur SkillBridge est totalement gratuit, que vous soyez client ou freelancer. Inscription par email, Google, GitHub, Discord ou reconnaissance faciale.'],
-                ['Comment contacter un freelancer ?',
-                 'Une fois connecté, ouvrez le profil d\'un freelancer et cliquez sur "Contacter". Une conversation est créée et vous pouvez démarrer immédiatement la discussion.'],
-                ['Puis-je partager des fichiers et photos via la messagerie ?',
-                 'Oui, jusqu\'à 10 Mo par fichier (JPG/PNG/WebP, PDF, Word, Excel, ZIP, etc.). Les fichiers sont stockés de manière sécurisée et accessibles uniquement aux participants.'],
-                ['Comment fonctionne la connexion par reconnaissance faciale ?',
-                 'À l\'inscription, vous pouvez enregistrer votre visage. Aux connexions suivantes, vous activez la caméra et la plateforme vous reconnaît automatiquement.'],
-                ['J\'ai oublié mon mot de passe, que faire ?',
-                 'Cliquez sur "Mot de passe oublié ?" depuis la page de connexion. Vous recevrez un lien de réinitialisation par email, valable 1 heure.'],
-              ];
-              foreach ($faq as $i => [$q, $a]): $id = 'faq' . ($i + 1); ?>
-              <div class="accordion-item border-0 mb-2 rounded-3 overflow-hidden" style="box-shadow:0 1px 3px rgba(0,0,0,.04);">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $id ?>"><?= htmlspecialchars($q) ?></button>
-                </h2>
-                <div id="<?= $id ?>" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-muted"><?= htmlspecialchars($a) ?></div>
-                </div>
-              </div>
-            <?php endforeach; ?>
+
+        <div class="why-grid">
+          <div class="why-card" data-aos="fade-up">
+            <div class="ic"><i class="bi bi-chat-dots-fill"></i></div>
+            <h5>Messagerie temps réel</h5>
+            <p>Discussions instantanées, accusés de réception, indicateurs de saisie, réactions emoji.</p>
           </div>
-        </div></div>
-      </div>
-    </section>
-
-    <!-- ================== CTA FINAL DUAL ================== -->
-    <section class="section-pad">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-6" data-aos="fade-right">
-            <div class="step-card text-center" style="border-top: 4px solid var(--sb-blue);">
-              <div style="width:78px;height:78px;border-radius:20px;background:rgba(37,99,235,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--sb-blue);margin:0 auto 18px;">
-                <i class="bi bi-briefcase-fill"></i>
-              </div>
-              <h3 class="fw-bold">Vous êtes Client ?</h3>
-              <p class="text-muted">Trouvez le freelancer idéal pour votre prochain projet et collaborez en toute confiance.</p>
-              <a href="register.php" class="btn btn-lg" style="background:var(--sb-blue);color:#fff;border-radius:12px;padding:12px 28px;font-weight:600;">
-                Trouver un freelancer <i class="bi bi-arrow-right ms-1"></i>
-              </a>
-            </div>
+          <div class="why-card honey" data-aos="fade-up" data-aos-delay="80">
+            <div class="ic"><i class="bi bi-shield-lock-fill"></i></div>
+            <h5>Auth sécurisée</h5>
+            <p>Email, OAuth (Google, GitHub, Discord), ou reconnaissance faciale.</p>
           </div>
-          <div class="col-md-6" data-aos="fade-left">
-            <div class="step-card text-center" style="border-top: 4px solid var(--sb-orange);">
-              <div style="width:78px;height:78px;border-radius:20px;background:rgba(249,115,22,.1);display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--sb-orange);margin:0 auto 18px;">
-                <i class="bi bi-tools"></i>
-              </div>
-              <h3 class="fw-bold">Vous êtes Freelancer ?</h3>
-              <p class="text-muted">Mettez en avant vos compétences et trouvez de nouvelles missions adaptées à votre profil.</p>
-              <a href="register.php" class="btn btn-lg" style="background:var(--sb-orange);color:#fff;border-radius:12px;padding:12px 28px;font-weight:600;">
-                Créer mon profil <i class="bi bi-arrow-right ms-1"></i>
-              </a>
-            </div>
+          <div class="why-card" data-aos="fade-up" data-aos-delay="160">
+            <div class="ic"><i class="bi bi-bell-fill"></i></div>
+            <h5>Notifications live</h5>
+            <p>Cloche et toasts en direct dès qu'un message vous concerne.</p>
+          </div>
+          <div class="why-card honey" data-aos="fade-up" data-aos-delay="240">
+            <div class="ic"><i class="bi bi-person-badge-fill"></i></div>
+            <h5>Profils vérifiés</h5>
+            <p>Email vérifié, photos, bio, compétences et localisation transparentes.</p>
           </div>
         </div>
       </div>
     </section>
 
-  <?php endif; /* /flow split */ ?>
+    <!-- Categories -->
+    <section class="s-pad" id="categories" style="background: var(--paper); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);">
+      <div class="container">
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> Catégories</span>
+          <h2 class="display-x">Tous les <span class="accent">domaines</span>.</h2>
+          <p class="lead-x">Du code à la création, du marketing à la rédaction — tous les talents au même endroit.</p>
+        </div>
+
+        <div class="cat-grid">
+          <?php foreach ($cats as $i => [$icon, $title, $desc, $kind]): ?>
+            <a href="register.php" class="cat-card cat-<?= $kind ?>" data-aos="fade-up" data-aos-delay="<?= $i * 80 ?>">
+              <div class="cat-ic"><i class="bi <?= $icon ?>"></i></div>
+              <div class="cat-title"><?= $title ?></div>
+              <div class="cat-desc"><?= $desc ?></div>
+              <div class="cat-arrow">Explorer <i class="bi bi-arrow-right"></i></div>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="s-pad" id="faq">
+      <div class="container">
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> FAQ</span>
+          <h2 class="display-x">Vous vous <span class="accent">demandez</span> ?</h2>
+          <p class="lead-x">Les questions les plus fréquentes. Si la vôtre n'y est pas, écrivez-nous.</p>
+        </div>
+
+        <div class="faq-list" data-aos="fade-up">
+          <?php foreach ($faq as [$q, $a]): ?>
+            <details class="faq-item">
+              <summary>
+                <span><?= htmlspecialchars($q) ?></span>
+                <span class="plus">+</span>
+              </summary>
+              <p><?= htmlspecialchars($a) ?></p>
+            </details>
+          <?php endforeach; ?>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dual CTA -->
+    <section class="s-pad" style="background: var(--paper); border-top: 1px solid var(--rule);">
+      <div class="container">
+        <div class="section-head text-center mx-auto" data-aos="fade-up">
+          <span class="eyebrow"><span class="dot"></span> Démarrer</span>
+          <h2 class="display-x">Choisissez votre <span class="accent">rôle</span>.</h2>
+          <p class="lead-x">Que vous cherchiez un freelancer ou que vous proposiez vos talents — tout commence ici.</p>
+        </div>
+
+        <div class="dual-grid">
+          <div class="dual-card d-sage" data-aos="fade-right">
+            <i class="bi bi-briefcase-fill icon-deco"></i>
+            <span class="role-badge">Pour les clients</span>
+            <h3>Trouvez le freelancer <span class="accent">idéal</span>.</h3>
+            <p>Parcourez les profils vérifiés, comparez les compétences et démarrez une collaboration en quelques clics.</p>
+            <a href="register.php" class="btn-action">
+              Trouver un freelancer <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+          <div class="dual-card d-honey" data-aos="fade-left">
+            <i class="bi bi-tools icon-deco"></i>
+            <span class="role-badge">Pour les freelancers</span>
+            <h3>Mettez en avant votre <span class="accent">talent</span>.</h3>
+            <p>Créez un profil distinctif, recevez des offres ciblées et collaborez en toute simplicité.</p>
+            <a href="register.php" class="btn-action">
+              Créer mon profil <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <?php endif; ?>
 
   </main>
 
   <!-- ================== FOOTER ================== -->
-  <footer id="footer" class="footer" style="background:var(--sb-dark); color:#cbd5e1;">
-    <div class="container py-5">
+  <footer class="sb-footer">
+    <div class="container">
       <div class="row gy-4">
-        <div class="col-lg-4">
-          <a href="index.php" class="logo d-flex align-items-center text-white text-decoration-none">
-            <span class="sitename" style="color:#fff; font-weight:800; font-size:1.5rem;">SkillBridge</span>
+        <div class="col-lg-5">
+          <a href="index.php" class="foot-logo">
+            <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="lazy">
           </a>
-          <p class="mt-3 mb-0 small">La marketplace freelance qui matche les bons talents avec les bons projets.</p>
-        </div>
-        <div class="col-lg-2 col-6">
-          <h6 class="fw-bold text-white mb-3">Plateforme</h6>
-          <ul class="list-unstyled small">
-            <li class="mb-2"><a href="#how-it-works" class="text-decoration-none" style="color:#94a3b8;">Comment ça marche</a></li>
-            <li class="mb-2"><a href="#featured" class="text-decoration-none" style="color:#94a3b8;">Freelancers</a></li>
-            <li class="mb-2"><a href="#why" class="text-decoration-none" style="color:#94a3b8;">Pourquoi nous</a></li>
-            <li class="mb-2"><a href="#faq" class="text-decoration-none" style="color:#94a3b8;">FAQ</a></li>
-          </ul>
+          <p class="mt-3 mb-0" style="color:rgba(255,255,255,.65); max-width: 380px; font-size:.92rem; line-height:1.6;">
+            La marketplace freelance qui matche les bons talents avec les bons projets. Pensée à Esprit, déployée en Tunisie.
+          </p>
         </div>
         <div class="col-lg-3 col-6">
-          <h6 class="fw-bold text-white mb-3">Compte</h6>
-          <ul class="list-unstyled small">
+          <h6>Plateforme</h6>
+          <ul class="list-unstyled" style="line-height: 2;">
+            <li><a href="#how-it-works">Méthode</a></li>
+            <li><a href="#talents">Talents</a></li>
+            <li><a href="#why">Plateforme</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-6">
+          <h6>Compte</h6>
+          <ul class="list-unstyled" style="line-height: 2;">
             <?php if ($isLoggedIn): ?>
-              <li class="mb-2"><a href="profil.php" class="text-decoration-none" style="color:#94a3b8;">Mon profil</a></li>
-              <li class="mb-2"><a href="../chat/conversations.php" class="text-decoration-none" style="color:#94a3b8;">Mes conversations</a></li>
-              <li class="mb-2"><a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout" class="text-decoration-none" style="color:#94a3b8;">Déconnexion</a></li>
+              <li><a href="profil.php">Mon profil</a></li>
+              <li><a href="../chat/conversations.php">Conversations</a></li>
+              <li><a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout">Déconnexion</a></li>
             <?php else: ?>
-              <li class="mb-2"><a href="login.php" class="text-decoration-none" style="color:#94a3b8;">Connexion</a></li>
-              <li class="mb-2"><a href="register.php" class="text-decoration-none" style="color:#94a3b8;">Inscription</a></li>
-              <li class="mb-2"><a href="forgot-password.php" class="text-decoration-none" style="color:#94a3b8;">Mot de passe oublié</a></li>
+              <li><a href="login.php">Connexion</a></li>
+              <li><a href="register.php">Inscription</a></li>
+              <li><a href="forgot-password.php">Mot de passe</a></li>
             <?php endif; ?>
           </ul>
         </div>
-        <div class="col-lg-3">
-          <h6 class="fw-bold text-white mb-3">Contact</h6>
-          <p class="small mb-1" style="color:#94a3b8;">Esprit, Z.I. Charguia 2</p>
-          <p class="small mb-0" style="color:#94a3b8;">2035 Ariana, Tunisie</p>
+        <div class="col-lg-2">
+          <h6>Contact</h6>
+          <p style="color:rgba(255,255,255,.65); font-size:.9rem; margin-bottom:4px;">Esprit, Charguia 2</p>
+          <p style="color:rgba(255,255,255,.65); font-size:.9rem; margin-bottom:0;">2035 Ariana, Tunisie</p>
         </div>
       </div>
-      <hr style="border-color:#1e293b; margin:30px 0 20px;">
-      <div class="text-center small" style="color:#64748b;">
-        © <?= date('Y') ?> <strong style="color:#cbd5e1;">SkillBridge</strong> — Tous droits réservés.
+      <hr style="border-color: rgba(255,255,255,.08); margin: 36px 0 20px;">
+      <div class="d-flex justify-content-between flex-wrap gap-2 copy">
+        <div>© <?= date('Y') ?> SkillBridge — Tous droits réservés.</div>
+        <div>Built at Esprit · 2A 2025/2026</div>
       </div>
     </div>
   </footer>
@@ -865,6 +1169,21 @@ $pickSkills = fn($csv, $max = 3) => $csv ? array_slice(array_filter(array_map('t
 
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/js/main.js"></script>
+  <script>
+    if (typeof AOS !== 'undefined') {
+      AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true });
+    }
+  </script>
+  <?php if ($isLoggedIn): ?>
+  <script src="../../shared/chatbus.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof ChatBus !== 'undefined') {
+        ChatBus.init({ apiBase: '<?= $BASE ?>/api/chat.php', user: <?= (int)$userId ?>, conv: 0 });
+        ChatBus.mountBell('#bellSlot');
+      }
+    });
+  </script>
+  <?php endif; ?>
 </body>
 </html>

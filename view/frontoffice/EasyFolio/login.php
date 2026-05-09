@@ -23,154 +23,260 @@ unset($_SESSION['error'], $_SESSION['success']);
   <meta name="description" content="Connectez-vous à votre compte SkillBridge.">
 
   <link href="assets/img/favicon.png" rel="icon">
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/css/main.css" rel="stylesheet">
 
   <style>
-    :root { --sb-blue:#2563eb; --sb-orange:#f97316; --sb-dark:#0f172a; --sb-soft:#f8fafc; }
-    body { font-family:'Inter', system-ui, -apple-system, sans-serif; }
+    :root {
+      --bg:          #F7F4ED;
+      --paper:       #FFFFFF;
+      --ink:         #0F0F0F;
+      --ink-2:       #2A2A2A;
+      --ink-mute:    #5C5C5C;
+      --ink-soft:    #A3A3A3;
+      --rule:        #E8E2D5;
+      --sage:        #1F5F4D;
+      --sage-d:      #134438;
+      --sage-soft:   #E8F0EC;
+      --honey:       #F5C842;
+      --honey-d:     #E0B033;
+      --honey-soft:  #FBF1D0;
+      --sb-orange: var(--honey);
+      --sb-blue:   var(--sage);
+      --sb-dark:   var(--ink);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--ink); letter-spacing: -.005em;
+      -webkit-font-smoothing: antialiased; margin: 0;
+    }
+    ::selection { background: var(--sage); color: var(--honey); }
 
+    h1, h2, h3, h4, h5 { font-family: 'Manrope', sans-serif; font-weight: 700; letter-spacing: -.022em; color: var(--ink); }
+    .display-x { font-size: clamp(2rem, 3.6vw, 2.8rem); line-height: 1.05; font-weight: 800; letter-spacing: -.025em; }
+    .display-l { font-size: clamp(1.6rem, 2.4vw, 2.1rem); line-height: 1.1;  letter-spacing: -.02em; font-weight: 800; }
+    .lead-x    { font-size: 1rem; line-height: 1.55; color: var(--ink-mute); font-weight: 400; }
+    .accent    { font-style: italic; font-weight: 700; color: var(--sage); }
+
+    .eyebrow {
+      display:inline-flex; align-items:center; gap:8px;
+      font-size: .8rem; font-weight: 600;
+      color: var(--sage); padding: 6px 12px;
+      background: var(--sage-soft); border-radius: 999px;
+    }
+    .eyebrow .dot { width:6px; height:6px; border-radius:50%; background: var(--sage); }
+    .eyebrow.honey { color: #92660A; background: var(--honey-soft); }
+    .eyebrow.honey .dot { background: var(--honey-d); }
+
+    /* ----------------- Header ----------------- */
+    .sb-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(247,244,237,.85); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--rule);
+    }
+    .sb-header .container { display:flex; align-items:center; justify-content:space-between; padding: 14px 0; }
+    .sb-logo { display:inline-flex; align-items:center; text-decoration:none; color: var(--ink); }
+    .sb-logo .logo-img { height: 38px; width: auto; display: block; }
+    .sb-nav { display:flex; align-items:center; gap: 28px; }
+    .sb-nav a { color: var(--ink-mute); text-decoration:none; font-weight:500; font-size:.92rem; transition: color .15s; }
+    .sb-nav a:hover, .sb-nav a.active { color: var(--ink); }
+    .sb-nav a.active { color: var(--sage); }
+    .sb-cta {
+      display:inline-flex; align-items:center; gap:8px;
+      background: var(--ink); color: var(--bg); padding: 10px 20px; border-radius: 999px;
+      text-decoration:none; font-weight:600; font-size:.92rem; transition: all .2s ease;
+    }
+    .sb-cta:hover { background: var(--sage); color: var(--paper); transform: translateY(-1px); }
+    @media (max-width: 991.98px) { .sb-nav { display: none; } }
+
+    /* ----------------- Auth canvas ----------------- */
     .auth-bg {
-      background:
-        radial-gradient(1100px 600px at 110% -10%, rgba(249,115,22,.18), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(37,99,235,.15), transparent 60%),
-        #fff;
-      min-height: calc(100vh - 64px);
-      padding: 60px 0;
+      position: relative; overflow: hidden; min-height: calc(100vh - 64px);
+      padding: 48px 0 60px;
     }
-    .section-tag {
-      display:inline-block; padding:4px 14px; border-radius:999px;
-      background: rgba(37,99,235,.08); color: var(--sb-blue);
-      font-weight:600; font-size:.82rem;
-    }
-    h1.auth-title { font-weight:800; line-height:1.05; letter-spacing:-.02em; color:var(--sb-dark); }
-    h1.auth-title .accent {
-      background: linear-gradient(90deg, var(--sb-orange), var(--sb-blue));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-    }
+    .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; pointer-events: none; z-index: 0; }
+    .blob.sage  { background: var(--sage-soft); }
+    .blob.honey { background: var(--honey-soft); }
+    .blob-1 { width: 380px; height: 380px; left: -120px; top: -120px; }
+    .blob-2 { width: 360px; height: 360px; right: -80px; bottom: -60px; }
+    .auth-bg .container { position: relative; z-index: 1; }
 
+    .auth-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 60px; align-items: center; }
+    @media (max-width: 991.98px) { .auth-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+    /* ----------------- Auth card ----------------- */
     .auth-card {
-      background:#fff; border:1px solid #e2e8f0; border-radius:24px;
-      box-shadow: 0 30px 60px -25px rgba(15,23,42,.18);
-      padding: 38px 36px;
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 24px;
+      padding: 36px 34px;
+      box-shadow: 0 30px 60px -25px rgba(31,95,77,.18);
     }
-    .auth-card .form-label { font-weight:600; font-size:.88rem; color:#475569; }
+    .auth-card .form-label {
+      font-weight: 600; font-size: .88rem; color: var(--ink-2); margin-bottom: 6px; display: block;
+    }
     .auth-card .form-control {
-      border-radius:12px; padding:13px 14px; border:1px solid #e2e8f0;
-      transition: all .18s; font-size:.95rem;
+      border-radius: 12px; padding: 13px 14px; font-size: .96rem;
+      border: 1px solid var(--rule); background: var(--paper);
+      transition: border-color .18s, box-shadow .18s;
+      width: 100%;
     }
     .auth-card .form-control:focus {
-      border-color: var(--sb-blue); box-shadow: 0 0 0 4px rgba(37,99,235,.12);
+      outline: none;
+      border-color: var(--sage);
+      box-shadow: 0 0 0 4px rgba(31,95,77,.12);
     }
-    .auth-card .input-group .form-control { border-right:none; }
-    .auth-card .input-group .btn { border-radius:0 12px 12px 0; border:1px solid #e2e8f0; border-left:none; background:#fff; color:#64748b; }
-    .auth-card .form-check-input:checked { background-color: var(--sb-blue); border-color: var(--sb-blue); }
+    .auth-card .form-control.is-invalid { border-color: #DC2626; }
+    .auth-card .pwd-wrap { position: relative; }
+    .auth-card .pwd-wrap .form-control { padding-right: 48px; }
+    .auth-card .pwd-toggle {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      width: 36px; height: 36px; border-radius: 9px; border: none;
+      background: transparent; color: var(--ink-mute);
+      display: inline-flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all .15s ease; padding: 0;
+    }
+    .auth-card .pwd-toggle:hover { background: var(--bg); color: var(--ink); }
+    .auth-card .form-check-input:checked { background-color: var(--sage); border-color: var(--sage); }
 
-    .btn-gradient {
-      background: linear-gradient(135deg, var(--sb-orange), var(--sb-blue));
-      color:#fff !important; font-weight:600; padding:13px 24px; border-radius:14px;
-      border:none; transition: all .2s ease;
+    /* ----------------- Buttons ----------------- */
+    .btn-sage {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 22px; border-radius: 12px; border: none;
+      background: var(--sage); color: var(--paper) !important;
+      font-weight: 700; font-size: 1rem;
+      transition: all .2s ease; text-decoration: none; cursor: pointer;
     }
-    .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -10px rgba(37,99,235,.45); color:#fff; }
+    .btn-sage:hover { background: var(--sage-d); transform: translateY(-2px); box-shadow: 0 14px 28px -12px rgba(31,95,77,.4); }
+    .btn-sage:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
     .oauth-btn {
-      width:100%; padding:11px 16px; border-radius:12px; border:1px solid #e2e8f0;
-      background:#fff; color:#0f172a; font-weight:600; font-size:.92rem;
-      display:flex; align-items:center; justify-content:center; gap:8px;
-      transition: all .18s ease; text-decoration:none;
+      width: 100%; padding: 11px 16px; border-radius: 12px; border: 1px solid var(--rule);
+      background: var(--paper); color: var(--ink); font-weight: 600; font-size: .92rem;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all .18s ease; text-decoration: none; cursor: pointer;
     }
-    .oauth-btn:hover { transform: translateY(-2px); box-shadow:0 8px 20px -8px rgba(15,23,42,.16); color:#0f172a; border-color:#cbd5e1; }
-    .oauth-btn.google  i { color:#ea4335; }
-    .oauth-btn.github  i { color:#0f172a; }
-    .oauth-btn.discord i { color:#5865F2; }
-    .oauth-btn.face    { border:1px dashed #7c3aed; color:#7c3aed; background: rgba(124,58,237,.04); }
-    .oauth-btn.face i  { color:#7c3aed; }
+    .oauth-btn:hover { border-color: var(--ink); transform: translateY(-2px); color: var(--ink); }
+    .oauth-btn.google  i { color: #EA4335; }
+    .oauth-btn.github  i { color: var(--ink); }
+    .oauth-btn.discord i { color: #5865F2; }
+    .oauth-btn.face {
+      background: var(--sage-soft); color: var(--sage);
+      border: 1px dashed var(--sage);
+    }
+    .oauth-btn.face:hover { background: var(--sage); color: var(--paper); border-color: var(--sage); }
+    .oauth-btn.face i { color: inherit; }
 
-    .or-divider { display:flex; align-items:center; gap:12px; margin: 18px 0 14px; color:#94a3b8; font-size:.82rem; font-weight:500; }
-    .or-divider::before, .or-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+    .or-divider { display:flex; align-items:center; gap:12px; margin: 18px 0 14px; color: var(--ink-soft); font-size:.82rem; font-weight: 500; }
+    .or-divider::before, .or-divider::after { content:''; flex:1; height:1px; background: var(--rule); }
 
-    /* Right value-prop column */
+    /* ----------------- Right column feature tiles ----------------- */
     .feature-tile {
-      background:#fff; border:1px solid #e2e8f0; border-radius:14px;
-      padding:14px 16px; display:flex; gap:12px; align-items:center;
-      transition:all .2s; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+      background: var(--paper); border: 1px solid var(--rule); border-radius: 16px;
+      padding: 16px 18px; display: flex; gap: 14px; align-items: center;
+      transition: all .2s ease;
     }
-    .feature-tile:hover { transform: translateY(-2px); box-shadow:0 12px 24px -10px rgba(15,23,42,.1); }
+    .feature-tile:hover { transform: translateY(-2px); border-color: var(--sage); }
     .feature-tile .tile-icon {
-      width:44px; height:44px; border-radius:12px; flex-shrink:0;
-      display:flex; align-items:center; justify-content:center; font-size:1.2rem;
+      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
     }
-    .feature-tile .tile-title { font-weight:700; color: var(--sb-dark); font-size:.95rem; }
-    .feature-tile .tile-sub   { color:#64748b; font-size:.8rem; }
+    .feature-tile .tile-icon.t-sage  { background: var(--sage-soft); color: var(--sage); }
+    .feature-tile .tile-icon.t-honey { background: var(--honey-soft); color: #92660A; }
+    .feature-tile .tile-title { font-weight: 700; color: var(--ink); font-size: .98rem; line-height: 1.2; }
+    .feature-tile .tile-sub   { color: var(--ink-mute); font-size: .82rem; margin-top: 2px; }
+
+    /* ----------------- Alerts ----------------- */
+    .alert {
+      border-radius: 14px; padding: 14px 16px; border: 1px solid; margin-bottom: 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .alert-success { background: var(--sage-soft); border-color: rgba(31,95,77,.2); color: var(--sage-d); }
+    .alert-warning { background: var(--honey-soft); border-color: rgba(224,176,51,.3); color: #7a4f08; }
+    .alert-danger  { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+
+    /* ----------------- Modal (face login) ----------------- */
+    .modal-content { border: 1px solid var(--rule) !important; border-radius: 22px !important; background: var(--paper); }
+    .modal-header  { border-bottom: 1px solid var(--rule); padding: 20px 24px; }
+    .modal-body    { padding: 22px 24px 28px; }
+    .modal-title   { font-weight: 800; color: var(--ink); }
+
+    /* ----------------- Footer ----------------- */
+    .sb-footer { background: var(--ink); color: rgba(255,255,255,.65); padding: 22px 0; font-size: .88rem; text-align: center; }
+    .sb-footer strong { color: var(--paper); }
+
+    /* legacy hooks */
+    .navmenu a.active { color: var(--sage) !important; }
   </style>
 </head>
 
-<body class="index-page">
+<body>
 
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-      <a href="index.php" class="logo d-flex align-items-center me-auto me-xl-0">
-        <h1 class="sitename">SkillBridge</h1>
+  <header class="sb-header">
+    <div class="container">
+      <a href="index.php" class="sb-logo">
+        <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
-      <nav id="navmenu" class="navmenu">
-        <ul>
-          <li><a href="index.php">Accueil</a></li>
-          <li><a href="login.php" class="active">Connexion</a></li>
-          <li><a href="register.php">Inscription</a></li>
-        </ul>
-        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      <nav class="sb-nav">
+        <a href="index.php">Accueil</a>
+        <a href="login.php" class="active">Connexion</a>
+        <a href="register.php">Inscription</a>
       </nav>
+      <a href="register.php" class="sb-cta">
+        <span>Créer un compte</span><i class="bi bi-arrow-right"></i>
+      </a>
     </div>
   </header>
 
-  <main class="main">
+  <main>
     <section class="auth-bg">
+      <div class="blob sage  blob-1"></div>
+      <div class="blob honey blob-2"></div>
+
       <div class="container">
-        <div class="row align-items-center g-5 justify-content-center">
+        <div class="auth-grid">
 
           <!-- LEFT — Form -->
-          <div class="col-lg-6 col-xl-5" data-aos="fade-right">
+          <div data-aos="fade-right">
             <div class="auth-card">
-              <span class="section-tag">Bienvenue</span>
-              <h1 class="auth-title display-5 mt-3 mb-2">Se <span class="accent">reconnecter</span>.</h1>
-              <p class="text-muted mb-4">Entrez vos identifiants pour accéder à votre espace SkillBridge.</p>
+              <span class="eyebrow"><span class="dot"></span> Bienvenue</span>
+              <h1 class="display-x mt-3 mb-2">Se <span class="accent">reconnecter</span>.</h1>
+              <p class="lead-x mb-4" style="font-size:.95rem;">Entrez vos identifiants pour accéder à votre espace.</p>
 
               <?php if ($success): ?>
-                <div class="alert alert-success d-flex align-items-start gap-3" role="alert" style="border-radius:12px; border:1px solid #d1fae5;">
-                  <i class="bi bi-envelope-check fs-4 text-success mt-1"></i>
+                <div class="alert alert-success">
+                  <i class="bi bi-envelope-check fs-4 mt-1"></i>
                   <div>
-                    <h6 class="fw-bold mb-1">Compte créé avec succès !</h6>
-                    <p class="mb-0 small"><?= htmlspecialchars($success) ?></p>
+                    <div style="font-weight:700; margin-bottom:2px;">Compte créé avec succès !</div>
+                    <div style="font-size:.88rem;"><?= htmlspecialchars($success) ?></div>
                   </div>
                 </div>
               <?php endif; ?>
 
               <?php if ($error === 'desactivated'): ?>
-                <div class="alert alert-warning d-flex align-items-start gap-3" role="alert" style="border-radius:12px;">
-                  <i class="bi bi-shield-exclamation fs-3 text-warning mt-1"></i>
+                <div class="alert alert-warning">
+                  <i class="bi bi-shield-exclamation fs-3 mt-1"></i>
                   <div>
-                    <h6 class="fw-bold mb-1">Compte désactivé</h6>
-                    <p class="mb-0 small">Votre compte a été désactivé par l'administrateur. Contactez <a href="mailto:admin@skillbridge.com" class="fw-semibold">admin@skillbridge.com</a>.</p>
+                    <div style="font-weight:700; margin-bottom:2px;">Compte désactivé</div>
+                    <div style="font-size:.88rem;">Votre compte a été désactivé par l'administrateur. Contactez <a href="mailto:admin@skillbridge.com" style="color:inherit; font-weight:700;">admin@skillbridge.com</a>.</div>
                   </div>
                 </div>
               <?php elseif ($error === 'unverified'): ?>
-                <div class="alert alert-warning d-flex align-items-start gap-3" role="alert" style="border-radius:12px;">
-                  <i class="bi bi-envelope-exclamation fs-3 text-warning mt-1"></i>
+                <div class="alert alert-warning">
+                  <i class="bi bi-envelope-exclamation fs-3 mt-1"></i>
                   <div>
-                    <h6 class="fw-bold mb-1">Email non vérifié</h6>
-                    <p class="mb-0 small">Vérifiez votre boîte email et cliquez sur le lien de confirmation.</p>
+                    <div style="font-weight:700; margin-bottom:2px;">Email non vérifié</div>
+                    <div style="font-size:.88rem;">Vérifiez votre boîte email et cliquez sur le lien de confirmation.</div>
                   </div>
                 </div>
               <?php elseif ($error): ?>
-                <div class="alert alert-danger" style="border-radius:12px;"><?= htmlspecialchars($error) ?></div>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
               <?php endif; ?>
 
-              <div id="js-errors" class="alert alert-danger d-none" style="border-radius:12px;"></div>
+              <div id="js-errors" class="alert alert-danger d-none"></div>
 
               <form id="loginForm" action="../../../controller/utilisateurcontroller.php" method="POST" novalidate>
                 <input type="hidden" name="action" value="login">
@@ -183,9 +289,11 @@ unset($_SESSION['error'], $_SESSION['success']);
 
                 <div class="mb-3">
                   <label for="password" class="form-label">Mot de passe</label>
-                  <div class="input-group">
+                  <div class="pwd-wrap">
                     <input type="password" name="password" id="password" class="form-control" placeholder="Votre mot de passe">
-                    <button class="btn" type="button" id="togglePassword"><i class="bi bi-eye" id="eyeIcon"></i></button>
+                    <button class="pwd-toggle" type="button" id="togglePassword" aria-label="Afficher le mot de passe">
+                      <i class="bi bi-eye" id="eyeIcon"></i>
+                    </button>
                   </div>
                   <div id="password-error" class="text-danger mt-1 small" style="display:none;"></div>
                 </div>
@@ -193,13 +301,13 @@ unset($_SESSION['error'], $_SESSION['success']);
                 <div class="d-flex justify-content-between align-items-center mb-4">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="remember" id="remember">
-                    <label class="form-check-label small" for="remember">Se souvenir de moi</label>
+                    <label class="form-check-label small" for="remember" style="color: var(--ink-mute);">Se souvenir de moi</label>
                   </div>
-                  <a href="forgot-password.php" class="text-decoration-none small fw-semibold" style="color:var(--sb-blue);">Mot de passe oublié&nbsp;?</a>
+                  <a href="forgot-password.php" class="text-decoration-none small fw-semibold" style="color: var(--sage);">Mot de passe oublié&nbsp;?</a>
                 </div>
 
-                <button type="submit" class="btn btn-gradient w-100">
-                  <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+                <button type="submit" class="btn-sage">
+                  <i class="bi bi-box-arrow-in-right"></i> Se connecter
                 </button>
 
                 <?php if ($hasAnyOAuth): ?>
@@ -227,50 +335,45 @@ unset($_SESSION['error'], $_SESSION['success']);
                   <i class="bi bi-camera-video"></i> Se connecter avec mon visage
                 </button>
 
-                <p class="text-center mb-0 mt-4 small text-muted">
-                  Pas encore de compte ? <a href="register.php" class="fw-semibold text-decoration-none" style="color:var(--sb-orange);">Créer un compte</a>
+                <p class="text-center mb-0 mt-4 small" style="color: var(--ink-mute);">
+                  Pas encore de compte ? <a href="register.php" class="fw-semibold text-decoration-none" style="color: var(--sage);">Créer un compte</a>
                 </p>
-
               </form>
             </div>
           </div>
 
           <!-- RIGHT — Value prop -->
-          <div class="col-lg-6 col-xl-5 d-none d-lg-block" data-aos="fade-left">
-            <span class="section-tag" style="background: rgba(249,115,22,.1); color: var(--sb-orange);">
-              <i class="bi bi-stars me-1"></i> Marketplace freelance
-            </span>
-            <h2 class="display-5 mt-3 mb-3" style="font-weight:800; letter-spacing:-.01em; color: var(--sb-dark);">
-              Continuez votre <span style="background: linear-gradient(90deg, var(--sb-orange), var(--sb-blue)); -webkit-background-clip:text; background-clip:text; color:transparent;">parcours</span>.
-            </h2>
-            <p class="text-muted lead mb-4">
+          <div class="d-none d-lg-block" data-aos="fade-left">
+            <span class="eyebrow honey"><span class="dot"></span> Marketplace freelance</span>
+            <h2 class="display-l mt-3 mb-3">Continuez votre <span class="accent">parcours</span>.</h2>
+            <p class="lead-x mb-4">
               Reprenez vos conversations, mettez à jour votre profil et collaborez avec les meilleurs talents.
             </p>
 
             <div class="d-flex flex-column gap-3">
               <div class="feature-tile">
-                <div class="tile-icon" style="background:rgba(37,99,235,.1); color:var(--sb-blue);"><i class="bi bi-chat-dots-fill"></i></div>
+                <div class="tile-icon t-sage"><i class="bi bi-chat-dots-fill"></i></div>
                 <div>
                   <div class="tile-title">Messagerie temps réel</div>
                   <div class="tile-sub">Messages, fichiers, photos, réactions emoji.</div>
                 </div>
               </div>
               <div class="feature-tile">
-                <div class="tile-icon" style="background:rgba(249,115,22,.1); color:var(--sb-orange);"><i class="bi bi-bell-fill"></i></div>
+                <div class="tile-icon t-honey"><i class="bi bi-bell-fill"></i></div>
                 <div>
                   <div class="tile-title">Notifications instantanées</div>
                   <div class="tile-sub">Cloche + toasts dès qu'un message vous concerne.</div>
                 </div>
               </div>
               <div class="feature-tile">
-                <div class="tile-icon" style="background:rgba(124,58,237,.1); color:#7c3aed;"><i class="bi bi-shield-lock-fill"></i></div>
+                <div class="tile-icon t-sage"><i class="bi bi-shield-lock-fill"></i></div>
                 <div>
                   <div class="tile-title">Authentification multi-modes</div>
                   <div class="tile-sub">OAuth Google / GitHub / Discord, ou reconnaissance faciale.</div>
                 </div>
               </div>
               <div class="feature-tile">
-                <div class="tile-icon" style="background:rgba(16,185,129,.1); color:#10b981;"><i class="bi bi-person-badge-fill"></i></div>
+                <div class="tile-icon t-honey"><i class="bi bi-person-badge-fill"></i></div>
                 <div>
                   <div class="tile-title">Profils vérifiés</div>
                   <div class="tile-sub">Email vérifié, photos, bio, compétences, localisation.</div>
@@ -286,42 +389,41 @@ unset($_SESSION['error'], $_SESSION['success']);
     <!-- Modal Webcam (face login) -->
     <div class="modal fade" id="faceModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:18px; border:none;">
-          <div class="modal-header" style="border-bottom:1px solid #f1f5f9;">
-            <h5 class="modal-title fw-bold"><i class="bi bi-camera-video me-2" style="color:#7c3aed;"></i>Reconnaissance faciale</h5>
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-camera-video me-2" style="color: var(--sage);"></i>Reconnaissance faciale</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body text-center">
-            <div id="faceStatus" class="alert alert-info mb-3" style="border-radius:12px;">Entrez votre email et activez la caméra.</div>
+            <div id="faceStatus" class="alert alert-success" style="border-radius:12px; text-align:left;">Entrez votre email et activez la caméra.</div>
             <input type="text" id="faceEmail" class="form-control text-center mb-3" placeholder="Votre adresse email" style="border-radius:12px; padding:12px;">
-            <button class="btn btn-outline-secondary mb-3" id="btnStartCamera" style="border-radius:12px;">
-              <i class="bi bi-camera me-1"></i> Activer la caméra
+            <button class="btn-sage" id="btnStartCamera" style="width:auto; padding: 11px 22px; margin-bottom: 16px;">
+              <i class="bi bi-camera"></i> Activer la caméra
             </button>
             <div class="position-relative d-inline-block">
-              <video id="faceVideo" width="320" height="240" style="border-radius:14px; display:none; border:3px solid #7c3aed;"></video>
+              <video id="faceVideo" width="320" height="240" style="border-radius:14px; display:none; border:3px solid var(--sage);"></video>
               <canvas id="faceCanvas" style="position:absolute; top:0; left:0; display:none;"></canvas>
             </div>
-            <button class="btn w-100 mt-3" id="btnVerifyFace" style="display:none; background:#10b981; color:#fff; font-weight:600; border-radius:12px; padding:12px;">
-              <i class="bi bi-check-circle me-1"></i> Vérifier mon visage
+            <button class="btn-sage" id="btnVerifyFace" style="display:none; margin-top: 14px; background: var(--sage);">
+              <i class="bi bi-check-circle"></i> Vérifier mon visage
             </button>
           </div>
         </div>
       </div>
     </div>
-
   </main>
 
-  <footer id="footer" class="footer" style="background:var(--sb-dark); color:#cbd5e1; padding:24px 0;">
-    <div class="container text-center small">
-      © <?= date('Y') ?> <strong style="color:#fff;">SkillBridge</strong> — Tous droits réservés.
-    </div>
+  <footer class="sb-footer">
+    © <?= date('Y') ?> <strong>SkillBridge</strong> — Tous droits réservés.
   </footer>
 
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
 
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/js/main.js"></script>
+  <script>
+    if (typeof AOS !== 'undefined') AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true });
+  </script>
 
   <!-- Form validation -->
   <script>
@@ -380,7 +482,7 @@ unset($_SESSION['error'], $_SESSION['success']);
 
   async function loadModels() {
     if (modelsLoaded) return;
-    setStatus('Chargement des modèles IA...', 'info');
+    setStatus('Chargement des modèles IA...', 'warning');
     await Promise.all([
       faceapi.nets.ssdMobilenetv1.loadFromUri(WEIGHTS_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(WEIGHTS_URL),
@@ -392,14 +494,14 @@ unset($_SESSION['error'], $_SESSION['success']);
   document.getElementById('btnStartCamera').addEventListener('click', async function () {
     const email = document.getElementById('faceEmail').value.trim();
     if (!email) { setStatus('Veuillez entrer votre email.', 'danger'); return; }
-    setStatus('Chargement des modèles IA...', 'info');
+    setStatus('Chargement des modèles IA...', 'warning');
     try {
       await loadModels();
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
       const v = document.getElementById('faceVideo');
       v.srcObject = stream; v.play(); v.style.display = 'block';
       document.getElementById('faceCanvas').style.display = 'block';
-      document.getElementById('btnVerifyFace').style.display = 'block';
+      document.getElementById('btnVerifyFace').style.display = 'inline-flex';
       setStatus('Caméra activée. Placez votre visage face à la caméra puis cliquez "Vérifier".', 'success');
     } catch (e) { setStatus("Impossible d'accéder à la caméra.", 'danger'); }
   });
@@ -407,13 +509,13 @@ unset($_SESSION['error'], $_SESSION['success']);
   document.getElementById('btnVerifyFace').addEventListener('click', async function () {
     const email = document.getElementById('faceEmail').value.trim();
     if (!email) { setStatus('Email requis.', 'danger'); return; }
-    setStatus('Récupération de votre photo...', 'info');
+    setStatus('Récupération de votre photo...', 'warning');
     const fd = new FormData(); fd.append('email', email);
     const res = await fetch('<?= $BASE ?>/controller/get_photo.php', { method:'POST', body:fd });
     const data = await res.json();
     if (!data.success) { setStatus(data.message === 'desactivated' ? "Votre compte a été désactivé." : data.message, 'danger'); return; }
 
-    setStatus('Analyse du visage en cours...', 'info');
+    setStatus('Analyse du visage en cours...', 'warning');
     const profileImg = await faceapi.fetchImage(data.photo);
     const profileDet = await faceapi.detectSingleFace(profileImg).withFaceLandmarks().withFaceDescriptor();
     if (!profileDet) { setStatus('Aucun visage détecté dans votre photo de profil.', 'danger'); return; }
@@ -446,8 +548,7 @@ unset($_SESSION['error'], $_SESSION['success']);
   }
   function setStatus(msg, type) {
     const el = document.getElementById('faceStatus');
-    el.className = 'alert alert-' + type + ' mb-3';
-    el.style.borderRadius = '12px';
+    el.className = 'alert alert-' + type;
     el.innerHTML = msg;
   }
   </script>

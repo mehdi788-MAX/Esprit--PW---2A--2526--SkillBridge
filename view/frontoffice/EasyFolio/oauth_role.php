@@ -38,113 +38,155 @@ $providerIcon = [
   <title>Choisissez votre rôle — SkillBridge</title>
 
   <link href="assets/img/favicon.png" rel="icon">
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
   <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-  <link href="assets/css/main.css" rel="stylesheet">
 
   <style>
-    :root { --sb-blue:#2563eb; --sb-orange:#f97316; --sb-dark:#0f172a; --sb-soft:#f8fafc; }
-    body { font-family:'Inter', system-ui, -apple-system, sans-serif; }
+    :root {
+      --bg:#F7F4ED; --paper:#FFFFFF; --ink:#0F0F0F; --ink-2:#2A2A2A;
+      --ink-mute:#5C5C5C; --ink-soft:#A3A3A3; --rule:#E8E2D5;
+      --sage:#1F5F4D; --sage-d:#134438; --sage-soft:#E8F0EC;
+      --honey:#F5C842; --honey-d:#E0B033; --honey-soft:#FBF1D0;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family:'Manrope', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--ink); letter-spacing:-.005em; -webkit-font-smoothing:antialiased; margin:0; }
+    ::selection { background: var(--sage); color: var(--honey); }
 
-    .auth-bg {
-      background:
-        radial-gradient(1100px 600px at 110% -10%, rgba(249,115,22,.18), transparent 60%),
-        radial-gradient(900px 500px at -10% 110%, rgba(37,99,235,.15), transparent 60%),
-        #fff;
-      min-height: calc(100vh - 64px); padding: 80px 0;
-    }
-    .section-tag {
-      display:inline-flex; align-items:center; gap:6px;
-      padding:5px 14px; border-radius:999px;
-      background: rgba(37,99,235,.08); color: var(--sb-blue);
-      font-weight:600; font-size:.82rem;
-    }
-    h1.auth-title { font-weight:800; line-height:1.05; letter-spacing:-.02em; color:var(--sb-dark); }
-    h1.auth-title .accent {
-      background: linear-gradient(90deg, var(--sb-orange), var(--sb-blue));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-    }
+    h1, h2, h3, h4 { font-family:'Manrope', sans-serif; font-weight:700; letter-spacing:-.022em; color: var(--ink); }
+    .display-x { font-size: clamp(2rem, 3.6vw, 2.8rem); line-height:1.05; font-weight:800; letter-spacing:-.025em; }
+    .lead-x    { font-size:1rem; line-height:1.55; color: var(--ink-mute); font-weight:400; }
+    .accent    { font-style: italic; font-weight:700; color: var(--sage); }
+
+    /* Header */
+    .sb-header { position:sticky; top:0; z-index:100; background: rgba(247,244,237,.85); backdrop-filter: blur(14px); border-bottom:1px solid var(--rule); }
+    .sb-header .container { display:flex; align-items:center; justify-content:space-between; padding:14px 0; }
+    .sb-logo { display:inline-flex; align-items:center; text-decoration:none; color: var(--ink); }
+    .sb-logo .logo-img { height:38px; width:auto; display:block; }
+    .sb-help { color: var(--ink-mute); text-decoration:none; font-weight:500; font-size:.92rem; transition: color .15s; }
+    .sb-help:hover { color: var(--sage); }
+
+    /* Page */
+    .page-bg { position:relative; overflow:hidden; min-height: calc(100vh - 64px); padding: 64px 0 80px; }
+    .blob { position:absolute; border-radius:50%; filter: blur(60px); opacity:.55; pointer-events:none; z-index:0; }
+    .blob.sage { background: var(--sage-soft); }
+    .blob.honey { background: var(--honey-soft); }
+    .blob-1 { width:380px; height:380px; left:-120px; top:-100px; }
+    .blob-2 { width:340px; height:340px; right:-100px; bottom:-60px; }
+    .page-bg .container { position:relative; z-index:1; }
 
     /* Provider pill */
     .provider-pill {
-      display:inline-flex; align-items:center; gap:8px;
-      background:#fff; border:1px solid #e2e8f0;
-      padding:7px 16px; border-radius:999px;
-      font-size:.85rem; color:#475569; font-weight:600;
-      box-shadow: 0 4px 12px rgba(15,23,42,.05);
+      display:inline-flex; align-items:center; gap:10px;
+      background: var(--paper); border:1px solid var(--rule);
+      padding:7px 16px 7px 7px; border-radius:999px;
+      font-size:.85rem; color: var(--ink-2); font-weight:600;
+      box-shadow: 0 4px 12px rgba(15,15,15,.04);
     }
     .provider-pill .icon-bg {
-      width:22px; height:22px; border-radius:50%; background:var(--sb-soft);
-      display:inline-flex; align-items:center; justify-content:center; font-size:.85rem;
+      width:30px; height:30px; border-radius:50%; background: var(--bg);
+      display:inline-flex; align-items:center; justify-content:center; font-size:.95rem;
     }
-    .provider-pill[data-provider="google"]   .icon-bg i { color:#ea4335; }
-    .provider-pill[data-provider="github"]   .icon-bg i { color:#0f172a; }
+    .provider-pill[data-provider="google"]   .icon-bg i { color:#EA4335; }
+    .provider-pill[data-provider="github"]   .icon-bg i { color: var(--ink); }
     .provider-pill[data-provider="discord"]  .icon-bg i { color:#5865F2; }
     .provider-pill[data-provider="facebook"] .icon-bg i { color:#1877F2; }
     .provider-pill[data-provider="linkedin"] .icon-bg i { color:#0A66C2; }
 
     /* Role cards */
+    .role-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    @media (max-width: 767.98px) { .role-grid { grid-template-columns: 1fr; gap: 18px; } }
+
     .role-card {
-      background:#fff; border:2px solid #e2e8f0; border-radius:24px;
-      padding:38px 32px; height:100%;
+      background: var(--paper); border:1.5px solid var(--rule); border-radius: 24px;
+      padding: 36px 30px 30px;
       display:flex; flex-direction:column; align-items:center; text-align:center;
       transition: all .25s ease; cursor:pointer; text-decoration:none; color:inherit;
-      box-shadow: 0 1px 3px rgba(15,23,42,.04);
+      box-shadow: 0 1px 3px rgba(15,15,15,.04);
+      width:100%;
+      position: relative; overflow: hidden;
+      font-family: 'Manrope', sans-serif;
+    }
+    .role-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:4px;
+      background: transparent; transition: background .25s;
     }
     .role-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 30px 60px -25px rgba(15,23,42,.18);
-      color:inherit;
+      transform: translateY(-6px); color: var(--ink);
+      box-shadow: 0 30px 60px -25px rgba(31,95,77,.22);
     }
-    .role-card.client:hover     { border-color: var(--sb-blue); }
-    .role-card.freelancer:hover { border-color: var(--sb-orange); }
+    .role-card.client:hover     { border-color: var(--sage);   }
+    .role-card.client:hover::before     { background: var(--sage); }
+    .role-card.freelancer:hover { border-color: var(--honey-d); }
+    .role-card.freelancer:hover::before { background: var(--honey); }
 
     .role-card .role-icon {
-      width:84px; height:84px; border-radius:22px;
+      width: 88px; height: 88px; border-radius: 24px;
       display:flex; align-items:center; justify-content:center;
-      font-size:2.2rem; margin-bottom:18px;
+      font-size: 2.2rem; margin-bottom: 22px;
       transition: all .25s ease;
     }
-    .role-card.client     .role-icon { background: rgba(37,99,235,.1);  color: var(--sb-blue); }
-    .role-card.freelancer .role-icon { background: rgba(249,115,22,.1); color: var(--sb-orange); }
-    .role-card:hover.client     .role-icon { transform: scale(1.06); box-shadow: 0 12px 28px -10px rgba(37,99,235,.4); }
-    .role-card:hover.freelancer .role-icon { transform: scale(1.06); box-shadow: 0 12px 28px -10px rgba(249,115,22,.4); }
+    .role-card.client     .role-icon { background: var(--sage-soft);  color: var(--sage); }
+    .role-card.freelancer .role-icon { background: var(--honey-soft); color: #92660A; }
+    .role-card:hover.client     .role-icon { transform: scale(1.06); box-shadow: 0 12px 26px -10px rgba(31,95,77,.4); }
+    .role-card:hover.freelancer .role-icon { transform: scale(1.06); box-shadow: 0 12px 26px -10px rgba(245,200,66,.55); }
 
-    .role-card h3 { font-weight:800; color: var(--sb-dark); margin-bottom:10px; letter-spacing:-.01em; }
-    .role-card p  { color:#64748b; font-size:.95rem; line-height:1.55; flex:1; }
+    .role-card h3 { font-weight:800; color: var(--ink); margin-bottom: 10px; font-size: 1.4rem; letter-spacing:-.018em; }
+    .role-card p  { color: var(--ink-mute); font-size: .94rem; line-height: 1.55; margin: 0 0 24px; flex-grow: 1; }
 
     .btn-role {
-      width:100%; padding:14px 24px; border-radius:14px; font-weight:700;
-      border:none; transition: all .2s ease; color:#fff;
-      display:flex; align-items:center; justify-content:center; gap:8px;
+      width: 100%; padding: 14px 20px; border-radius: 14px; font-weight: 700; font-size: .98rem;
+      border: none; transition: all .2s ease;
+      display:flex; align-items:center; justify-content:center; gap: 8px;
+      letter-spacing:-.005em;
     }
-    .btn-role.client     { background: linear-gradient(135deg, var(--sb-blue),   #1d4ed8); }
-    .btn-role.freelancer { background: linear-gradient(135deg, var(--sb-orange), #ea580c); }
-    .btn-role:hover { transform: translateY(-2px); color:#fff; }
-    .btn-role.client:hover     { box-shadow: 0 14px 30px -10px rgba(37,99,235,.55); }
-    .btn-role.freelancer:hover { box-shadow: 0 14px 30px -10px rgba(249,115,22,.55); }
+    .btn-role.client     { background: var(--sage);   color: var(--paper); }
+    .btn-role.freelancer { background: var(--honey);  color: var(--ink);   }
+    .role-card.client:hover     .btn-role     { background: var(--sage-d); }
+    .role-card.freelancer:hover .btn-role     { background: var(--honey-d); }
+
+    /* Alerts */
+    .sb-alert { border-radius:14px; padding:14px 16px; border:1px solid; display:flex; align-items:center; gap:12px; max-width: 600px; margin: 0 auto 24px; }
+    .sb-alert.danger  { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+
+    /* Cancel link */
+    .btn-cancel {
+      display:inline-flex; align-items:center; gap:6px;
+      color: var(--ink-mute); text-decoration:none; font-weight:600; font-size:.9rem;
+      transition: color .15s;
+    }
+    .btn-cancel:hover { color: var(--sage); }
+
+    /* Footer */
+    .sb-footer { background: var(--ink); color: rgba(255,255,255,.65); padding:22px 0; font-size:.88rem; text-align:center; }
+    .sb-footer strong { color: var(--paper); }
   </style>
 </head>
 
-<body class="index-page">
+<body>
 
-  <header id="header" class="header d-flex align-items-center sticky-top">
-    <div class="header-container container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
-      <a href="index.php" class="logo d-flex align-items-center me-auto me-xl-0">
-        <h1 class="sitename">SkillBridge</h1>
+  <header class="sb-header">
+    <div class="container">
+      <a href="index.php" class="sb-logo">
+        <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
+      </a>
+      <a href="<?= $BASE ?>/view/frontoffice/EasyFolio/login.php" class="sb-help">
+        <i class="bi bi-question-circle"></i> Besoin d'aide ?
       </a>
     </div>
   </header>
 
-  <main class="main">
-    <section class="auth-bg">
+  <main>
+    <section class="page-bg">
+      <div class="blob sage  blob-1"></div>
+      <div class="blob honey blob-2"></div>
+
       <div class="container">
         <div class="row justify-content-center">
-          <div class="col-lg-10">
+          <div class="col-lg-10 col-xl-9">
 
             <!-- Header content -->
             <div class="text-center mb-5" data-aos="fade-up">
@@ -152,62 +194,59 @@ $providerIcon = [
                 <span class="icon-bg"><i class="bi <?= htmlspecialchars($providerIcon) ?>"></i></span>
                 Connecté via <?= htmlspecialchars($providerLabel) ?>
               </span>
-              <h1 class="auth-title display-4 mt-4 mb-3">
-                Bienvenue, <span class="accent"><?= htmlspecialchars($display) ?></span> !
+              <h1 class="display-x mt-4 mb-3">
+                Bienvenue, <span class="accent"><?= htmlspecialchars($display) ?></span>.
               </h1>
-              <p class="lead text-muted mb-1">
+              <p class="lead-x mb-1">
                 Avant de continuer, dites-nous comment vous comptez utiliser SkillBridge.
               </p>
-              <p class="small text-muted mb-0">
+              <p class="mb-0" style="color: var(--ink-soft); font-size: .88rem;">
                 Vous pourrez modifier ce choix plus tard depuis votre profil.
               </p>
             </div>
 
             <?php if (!empty($_SESSION['error'])): ?>
-              <div class="alert alert-danger mb-4 mx-auto" style="max-width:600px; border-radius:12px;">
-                <?= htmlspecialchars($_SESSION['error']) ?>
+              <div class="sb-alert danger">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span><?= htmlspecialchars($_SESSION['error']) ?></span>
               </div>
               <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
             <!-- Role cards -->
-            <div class="row g-4 justify-content-center">
+            <div class="role-grid">
 
-              <div class="col-md-6 col-lg-5" data-aos="fade-right" data-aos-delay="100">
-                <form method="POST" action="<?= $BASE ?>/controller/utilisateurcontroller.php" class="h-100">
-                  <input type="hidden" name="action" value="oauth_complete_role">
-                  <input type="hidden" name="role"   value="client">
-                  <button type="submit" class="role-card client">
-                    <div class="role-icon"><i class="bi bi-briefcase-fill"></i></div>
-                    <h3>Je suis Client</h3>
-                    <p>Je cherche des freelancers compétents pour réaliser mes projets : développement, design, rédaction, etc.</p>
-                    <span class="btn-role client mt-3">
-                      Continuer en Client <i class="bi bi-arrow-right"></i>
-                    </span>
-                  </button>
-                </form>
-              </div>
+              <form method="POST" action="<?= $BASE ?>/controller/utilisateurcontroller.php" data-aos="fade-right" data-aos-delay="100">
+                <input type="hidden" name="action" value="oauth_complete_role">
+                <input type="hidden" name="role"   value="client">
+                <button type="submit" class="role-card client">
+                  <div class="role-icon"><i class="bi bi-briefcase-fill"></i></div>
+                  <h3>Je suis <span class="accent">Client</span></h3>
+                  <p>Je cherche des freelancers compétents pour réaliser mes projets : développement, design, rédaction, etc.</p>
+                  <span class="btn-role client">
+                    Continuer en Client <i class="bi bi-arrow-right"></i>
+                  </span>
+                </button>
+              </form>
 
-              <div class="col-md-6 col-lg-5" data-aos="fade-left" data-aos-delay="200">
-                <form method="POST" action="<?= $BASE ?>/controller/utilisateurcontroller.php" class="h-100">
-                  <input type="hidden" name="action" value="oauth_complete_role">
-                  <input type="hidden" name="role"   value="freelancer">
-                  <button type="submit" class="role-card freelancer">
-                    <div class="role-icon"><i class="bi bi-tools"></i></div>
-                    <h3>Je suis Freelancer</h3>
-                    <p>Je propose mes compétences et services à des clients qui cherchent un talent pour leurs projets.</p>
-                    <span class="btn-role freelancer mt-3">
-                      Continuer en Freelancer <i class="bi bi-arrow-right"></i>
-                    </span>
-                  </button>
-                </form>
-              </div>
+              <form method="POST" action="<?= $BASE ?>/controller/utilisateurcontroller.php" data-aos="fade-left" data-aos-delay="200">
+                <input type="hidden" name="action" value="oauth_complete_role">
+                <input type="hidden" name="role"   value="freelancer">
+                <button type="submit" class="role-card freelancer">
+                  <div class="role-icon"><i class="bi bi-tools"></i></div>
+                  <h3>Je suis <span style="font-style: italic; color: #92660A;">Freelancer</span></h3>
+                  <p>Je propose mes compétences et services à des clients qui cherchent un talent pour leurs projets.</p>
+                  <span class="btn-role freelancer">
+                    Continuer en Freelancer <i class="bi bi-arrow-right"></i>
+                  </span>
+                </button>
+              </form>
 
             </div>
 
             <div class="text-center mt-5">
-              <a href="<?= $BASE ?>/view/frontoffice/EasyFolio/login.php" class="text-decoration-none small fw-semibold" style="color:#64748b;">
-                <i class="bi bi-arrow-left me-1"></i> Annuler et revenir à la connexion
+              <a href="<?= $BASE ?>/view/frontoffice/EasyFolio/login.php" class="btn-cancel">
+                <i class="bi bi-arrow-left"></i> Annuler et revenir à la connexion
               </a>
             </div>
 
@@ -217,21 +256,15 @@ $providerIcon = [
     </section>
   </main>
 
-  <footer id="footer" class="footer" style="background:var(--sb-dark); color:#cbd5e1; padding:24px 0;">
-    <div class="container text-center small">
-      © <?= date('Y') ?> <strong style="color:#fff;">SkillBridge</strong> — Tous droits réservés.
-    </div>
+  <footer class="sb-footer">
+    © <?= date('Y') ?> <strong>SkillBridge</strong> — Tous droits réservés.
   </footer>
 
   <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="assets/vendor/aos/aos.js"></script>
-  <script src="assets/js/main.js"></script>
   <script>
-    // Filet de sécurité : si main.js n'a pas initialisé AOS pour une raison
-    // quelconque, on l'initialise nous-mêmes pour que les éléments
-    // [data-aos] ne restent pas invisibles (opacity:0).
     if (typeof AOS !== 'undefined') {
-      AOS.init({ duration: 600, once: true });
+      AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true });
     }
   </script>
 </body>
