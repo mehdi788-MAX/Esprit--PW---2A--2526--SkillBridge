@@ -339,14 +339,7 @@ $navAvatarSrc = !empty($utilisateur['photo'])
         <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="../chat/conversations.php">Conversations</a>
-        <?php if ($is_freelancer): ?>
-          <a href="browse_demandes.php">Demandes</a>
-          <a href="mes_propositions.php">Mes propositions</a>
-        <?php else: ?>
-          <a href="mes_demandes.php">Mes demandes</a>
-        <?php endif; ?>
+        <?= frontoffice_main_nav('', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>

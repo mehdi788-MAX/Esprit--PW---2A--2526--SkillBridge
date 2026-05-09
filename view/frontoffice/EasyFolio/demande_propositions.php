@@ -36,6 +36,22 @@ if ((int)$demande['user_id'] !== $userId) {
     exit;
 }
 
+// Action : accepter une proposition
+$flashAccepted = null;
+$flashError    = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'accept') {
+    $pid = (int)($_POST['proposition_id'] ?? 0);
+    if ($pid > 0) {
+        $res = $ctrl->acceptProposition($pid, $userId);
+        if ($res['success']) {
+            // Refresh demande state and redirect to the new conversation
+            header('Location: ../chat/chat.php?id=' . (int)$res['conversation_id'] . '&accepted=1');
+            exit;
+        }
+        $flashError = implode(' ', $res['errors']);
+    }
+}
+
 // Tri
 $sort = (isset($_GET['sort']) && $_GET['sort'] === 'oldest') ? 'oldest' : 'recent';
 
@@ -45,6 +61,21 @@ $propositions = [];
 if ($stmt) {
     while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $propositions[] = $row;
+    }
+}
+
+// Pour chaque proposition, récupérer la fiche du freelancer (photo + nom officiel
+// + localisation) en une seule requête batchée pour rester efficace.
+$freelancers = [];
+$fIds = array_filter(array_unique(array_map(function ($p) { return (int)($p['user_id'] ?? 0); }, $propositions)));
+if (!empty($fIds)) {
+    $in = implode(',', array_map('intval', $fIds));
+    $fStmt = $pdo->query("SELECT u.id, u.prenom, u.nom, u.photo, p.localisation, p.competences
+                            FROM utilisateurs u
+                            LEFT JOIN profils p ON p.utilisateur_id = u.id
+                           WHERE u.id IN ($in)");
+    foreach ($fStmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+        $freelancers[(int)$row['id']] = $row;
     }
 }
 
@@ -238,14 +269,26 @@ function fmt_datetime($d) {
       display: flex; align-items: center; gap: 12px;
     }
     .proposition-card .avatar-disc {
-      width: 42px; height: 42px; border-radius: 50%;
+      width: 46px; height: 46px; border-radius: 50%;
       background: var(--sage); color: var(--paper);
       display: inline-flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 1rem;
+      font-weight: 800; font-size: 1rem; flex-shrink: 0;
       box-shadow: 0 4px 10px -4px rgba(31,95,77,.4);
+      object-fit: cover; overflow: hidden;
     }
+    .proposition-card img.avatar-disc { padding: 0; }
     .proposition-card .name {
       font-weight: 800; color: var(--ink); font-size: 1rem; line-height: 1.2;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .proposition-card .name .verif {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: var(--sage); color: #fff; display:inline-flex;
+      align-items:center; justify-content:center; font-size: .65rem;
+    }
+    .proposition-card .role-loc {
+      color: var(--ink-soft); font-size: .78rem; margin-top: 2px;
+      display: inline-flex; align-items: center; gap: 4px;
     }
     .proposition-card .meta {
       color: var(--ink-soft); font-size: .78rem;
@@ -262,6 +305,35 @@ function fmt_datetime($d) {
       padding: 12px 14px; border: 1px dashed var(--rule);
       white-space: pre-wrap;
     }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 999px;
+      font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .status-badge.pending  { background: var(--paper); color: var(--ink-mute); border: 1px solid var(--rule); }
+    .status-badge.accepted { background: var(--sage-soft); color: var(--sage); border: 1px solid rgba(31,95,77,.25); }
+    .status-badge.declined { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
+    .proposition-card.is-accepted { border-color: var(--sage); box-shadow: 0 18px 40px -22px rgba(31,95,77,.35); }
+    .proposition-card.is-declined { opacity: .6; }
+    .accept-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding-top: 10px; border-top: 1px dashed var(--rule); flex-wrap: wrap;
+    }
+    .btn-accept {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--sage); color: var(--paper);
+      padding: 10px 18px; border-radius: 10px;
+      border: none; font-weight: 700; font-size: .88rem;
+      cursor: pointer; transition: all .15s;
+    }
+    .btn-accept:hover { background: #174634; transform: translateY(-1px); box-shadow: 0 12px 24px -10px rgba(31,95,77,.45); }
+    .closed-banner {
+      background: var(--sage-soft); border: 1px solid rgba(31,95,77,.18);
+      border-radius: 14px; padding: 14px 18px; margin-bottom: 18px;
+      display: flex; align-items: center; gap: 12px; color: var(--sage-d);
+    }
+    .closed-banner i { font-size: 1.2rem; }
 
     /* Empty */
     .empty-card {
@@ -314,9 +386,7 @@ function fmt_datetime($d) {
         <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
-        <a href="mes_demandes.php" class="active">Mes Demandes</a>
+        <?= frontoffice_main_nav('mes_demandes', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>
@@ -425,6 +495,20 @@ function fmt_datetime($d) {
           </form>
         <?php endif; ?>
 
+        <?php $isClosed = ($demande['status'] ?? 'open') === 'closed'; ?>
+        <?php if ($flashError): ?>
+          <div class="closed-banner" style="background:#FEF2F2; border-color:#FECACA; color:#991B1B;">
+            <i class="bi bi-exclamation-circle"></i>
+            <div><?= htmlspecialchars($flashError) ?></div>
+          </div>
+        <?php endif; ?>
+        <?php if ($isClosed): ?>
+          <div class="closed-banner" data-aos="fade-up">
+            <i class="bi bi-lock-fill"></i>
+            <div><strong>Demande clôturée.</strong> Vous avez accepté une proposition — la conversation est ouverte côté <em>Mes Conversations</em>.</div>
+          </div>
+        <?php endif; ?>
+
         <!-- Liste -->
         <?php if ($count === 0): ?>
           <div class="empty-card" data-aos="fade-up" data-aos-delay="160">
@@ -434,26 +518,87 @@ function fmt_datetime($d) {
           </div>
         <?php else: ?>
           <div class="row g-3">
-            <?php foreach ($propositions as $p): ?>
-              <?php
-                $name = $p['freelancer_name'] ?? '';
-                $initial = strtoupper(mb_substr(trim($name), 0, 1, 'UTF-8') ?: '?');
-              ?>
+            <?php foreach ($propositions as $p):
+                $fl       = $freelancers[(int)($p['user_id'] ?? 0)] ?? null;
+                $realName = $fl ? trim(($fl['prenom'] ?? '') . ' ' . ($fl['nom'] ?? '')) : '';
+                $name     = $realName !== '' ? $realName : trim($p['freelancer_name'] ?? '');
+                if ($name === '') { $name = 'Freelancer SkillBridge'; }
+                $initial  = strtoupper(mb_substr($name, 0, 1, 'UTF-8') ?: '?');
+                $hasPhoto = $fl && !empty($fl['photo']);
+                $photoSrc = $hasPhoto
+                    ? 'assets/img/profile/' . htmlspecialchars($fl['photo'])
+                    : 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&background=1F5F4D&color=fff&bold=true&size=120';
+                $location = $fl['localisation'] ?? '';
+                $skills   = !empty($fl['competences']) ? array_slice(array_filter(array_map('trim', explode(',', $fl['competences']))), 0, 1) : [];
+                $topSkill = $skills[0] ?? '';
+                $pStatus  = $p['status'] ?? 'pending';
+                $cardCls  = 'proposition-card' . ($pStatus === 'accepted' ? ' is-accepted' : ($pStatus === 'declined' ? ' is-declined' : ''));
+                $statusLabel = ['pending' => 'En attente', 'accepted' => 'Acceptée', 'declined' => 'Refusée'][$pStatus] ?? 'En attente';
+            ?>
               <div class="col-12 col-lg-6" data-aos="fade-up">
-                <div class="proposition-card">
+                <div class="<?= $cardCls ?>">
                   <div class="head-row">
                     <div class="freelancer">
-                      <div class="avatar-disc"><?= htmlspecialchars($initial) ?></div>
+                      <img class="avatar-disc" src="<?= $photoSrc ?>" alt=""
+                           onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($name) ?>&background=1F5F4D&color=fff&bold=true&size=120';">
                       <div>
-                        <div class="name"><?= htmlspecialchars($name) ?></div>
+                        <div class="name">
+                          <?php if ($fl): ?>
+                            <a href="profil.php?id=<?= (int)$fl['id'] ?>" style="color:inherit;text-decoration:none;"><?= htmlspecialchars($name) ?></a>
+                            <span class="verif" title="Profil vérifié"><i class="bi bi-check-lg"></i></span>
+                          <?php else: ?>
+                            <?= htmlspecialchars($name) ?>
+                          <?php endif; ?>
+                        </div>
+                        <?php if ($topSkill || $location): ?>
+                          <div class="role-loc">
+                            <?php if ($topSkill): ?><i class="bi bi-stars"></i> <?= htmlspecialchars($topSkill) ?><?php endif; ?>
+                            <?php if ($topSkill && $location): ?><span style="opacity:.5;">·</span><?php endif; ?>
+                            <?php if ($location): ?><i class="bi bi-geo-alt"></i> <?= htmlspecialchars($location) ?><?php endif; ?>
+                          </div>
+                        <?php endif; ?>
                         <div class="meta"><i class="bi bi-clock"></i> <?= fmt_datetime($p['created_at']) ?></div>
                       </div>
                     </div>
-                    <span class="price-badge">
-                      <i class="bi bi-cash"></i> <?= fmt_price($p['price']) ?> TND
-                    </span>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                      <span class="price-badge">
+                        <i class="bi bi-cash"></i> <?= fmt_price($p['price']) ?> TND
+                      </span>
+                      <span class="status-badge <?= $pStatus ?>">
+                        <?php if ($pStatus === 'accepted'): ?><i class="bi bi-check-circle-fill"></i><?php endif; ?>
+                        <?php if ($pStatus === 'declined'): ?><i class="bi bi-x-circle-fill"></i><?php endif; ?>
+                        <?php if ($pStatus === 'pending'):  ?><i class="bi bi-hourglass-split"></i><?php endif; ?>
+                        <?= $statusLabel ?>
+                      </span>
+                    </div>
                   </div>
                   <div class="message"><?= htmlspecialchars($p['message']) ?></div>
+
+                  <div class="accept-bar">
+                    <?php if ($fl): ?>
+                      <a href="../chat/new_conversation.php?user2=<?= (int)$fl['id'] ?>"
+                         class="btn-ghost" style="padding:8px 14px; font-size:.85rem;">
+                        <i class="bi bi-chat-dots"></i> Contacter
+                      </a>
+                    <?php else: ?>
+                      <span></span>
+                    <?php endif; ?>
+                    <?php if (!$isClosed && $pStatus === 'pending'): ?>
+                      <form method="POST" action="demande_propositions.php?id=<?= (int)$demandeId ?>"
+                            onsubmit="return confirm('Accepter cette proposition ? Toutes les autres seront automatiquement refusées et la demande clôturée.');"
+                            style="margin:0;">
+                        <input type="hidden" name="action" value="accept">
+                        <input type="hidden" name="proposition_id" value="<?= (int)$p['id'] ?>">
+                        <button type="submit" class="btn-accept">
+                          <i class="bi bi-check-circle-fill"></i> Accepter cette offre
+                        </button>
+                      </form>
+                    <?php elseif ($pStatus === 'accepted'): ?>
+                      <a href="../chat/conversations.php" class="btn-sage" style="padding:8px 14px; font-size:.85rem;">
+                        <i class="bi bi-chat-dots-fill"></i> Ouvrir la conversation
+                      </a>
+                    <?php endif; ?>
+                  </div>
                 </div>
               </div>
             <?php endforeach; ?>

@@ -148,14 +148,7 @@ $navAvatarSrc = !empty($myPhoto)
       <img src="<?= $templateBase ?>/assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
     </a>
     <nav class="sb-nav">
-      <a href="<?= $templateBase ?>/index.php">Accueil</a>
-      <a href="conversations.php" class="active">Conversations</a>
-      <?php if (($currentUserRole ?? '') === 'freelancer'): ?>
-        <a href="<?= $templateBase ?>/browse_demandes.php">Demandes</a>
-        <a href="<?= $templateBase ?>/mes_propositions.php">Mes propositions</a>
-      <?php elseif (($currentUserRole ?? '') === 'client'): ?>
-        <a href="<?= $templateBase ?>/mes_demandes.php">Mes demandes</a>
-      <?php endif; ?>
+      <?= frontoffice_main_nav('conversations', $templateBase, '.') ?>
     </nav>
     <div class="d-flex align-items-center gap-2">
       <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>

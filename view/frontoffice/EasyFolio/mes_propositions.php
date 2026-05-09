@@ -37,14 +37,19 @@ $sort = ($_GET['sort'] ?? 'recent') === 'oldest' ? 'oldest' : 'recent';
 $stmt = $ctrl->listPropositionsByUser($userId, $sort);
 $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
 
-// Need deadline for chips — fetch demande deadlines for these propositions
+// Pour chaque proposition, on a besoin de la deadline de la demande ainsi que
+// du client qui l'a publiée (photo + nom). Une seule requête JOIN suffit.
 $dmap = [];
 $dIds = array_unique(array_map(function($r){ return (int)$r['demande_id']; }, $rows));
 if (!empty($dIds)) {
     $in = implode(',', array_map('intval', $dIds));
-    $dStmt = $pdo->query("SELECT id, deadline FROM demandes WHERE id IN ($in)");
+    $dStmt = $pdo->query("SELECT d.id, d.deadline, d.user_id,
+                                 u.prenom AS client_prenom, u.nom AS client_nom, u.photo AS client_photo
+                            FROM demandes d
+                            LEFT JOIN utilisateurs u ON u.id = d.user_id
+                           WHERE d.id IN ($in)");
     foreach ($dStmt->fetchAll(PDO::FETCH_ASSOC) as $d) {
-        $dmap[(int)$d['id']] = $d['deadline'];
+        $dmap[(int)$d['id']] = $d;
     }
 }
 
@@ -86,8 +91,10 @@ $flashDeleted = isset($_GET['deleted']);
 $flashError   = $_SESSION['error'] ?? null;
 unset($_SESSION['error']);
 
-$navName = trim(explode(' ', trim($_SESSION['user_nom'] ?? ''))[0] ?? '') ?: 'Profil';
-$navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&background=1F5F4D&color=fff&bold=true&size=80';
+$navAvatar    = frontoffice_nav_avatar($pdo, $_SESSION['user_id'] ?? 0);
+$navName      = $navAvatar['name'];
+$navAvatarSrc = $navAvatar['src'];
+$navFallback  = $navAvatar['fallback'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -152,6 +159,22 @@ $navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&ba
     .p-card .meta{display:flex;flex-wrap:wrap;gap:8px}
     .p-card .actions{display:flex;gap:8px;justify-content:flex-end;padding-top:8px;border-top:1px dashed var(--rule)}
     .p-card .when{font-size:.78rem;color:var(--ink-soft);font-weight:500}
+    .p-card .client-row{
+      display:flex;align-items:center;gap:10px;
+      padding:10px 12px;border-radius:12px;
+      background:var(--bg);border:1px solid var(--rule);
+    }
+    .p-card .client-row img{width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0}
+    .p-card .client-row .lbl{font-size:.7rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .p-card .client-row .who{font-weight:700;color:var(--ink);font-size:.92rem;line-height:1.2}
+    .p-card .client-row a{color:inherit;text-decoration:none}
+    .p-card .client-row a:hover{color:var(--sage)}
+    .p-card.is-accepted{border-color:var(--sage);box-shadow:0 18px 38px -22px rgba(31,95,77,.3)}
+    .p-card.is-declined{opacity:.65}
+    .status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+    .status-badge.pending{background:var(--bg);color:var(--ink-mute);border:1px solid var(--rule)}
+    .status-badge.accepted{background:var(--sage-soft);color:var(--sage);border:1px solid rgba(31,95,77,.25)}
+    .status-badge.declined{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
     .chip{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:.78rem;font-weight:700}
     .chip.sage{background:var(--sage-soft);color:var(--sage)}
     .chip.honey{background:var(--honey-soft);color:#92660A}
@@ -170,15 +193,13 @@ $navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&ba
     <div class="container">
       <a href="index.php" class="sb-logo"><img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img"></a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="browse_demandes.php">Parcourir les demandes</a>
-        <a href="mes_propositions.php" class="active">Mes propositions</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
+        <?= frontoffice_main_nav('mes_propositions', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn"></span>
         <a href="profil.php" class="sb-profile-chip" title="Mon Profil">
-          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar">
+          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar"
+               onerror="this.onerror=null;this.src='<?= htmlspecialchars($navFallback) ?>';">
           <span><?= htmlspecialchars($navName) ?></span>
         </a>
         <a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout" class="sb-cta d-none d-md-inline-flex">
@@ -238,12 +259,30 @@ $navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&ba
         <?php else: ?>
           <div class="row g-4">
             <?php foreach ($rows as $p):
-              $deadline = $dmap[(int)$p['demande_id']] ?? null;
-              $soon = $deadline ? isDeadlineSoon($deadline) : false;
+              $dInfo    = $dmap[(int)$p['demande_id']] ?? null;
+              $deadline = $dInfo['deadline'] ?? null;
+              $soon     = $deadline ? isDeadlineSoon($deadline) : false;
+              $clientId = (int)($dInfo['user_id'] ?? 0);
+              $clientName = trim(($dInfo['client_prenom'] ?? '') . ' ' . ($dInfo['client_nom'] ?? '')) ?: 'Client SkillBridge';
+              $clientHasPhoto = !empty($dInfo['client_photo']);
+              $clientAvatar = $clientHasPhoto
+                  ? 'assets/img/profile/' . htmlspecialchars($dInfo['client_photo'])
+                  : 'https://ui-avatars.com/api/?name=' . urlencode($clientName) . '&background=1F5F4D&color=fff&bold=true&size=120';
+              $pStatus  = $p['status'] ?? 'pending';
+              $cardCls  = 'p-card' . ($pStatus === 'accepted' ? ' is-accepted' : ($pStatus === 'declined' ? ' is-declined' : ''));
+              $statusLabel = ['pending' => 'En attente', 'accepted' => 'Acceptée 🎉', 'declined' => 'Refusée'][$pStatus] ?? 'En attente';
             ?>
               <div class="col-lg-6" data-aos="fade-up">
-                <div class="p-card">
-                  <h4 class="ttl"><?= htmlspecialchars(html_entity_decode($p['demande_title'], ENT_QUOTES, 'UTF-8')) ?></h4>
+                <div class="<?= $cardCls ?>">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <h4 class="ttl" style="margin:0;"><?= htmlspecialchars(html_entity_decode($p['demande_title'], ENT_QUOTES, 'UTF-8')) ?></h4>
+                    <span class="status-badge <?= $pStatus ?>">
+                      <?php if ($pStatus === 'accepted'): ?><i class="bi bi-check-circle-fill"></i><?php endif; ?>
+                      <?php if ($pStatus === 'declined'): ?><i class="bi bi-x-circle-fill"></i><?php endif; ?>
+                      <?php if ($pStatus === 'pending'):  ?><i class="bi bi-hourglass-split"></i><?php endif; ?>
+                      <?= $statusLabel ?>
+                    </span>
+                  </div>
                   <div class="meta">
                     <span class="chip honey"><i class="bi bi-cash-coin"></i> <?= number_format((float)$p['price'], 0) ?> DT</span>
                     <?php if ($deadline): ?>
@@ -251,15 +290,45 @@ $navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&ba
                     <?php endif; ?>
                   </div>
                   <p class="msg"><?= htmlspecialchars(html_entity_decode($p['message'], ENT_QUOTES, 'UTF-8')) ?></p>
+
+                  <?php if ($clientId > 0): ?>
+                    <div class="client-row">
+                      <img src="<?= $clientAvatar ?>" alt=""
+                           onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($clientName) ?>&background=1F5F4D&color=fff&bold=true&size=120';">
+                      <div style="flex:1; min-width:0;">
+                        <div class="lbl">Client</div>
+                        <div class="who">
+                          <a href="profil.php?id=<?= $clientId ?>"><?= htmlspecialchars($clientName) ?></a>
+                        </div>
+                      </div>
+                      <a href="../chat/new_conversation.php?user2=<?= $clientId ?>"
+                         class="btn-ghost" style="padding:7px 12px; font-size:.82rem; white-space:nowrap;">
+                        <i class="bi bi-chat-dots"></i> Contacter
+                      </a>
+                    </div>
+                  <?php endif; ?>
+
                   <div class="when"><i class="bi bi-clock"></i> <?= relativeTime($p['created_at']) ?></div>
-                  <div class="actions">
-                    <a href="edit_proposition.php?id=<?= (int)$p['id'] ?>" class="btn-ghost"><i class="bi bi-pencil"></i> Modifier</a>
-                    <form method="POST" onsubmit="return confirm('Supprimer cette proposition ?');" style="display:inline;">
-                      <input type="hidden" name="action" value="delete">
-                      <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
-                      <button type="submit" class="btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
-                    </form>
-                  </div>
+                  <?php if ($pStatus === 'accepted'): ?>
+                    <div class="actions" style="justify-content:flex-end;">
+                      <a href="../chat/conversations.php" class="btn-sage"><i class="bi bi-chat-dots-fill"></i> Ouvrir la conversation</a>
+                    </div>
+                  <?php elseif ($pStatus === 'pending'): ?>
+                    <div class="actions">
+                      <a href="edit_proposition.php?id=<?= (int)$p['id'] ?>" class="btn-ghost"><i class="bi bi-pencil"></i> Modifier</a>
+                      <form method="POST" onsubmit="return confirm('Supprimer cette proposition ?');" style="display:inline;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id" value="<?= (int)$p['id'] ?>">
+                        <button type="submit" class="btn-danger"><i class="bi bi-trash"></i> Supprimer</button>
+                      </form>
+                    </div>
+                  <?php else: ?>
+                    <div class="actions" style="justify-content:flex-end;">
+                      <span style="font-size:.82rem; color: var(--ink-soft); font-style:italic;">
+                        <i class="bi bi-info-circle"></i> Le client a retenu une autre proposition.
+                      </span>
+                    </div>
+                  <?php endif; ?>
                 </div>
               </div>
             <?php endforeach; ?>

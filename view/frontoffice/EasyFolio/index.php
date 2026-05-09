@@ -757,15 +757,7 @@ $faq = [
 
       <nav class="sb-nav">
         <?php if ($isLoggedIn): ?>
-          <a href="index.php" class="active">Accueil</a>
-          <a href="../chat/conversations.php">Conversations<?php if ($dashboard['unread_count'] > 0): ?> <span style="color:var(--honey-d);">·<?= $dashboard['unread_count'] ?></span><?php endif; ?></a>
-          <?php if ($isClient): ?>
-            <a href="mes_demandes.php">Mes demandes</a>
-          <?php elseif ($isFreelancer): ?>
-            <a href="browse_demandes.php">Demandes</a>
-            <a href="mes_propositions.php">Mes propositions</a>
-          <?php endif; ?>
-          <a href="#talents">Talents</a>
+          <?= frontoffice_main_nav('accueil', '.', '../chat') ?>
         <?php else: ?>
           <a href="#how-it-works">Méthode</a>
           <a href="#talents">Talents</a>

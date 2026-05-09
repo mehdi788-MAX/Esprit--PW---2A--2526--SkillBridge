@@ -240,6 +240,8 @@ function is_soon($deadline) {
       height: 100%;
     }
     .demande-card:hover { border-color: var(--sage); transform: translateY(-2px); box-shadow: 0 14px 28px -16px rgba(31,95,77,.18); }
+    .demande-card.is-closed { background: linear-gradient(180deg, var(--paper) 0%, var(--bg) 100%); border-color: rgba(31,95,77,.2); }
+    .demande-card.is-closed h3 { color: var(--ink-mute); }
     .demande-card h3 { font-size: 1.1rem; font-weight: 800; margin: 0; line-height: 1.25; }
     .demande-card .desc {
       color: var(--ink-mute); font-size: .92rem; line-height: 1.5;
@@ -335,9 +337,7 @@ function is_soon($deadline) {
         <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
-        <a href="mes_demandes.php" class="active">Mes Demandes</a>
+        <?= frontoffice_main_nav('mes_demandes', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>
@@ -471,18 +471,26 @@ function is_soon($deadline) {
           <div class="row g-3">
             <?php foreach ($demandes as $d): ?>
               <?php
-                $id     = (int)$d['id'];
-                $count  = $ctrl->countPropositionsByDemande($id);
-                $soon   = is_soon($d['deadline']);
+                $id       = (int)$d['id'];
+                $count    = $ctrl->countPropositionsByDemande($id);
+                $soon     = is_soon($d['deadline']);
+                $isClosed = ($d['status'] ?? 'open') === 'closed';
               ?>
               <div class="col-12 col-md-6 col-lg-4" data-aos="fade-up">
-                <div class="demande-card">
-                  <div>
-                    <h3><?= htmlspecialchars($d['title']) ?></h3>
-                    <div class="meta mt-1">
-                      <i class="bi bi-clock"></i>
-                      Publiée le <?= fmt_date($d['created_at']) ?>
+                <div class="demande-card<?= $isClosed ? ' is-closed' : '' ?>">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div style="min-width:0; flex:1;">
+                      <h3><?= htmlspecialchars($d['title']) ?></h3>
+                      <div class="meta mt-1">
+                        <i class="bi bi-clock"></i>
+                        Publiée le <?= fmt_date($d['created_at']) ?>
+                      </div>
                     </div>
+                    <?php if ($isClosed): ?>
+                      <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:var(--sage-soft);color:var(--sage);border:1px solid rgba(31,95,77,.25);white-space:nowrap;">
+                        <i class="bi bi-lock-fill"></i> Fermée
+                      </span>
+                    <?php endif; ?>
                   </div>
                   <p class="desc"><?= htmlspecialchars($d['description']) ?></p>
                   <div class="chip-row">
@@ -495,16 +503,22 @@ function is_soon($deadline) {
                     <a href="demande_propositions.php?id=<?= $id ?>" class="btn-mini primary">
                       <i class="bi bi-inboxes"></i> Voir propositions <span class="badge-count"><?= $count ?></span>
                     </a>
-                    <a href="edit_demande.php?id=<?= $id ?>" class="btn-mini">
-                      <i class="bi bi-pencil"></i> Modifier
-                    </a>
-                    <form method="POST" action="mes_demandes.php" style="display:inline;"
-                          onsubmit="return confirm('Supprimer définitivement cette demande ? Cette action est irréversible.');">
-                      <input type="hidden" name="delete_id" value="<?= $id ?>">
-                      <button type="submit" class="btn-mini danger">
-                        <i class="bi bi-trash3"></i> Supprimer
-                      </button>
-                    </form>
+                    <?php if (!$isClosed): ?>
+                      <a href="edit_demande.php?id=<?= $id ?>" class="btn-mini">
+                        <i class="bi bi-pencil"></i> Modifier
+                      </a>
+                      <form method="POST" action="mes_demandes.php" style="display:inline;"
+                            onsubmit="return confirm('Supprimer définitivement cette demande ? Cette action est irréversible.');">
+                        <input type="hidden" name="delete_id" value="<?= $id ?>">
+                        <button type="submit" class="btn-mini danger">
+                          <i class="bi bi-trash3"></i> Supprimer
+                        </button>
+                      </form>
+                    <?php else: ?>
+                      <a href="../chat/conversations.php" class="btn-mini">
+                        <i class="bi bi-chat-dots"></i> Conversation
+                      </a>
+                    <?php endif; ?>
                   </div>
                 </div>
               </div>

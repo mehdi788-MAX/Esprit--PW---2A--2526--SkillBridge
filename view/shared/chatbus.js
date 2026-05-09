@@ -431,6 +431,20 @@
     if (n.type === 'message_reacted') {
       return safeActor + ' a réagi avec ' + escapeHtml(payload.emoji || '👍') + '.';
     }
+    if (n.type === 'new_proposition') {
+      // Côté client : un freelancer a soumis une nouvelle proposition.
+      return safeActor + ' a envoyé une proposition'
+           + (payload.preview ? ' — ' + escapeHtml(payload.preview) : '.');
+    }
+    if (n.type === 'proposition_accepted') {
+      // Côté freelancer : sa proposition a été retenue.
+      const title = payload.demande_title ? ' « ' + escapeHtml(payload.demande_title) + ' »' : '';
+      return '🎉 Votre proposition' + title + ' a été acceptée.';
+    }
+    if (n.type === 'proposition_declined') {
+      const title = payload.demande_title ? ' « ' + escapeHtml(payload.demande_title) + ' »' : '';
+      return 'La demande' + title + ' a été attribuée à un autre freelancer.';
+    }
     return safeActor + ' : ' + escapeHtml(payload.preview || '');
   }
 

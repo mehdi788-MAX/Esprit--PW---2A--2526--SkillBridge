@@ -77,15 +77,19 @@ CREATE TABLE `profils` (
 -- 3. DEMANDES — projets postés par les clients
 -- =====================================================
 CREATE TABLE `demandes` (
-    `id`           INT AUTO_INCREMENT PRIMARY KEY,
-    `title`        VARCHAR(150)   NOT NULL,
-    `price`        DECIMAL(10,2)  NOT NULL,
-    `deadline`     DATE           NOT NULL,
-    `description`  TEXT           NOT NULL,
-    `created_at`   DATETIME       NOT NULL,
-    `user_id`      INT            NULL,
+    `id`                       INT AUTO_INCREMENT PRIMARY KEY,
+    `title`                    VARCHAR(150)   NOT NULL,
+    `price`                    DECIMAL(10,2)  NOT NULL,
+    `deadline`                 DATE           NOT NULL,
+    `description`              TEXT           NOT NULL,
+    `created_at`               DATETIME       NOT NULL,
+    `user_id`                  INT            NULL,
+    `status`                   ENUM('open','closed') NOT NULL DEFAULT 'open',
+    `accepted_proposition_id`  INT            NULL,
     INDEX `idx_user_id` (`user_id`),
+    INDEX `idx_demandes_status` (`status`),
     FOREIGN KEY (`user_id`) REFERENCES `utilisateurs`(`id`) ON DELETE CASCADE
+    -- la FK vers propositions est ajoutée après la création de la table propositions (cycle)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================
@@ -98,12 +102,19 @@ CREATE TABLE `propositions` (
     `freelancer_name`  VARCHAR(100)   NULL,
     `message`          TEXT           NULL,
     `price`            DECIMAL(10,2)  NULL,
+    `status`           ENUM('pending','accepted','declined') NOT NULL DEFAULT 'pending',
     `created_at`       DATETIME       DEFAULT CURRENT_TIMESTAMP,
-    INDEX `idx_demande`            (`demande_id`),
-    INDEX `idx_propositions_user`  (`user_id`),
+    INDEX `idx_demande`              (`demande_id`),
+    INDEX `idx_propositions_user`    (`user_id`),
+    INDEX `idx_propositions_status`  (`status`),
     FOREIGN KEY (`demande_id`) REFERENCES `demandes`(`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_propositions_user` FOREIGN KEY (`user_id`) REFERENCES `utilisateurs`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- FK demandes.accepted_proposition_id → propositions.id (créée après les deux tables)
+ALTER TABLE `demandes`
+    ADD CONSTRAINT `fk_demandes_accepted_proposition`
+    FOREIGN KEY (`accepted_proposition_id`) REFERENCES `propositions`(`id`) ON DELETE SET NULL;
 
 -- =====================================================
 -- 5. CONVERSATIONS — fil entre 2 utilisateurs (Oussema)

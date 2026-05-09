@@ -235,9 +235,7 @@ $today = date('Y-m-d');
         <img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img" loading="eager">
       </a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
-        <a href="mes_demandes.php" class="active">Mes Demandes</a>
+        <?= frontoffice_main_nav('mes_demandes', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn" style="display:inline-flex;"></span>

@@ -9,8 +9,10 @@ $ctrl = new DemandeController();
 $role        = strtolower($_SESSION['user_role'] ?? '');
 $isFreelancer = ($role === 'freelancer');
 $isClient     = ($role === 'client');
-$navName     = trim(explode(' ', trim($_SESSION['user_nom'] ?? ''))[0] ?? '') ?: 'Profil';
-$navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&background=1F5F4D&color=fff&bold=true&size=80';
+$navAvatar    = frontoffice_nav_avatar($pdo, $_SESSION['user_id'] ?? 0);
+$navName      = $navAvatar['name'];
+$navAvatarSrc = $navAvatar['src'];
+$navFallback  = $navAvatar['fallback'];
 
 // Filters
 $sort   = ($_GET['sort']   ?? 'recent') === 'oldest' ? 'oldest' : 'recent';
@@ -19,13 +21,23 @@ $searchParam = $search !== '' ? $search : null;
 
 $stmt = $ctrl->listDemandes($sort, $searchParam);
 $rows = $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+// On ne montre aux freelancers que les demandes encore ouvertes — les
+// demandes clôturées (proposition acceptée) disparaissent du marketplace.
+$rows = array_values(array_filter($rows, function ($r) {
+    return ($r['status'] ?? 'open') === 'open';
+}));
 
-// Author lookup (one extra query for all user_ids)
+// Author lookup (utilisateurs + profils en une seule requête, pour afficher
+// photo + localisation sur chaque carte demande).
 $authors = [];
 $userIds = array_filter(array_unique(array_map(function($r){ return (int)$r['user_id']; }, $rows)));
 if (!empty($userIds)) {
     $in = implode(',', array_map('intval', $userIds));
-    $aStmt = $pdo->query("SELECT id, nom, prenom, photo FROM utilisateurs WHERE id IN ($in)");
+    $aStmt = $pdo->query("SELECT u.id, u.nom, u.prenom, u.photo,
+                                 p.localisation
+                            FROM utilisateurs u
+                            LEFT JOIN profils p ON p.utilisateur_id = u.id
+                           WHERE u.id IN ($in)");
     foreach ($aStmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
         $authors[(int)$u['id']] = $u;
     }
@@ -154,15 +166,13 @@ function isDeadlineSoon($d) {
     <div class="container">
       <a href="index.php" class="sb-logo"><img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img"></a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="browse_demandes.php" class="active">Parcourir les demandes</a>
-        <a href="mes_propositions.php">Mes propositions</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
+        <?= frontoffice_main_nav('demandes', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn"></span>
         <a href="profil.php" class="sb-profile-chip" title="Mon Profil">
-          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar">
+          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar"
+               onerror="this.onerror=null;this.src='<?= htmlspecialchars($navFallback) ?>';">
           <span><?= htmlspecialchars($navName) ?></span>
         </a>
         <a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout" class="sb-cta d-none d-md-inline-flex">
@@ -234,6 +244,8 @@ function isDeadlineSoon($d) {
               $author = $authors[(int)$r['user_id']] ?? null;
               $authorName = $author ? trim($author['prenom'] . ' ' . $author['nom']) : 'Client SkillBridge';
               $authorAvatar = ($author && !empty($author['photo'])) ? 'assets/img/profile/' . htmlspecialchars($author['photo']) : 'https://ui-avatars.com/api/?name=' . urlencode($authorName) . '&background=1F5F4D&color=fff&size=80';
+              $authorLoc  = $author['localisation'] ?? '';
+              $authorId   = $author ? (int)$author['id'] : 0;
               $soon = isDeadlineSoon($r['deadline']);
             ?>
               <div class="col-md-6" data-aos="fade-up">
@@ -246,9 +258,18 @@ function isDeadlineSoon($d) {
                   <p class="desc"><?= htmlspecialchars(html_entity_decode($r['description'], ENT_QUOTES, 'UTF-8')) ?></p>
                   <div class="author">
                     <img src="<?= $authorAvatar ?>" alt="" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name=<?= urlencode($authorName) ?>&background=1F5F4D&color=fff';">
-                    <div class="flex-grow-1">
-                      <div class="who"><?= htmlspecialchars($authorName) ?></div>
-                      <div class="when"><?= relativeTime($r['created_at']) ?></div>
+                    <div class="flex-grow-1" style="min-width:0;">
+                      <div class="who">
+                        <?php if ($authorId): ?>
+                          <a href="profil.php?id=<?= $authorId ?>" style="color:inherit;text-decoration:none;"><?= htmlspecialchars($authorName) ?></a>
+                        <?php else: ?>
+                          <?= htmlspecialchars($authorName) ?>
+                        <?php endif; ?>
+                      </div>
+                      <div class="when">
+                        <?php if ($authorLoc): ?><i class="bi bi-geo-alt"></i> <?= htmlspecialchars($authorLoc) ?> · <?php endif; ?>
+                        <?= relativeTime($r['created_at']) ?>
+                      </div>
                     </div>
                     <?php if ($isFreelancer): ?>
                       <a href="add_proposition.php?demande_id=<?= (int)$r['id'] ?>" class="btn-sage" style="padding:9px 14px;font-size:.85rem;">

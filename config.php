@@ -101,6 +101,83 @@ if (!function_exists('admin_url')) {
 }
 
 /**
+ * Génère le bloc <a> du menu principal frontoffice — ordre canonique partagé
+ * entre la landing, le chat et toutes les pages demandes/propositions :
+ *   Accueil · Conversations · (Mes demandes | Demandes + Mes propositions) · Talents
+ *
+ * @param string $activeKey   accueil|conversations|mes_demandes|demandes|mes_propositions|talents
+ * @param string $easyBase    chemin relatif vers le dossier view/frontoffice/EasyFolio
+ *                            (ex. '.' depuis EasyFolio, '../EasyFolio' depuis chat/).
+ * @param string $chatBase    chemin relatif vers view/frontoffice/chat
+ *                            (ex. '../chat' depuis EasyFolio, '.' depuis chat/).
+ */
+if (!function_exists('frontoffice_main_nav')) {
+    function frontoffice_main_nav($activeKey = '', $easyBase = '.', $chatBase = '../chat') {
+        $role   = strtolower($_SESSION['user_role'] ?? '');
+        $easy   = rtrim($easyBase, '/');
+        $chat   = rtrim($chatBase, '/');
+        $items  = [
+            ['key' => 'accueil',          'href' => $easy . '/index.php',                'label' => 'Accueil'],
+            ['key' => 'conversations',    'href' => $chat . '/conversations.php',        'label' => 'Conversations'],
+        ];
+        if ($role === 'freelancer') {
+            $items[] = ['key' => 'demandes',         'href' => $easy . '/browse_demandes.php',  'label' => 'Demandes'];
+            $items[] = ['key' => 'mes_propositions', 'href' => $easy . '/mes_propositions.php', 'label' => 'Mes propositions'];
+        } elseif ($role === 'client') {
+            $items[] = ['key' => 'mes_demandes',     'href' => $easy . '/mes_demandes.php',     'label' => 'Mes demandes'];
+        }
+
+        $out = '';
+        foreach ($items as $it) {
+            $cls = ($it['key'] === $activeKey) ? ' class="active"' : '';
+            $out .= '<a href="' . htmlspecialchars($it['href']) . '"' . $cls . '>'
+                  . htmlspecialchars($it['label']) . '</a>';
+        }
+        return $out;
+    }
+}
+
+/**
+ * Renvoie la fiche minimale de l'utilisateur courant pour la barre de nav
+ * (avatar + prénom). Centralise la résolution de la photo (assets/img/profile/<file>)
+ * + fallback ui-avatars.com afin d'éviter que des pages affichent les initiales
+ * alors que la photo existe.
+ *
+ * @return array{name:string, src:string, fallback:string}
+ */
+if (!function_exists('frontoffice_nav_avatar')) {
+    function frontoffice_nav_avatar(PDO $pdo, $userId, $assetsBase = 'assets/img/profile') {
+        $userId = (int)$userId;
+        $name   = trim((string)($_SESSION['user_nom'] ?? '')) ?: 'Profil';
+        $photo  = '';
+        if ($userId > 0) {
+            try {
+                $stmt = $pdo->prepare('SELECT prenom, nom, photo FROM utilisateurs WHERE id = :id LIMIT 1');
+                $stmt->execute([':id' => $userId]);
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                if ($row) {
+                    $full = trim(($row['prenom'] ?? '') . ' ' . ($row['nom'] ?? ''));
+                    if ($full !== '') $name = $full;
+                    if (!empty($row['photo'])) $photo = $row['photo'];
+                }
+            } catch (Throwable $e) {}
+        }
+        $first    = trim(explode(' ', $name)[0] ?? '') ?: 'Profil';
+        $fallback = 'https://ui-avatars.com/api/?name=' . urlencode($name)
+                  . '&background=1F5F4D&color=fff&bold=true&size=120';
+        $src = $photo !== ''
+            ? rtrim($assetsBase, '/') . '/' . htmlspecialchars($photo)
+            : $fallback;
+        return [
+            'name'     => $first,
+            'fullname' => $name,
+            'src'      => $src,
+            'fallback' => $fallback,
+        ];
+    }
+}
+
+/**
  * Aperçu lisible d'un message de chat.
  * Les pièces jointes sont stockées en base sous forme d'enveloppe JSON
  * ({"kind":"file"|"image","url":"...","name":"...","mime":"..."}). On évite
@@ -234,6 +311,8 @@ if (!$useMySQL) {
                 description TEXT NOT NULL,
                 created_at DATETIME NOT NULL,
                 user_id INTEGER,
+                status VARCHAR(10) NOT NULL DEFAULT 'open',
+                accepted_proposition_id INTEGER NULL,
                 FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
             );
 
@@ -244,6 +323,7 @@ if (!$useMySQL) {
                 freelancer_name VARCHAR(100),
                 message TEXT,
                 price DECIMAL(10,2),
+                status VARCHAR(10) NOT NULL DEFAULT 'pending',
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (demande_id) REFERENCES demandes(id) ON DELETE CASCADE,
                 FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE

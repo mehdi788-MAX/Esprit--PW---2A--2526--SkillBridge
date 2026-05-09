@@ -59,8 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = $res['errors'];
 }
 
-$navName = trim(explode(' ', trim($_SESSION['user_nom'] ?? ''))[0] ?? '') ?: 'Profil';
-$navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&background=1F5F4D&color=fff&bold=true&size=80';
+$navAvatar    = frontoffice_nav_avatar($pdo, $_SESSION['user_id'] ?? 0);
+$navName      = $navAvatar['name'];
+$navAvatarSrc = $navAvatar['src'];
+$navFallback  = $navAvatar['fallback'];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -136,15 +138,13 @@ $navAvatarSrc = 'https://ui-avatars.com/api/?name=' . urlencode($navName) . '&ba
     <div class="container">
       <a href="index.php" class="sb-logo"><img src="assets/img/skillbridge-logo.png" alt="SkillBridge" class="logo-img"></a>
       <nav class="sb-nav">
-        <a href="index.php">Accueil</a>
-        <a href="browse_demandes.php" class="active">Parcourir les demandes</a>
-        <a href="mes_propositions.php">Mes propositions</a>
-        <a href="../chat/conversations.php">Mes Conversations</a>
+        <?= frontoffice_main_nav('demandes', '.', '../chat') ?>
       </nav>
       <div class="d-flex align-items-center gap-2">
         <span id="bellSlot" class="sb-bell-btn"></span>
         <a href="profil.php" class="sb-profile-chip" title="Mon Profil">
-          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar">
+          <img src="<?= $navAvatarSrc ?>" alt="" class="avatar"
+               onerror="this.onerror=null;this.src='<?= htmlspecialchars($navFallback) ?>';">
           <span><?= htmlspecialchars($navName) ?></span>
         </a>
         <a href="<?= $BASE ?>/controller/utilisateurcontroller.php?action=logout" class="sb-cta d-none d-md-inline-flex">

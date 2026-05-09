@@ -13,6 +13,8 @@ class Demande {
     public $description;
     public $created_at;
     public $user_id;
+    public $status;                  // 'open' | 'closed'
+    public $accepted_proposition_id; // FK vers la proposition retenue (NULL si demande ouverte)
 
     public function __construct($db) {
         $this->conn = $db;
@@ -60,7 +62,8 @@ class Demande {
     public function readAll($sort = 'recent', $search = null) {
         $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
 
-        $query = "SELECT id, title, price, deadline, description, created_at, user_id
+        $query = "SELECT id, title, price, deadline, description, created_at, user_id,
+                         status, accepted_proposition_id
                   FROM " . $this->table;
 
         if ($search !== null && $search !== '') {
@@ -86,7 +89,8 @@ class Demande {
     public function readByUser($userId, $sort = 'recent', $search = null) {
         $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
 
-        $query = "SELECT id, title, price, deadline, description, created_at, user_id
+        $query = "SELECT id, title, price, deadline, description, created_at, user_id,
+                         status, accepted_proposition_id
                   FROM " . $this->table . "
                   WHERE user_id = :user_id";
 
@@ -112,7 +116,8 @@ class Demande {
     // READ ONE
     // =====================
     public function readOne() {
-        $query = "SELECT id, title, price, deadline, description, created_at, user_id
+        $query = "SELECT id, title, price, deadline, description, created_at, user_id,
+                         status, accepted_proposition_id
                   FROM " . $this->table . "
                   WHERE id = :id
                   LIMIT 1";
@@ -123,12 +128,14 @@ class Demande {
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
-            $this->title       = $row['title'];
-            $this->price       = $row['price'];
-            $this->deadline    = $row['deadline'];
-            $this->description = $row['description'];
-            $this->created_at  = $row['created_at'];
-            $this->user_id     = $row['user_id'];
+            $this->title                   = $row['title'];
+            $this->price                   = $row['price'];
+            $this->deadline                = $row['deadline'];
+            $this->description             = $row['description'];
+            $this->created_at              = $row['created_at'];
+            $this->user_id                 = $row['user_id'];
+            $this->status                  = $row['status'] ?? 'open';
+            $this->accepted_proposition_id = $row['accepted_proposition_id'] ?? null;
             return true;
         }
         return false;
@@ -206,7 +213,8 @@ class Demande {
         $today  = date('Y-m-d');
         $in7    = date('Y-m-d', strtotime('+7 days'));
 
-        $query = "SELECT id, title, price, deadline, description, created_at, user_id
+        $query = "SELECT id, title, price, deadline, description, created_at, user_id,
+                         status, accepted_proposition_id
                   FROM " . $this->table . "
                   WHERE deadline >= :today AND deadline <= :in7
                   ORDER BY deadline ASC";

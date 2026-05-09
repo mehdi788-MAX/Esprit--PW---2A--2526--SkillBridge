@@ -12,6 +12,7 @@ class Proposition {
     public $freelancer_name;
     public $message;
     public $price;
+    public $status;     // 'pending' | 'accepted' | 'declined'
     public $created_at;
 
     public function __construct($db) {
@@ -60,7 +61,7 @@ class Proposition {
         $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
 
         $query = "SELECT p.id, p.demande_id, p.user_id, p.freelancer_name,
-                         p.message, p.price, p.created_at,
+                         p.message, p.price, p.status, p.created_at,
                          d.title AS demande_title
                   FROM " . $this->table . " p
                   JOIN demandes d ON d.id = p.demande_id
@@ -80,7 +81,7 @@ class Proposition {
         $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
 
         $query = "SELECT p.id, p.demande_id, p.user_id, p.freelancer_name,
-                         p.message, p.price, p.created_at,
+                         p.message, p.price, p.status, p.created_at,
                          d.title AS demande_title
                   FROM " . $this->table . " p
                   JOIN demandes d ON d.id = p.demande_id
@@ -100,7 +101,7 @@ class Proposition {
         $order = ($sort === 'oldest') ? 'ASC' : 'DESC';
 
         $query = "SELECT p.id, p.demande_id, p.user_id, p.freelancer_name,
-                         p.message, p.price, p.created_at,
+                         p.message, p.price, p.status, p.created_at,
                          d.title AS demande_title
                   FROM " . $this->table . " p
                   JOIN demandes d ON d.id = p.demande_id";
@@ -137,7 +138,7 @@ class Proposition {
     // READ ONE
     // =====================
     public function readOne() {
-        $query = "SELECT id, demande_id, user_id, freelancer_name, message, price, created_at
+        $query = "SELECT id, demande_id, user_id, freelancer_name, message, price, status, created_at
                   FROM " . $this->table . "
                   WHERE id = :id
                   LIMIT 1";
@@ -153,6 +154,7 @@ class Proposition {
             $this->freelancer_name = $row['freelancer_name'];
             $this->message         = $row['message'];
             $this->price           = $row['price'];
+            $this->status          = $row['status'] ?? 'pending';
             $this->created_at      = $row['created_at'];
             return true;
         }
