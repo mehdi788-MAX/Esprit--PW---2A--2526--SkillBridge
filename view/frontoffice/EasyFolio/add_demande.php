@@ -221,9 +221,89 @@ $today = date('Y-m-d');
     .sb-footer { background: var(--ink); color: rgba(255,255,255,.65); padding: 22px 0; font-size: .88rem; text-align: center; }
     .sb-footer strong { color: var(--paper); }
 
+    /* ===== Panneau IA — analyse temps réel du brief ===== */
+    .ai-panel {
+      position: sticky; top: 100px;
+      background: linear-gradient(180deg, var(--paper) 0%, var(--bg) 100%);
+      border: 1px solid var(--rule); border-radius: 22px;
+      padding: 24px 22px; display: flex; flex-direction: column; gap: 14px;
+      box-shadow: 0 22px 48px -28px rgba(31,95,77,.22);
+    }
+    .ai-head {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 14px; border-bottom: 1px dashed var(--rule);
+    }
+    .ai-icon {
+      width: 44px; height: 44px; border-radius: 14px;
+      background: var(--sage); color: var(--honey);
+      display:flex; align-items:center; justify-content:center;
+      font-size: 1.25rem; flex-shrink: 0;
+      box-shadow: 0 8px 18px -8px rgba(31,95,77,.55);
+    }
+    .ai-title { font-weight: 800; color: var(--ink); font-size: 1rem; line-height: 1.2; }
+    .ai-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .78rem; color: var(--ink-mute); margin-top: 3px;
+    }
+    .ai-status .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--ink-mute);
+    }
+    .ai-status[data-state="thinking"] .dot { background: var(--honey); animation: aiPulse 1s ease-in-out infinite; }
+    .ai-status[data-state="ready"]    .dot { background: var(--sage); }
+    .ai-status[data-state="offline"]  .dot { background: #C44; }
+    @keyframes aiPulse { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+
+    .ai-block {
+      background: var(--paper); border: 1px solid var(--rule);
+      border-radius: 14px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .ai-block-head {
+      font-size: .72rem; font-weight: 800; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--sage);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .ai-block-body {
+      margin: 0; font-size: .92rem; line-height: 1.55; color: var(--ink-2);
+    }
+    .ai-suggestions {
+      list-style: none; padding: 0; margin: 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .ai-suggestions li {
+      font-size: .9rem; color: var(--ink-2); line-height: 1.5;
+      padding-left: 22px; position: relative;
+    }
+    .ai-suggestions li::before {
+      content: '✦'; position: absolute; left: 0; top: 1px;
+      color: var(--honey-d); font-weight: 800;
+    }
+    .ai-empty {
+      text-align: center; padding: 24px 16px;
+      color: var(--ink-mute); font-size: .9rem;
+    }
+    .ai-empty i { font-size: 1.6rem; color: var(--sage); display:block; margin-bottom: 8px; }
+    .ai-empty p { margin: 0; }
+    .ai-foot {
+      font-size: .75rem; color: var(--ink-soft);
+      display: inline-flex; align-items: center; gap: 6px;
+      padding-top: 12px; border-top: 1px dashed var(--rule);
+    }
+    .ai-foot i { color: var(--sage); }
+
+    /* Skeleton loading */
+    .ai-skel {
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--rule) 0%, var(--bg) 50%, var(--rule) 100%);
+      background-size: 200% 100%; animation: skel 1.4s linear infinite;
+    }
+    @keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
     @media (max-width: 991.98px) {
       .auth-card { padding: 24px 22px; }
       .page-bg { padding: 40px 0 60px; }
+      .ai-panel { position: static; }
     }
   </style>
 </head>
@@ -268,8 +348,8 @@ $today = date('Y-m-d');
           </p>
         </div>
 
-        <div class="row justify-content-center">
-          <div class="col-12 col-lg-7" style="max-width: 640px;" data-aos="fade-up" data-aos-delay="100">
+        <div class="row justify-content-center g-4">
+          <div class="col-12 col-lg-7" data-aos="fade-up" data-aos-delay="100">
             <div class="auth-card">
 
               <?php if (!empty($errors)): ?>
@@ -345,6 +425,54 @@ $today = date('Y-m-d');
               </form>
 
             </div>
+          </div>
+
+          <!-- ========================================== -->
+          <!-- Panneau IA — analyse en direct du brief    -->
+          <!-- ========================================== -->
+          <div class="col-12 col-lg-5" data-aos="fade-up" data-aos-delay="200">
+            <aside class="ai-panel" id="aiPanel" aria-live="polite">
+              <header class="ai-head">
+                <div class="ai-icon"><i class="bi bi-stars"></i></div>
+                <div class="ai-meta">
+                  <div class="ai-title">Assistant IA</div>
+                  <div class="ai-status" id="aiStatus">
+                    <span class="dot"></span>
+                    <span id="aiStatusText">Analyse en attente…</span>
+                  </div>
+                </div>
+              </header>
+
+              <section class="ai-block" id="aiSummaryBlock" hidden>
+                <div class="ai-block-head"><i class="bi bi-lightbulb-fill"></i> Synthèse du besoin</div>
+                <p class="ai-block-body" id="aiSummary"></p>
+              </section>
+
+              <section class="ai-block" id="aiPriceBlock" hidden>
+                <div class="ai-block-head"><i class="bi bi-cash-coin"></i> Verdict budget</div>
+                <p class="ai-block-body" id="aiPriceAdvice"></p>
+              </section>
+
+              <section class="ai-block" id="aiDeadlineBlock" hidden>
+                <div class="ai-block-head"><i class="bi bi-calendar-event-fill"></i> Verdict délai</div>
+                <p class="ai-block-body" id="aiDeadlineAdvice"></p>
+              </section>
+
+              <section class="ai-block" id="aiSuggestionsBlock" hidden>
+                <div class="ai-block-head"><i class="bi bi-magic"></i> Suggestions pour améliorer</div>
+                <ul class="ai-suggestions" id="aiSuggestions"></ul>
+              </section>
+
+              <div class="ai-empty" id="aiEmpty">
+                <i class="bi bi-keyboard"></i>
+                <p>Commencez à rédiger votre demande — l'analyse apparaît automatiquement après quelques secondes.</p>
+              </div>
+
+              <footer class="ai-foot">
+                <i class="bi bi-shield-check"></i>
+                Analyse locale (Ollama · Qwen). Vos données ne quittent pas votre serveur.
+              </footer>
+            </aside>
           </div>
         </div>
 
@@ -425,6 +553,120 @@ $today = date('Y-m-d');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       });
+    })();
+
+    /* =========================================================
+     * Panneau IA — analyse en direct du brief
+     * ---------------------------------------------------------
+     * Debounce 1.2 s après la dernière frappe → POST api/ai_advice.php
+     * → met à jour synthèse / verdict prix / verdict délai / suggestions.
+     * Annule la requête en cours si une nouvelle est lancée (AbortController).
+     * ========================================================= */
+    (function () {
+      const fields = {
+        title:       document.getElementById('title'),
+        description: document.getElementById('description'),
+        price:       document.getElementById('price'),
+        deadline:    document.getElementById('deadline'),
+      };
+      const panel       = document.getElementById('aiPanel');
+      const statusEl    = document.getElementById('aiStatus');
+      const statusText  = document.getElementById('aiStatusText');
+      const emptyEl     = document.getElementById('aiEmpty');
+      const summaryEl   = document.getElementById('aiSummary');
+      const summaryB    = document.getElementById('aiSummaryBlock');
+      const priceEl     = document.getElementById('aiPriceAdvice');
+      const priceB      = document.getElementById('aiPriceBlock');
+      const deadlineEl  = document.getElementById('aiDeadlineAdvice');
+      const deadlineB   = document.getElementById('aiDeadlineBlock');
+      const suggEl      = document.getElementById('aiSuggestions');
+      const suggB       = document.getElementById('aiSuggestionsBlock');
+      if (!panel || !fields.title) return;
+
+      let debounce = null;
+      let activeController = null;
+
+      function setStatus(state, text) {
+        statusEl.dataset.state = state;
+        statusText.textContent = text;
+      }
+      function show(block, on) { if (block) block.hidden = !on; }
+
+      function refresh() {
+        const title = fields.title.value.trim();
+        const desc  = fields.description.value.trim();
+        if (title.length < 3 && desc.length < 10) {
+          // Trop tôt — on garde l'état initial.
+          show(summaryB, false); show(priceB, false); show(deadlineB, false); show(suggB, false);
+          show(emptyEl, true);
+          setStatus('idle', 'Analyse en attente…');
+          return;
+        }
+
+        if (activeController) { activeController.abort(); }
+        activeController = new AbortController();
+        const controller = activeController;
+
+        show(emptyEl, false);
+        setStatus('thinking', 'Analyse en cours…');
+
+        const fd = new FormData();
+        fd.append('title',       title);
+        fd.append('description', desc);
+        fd.append('price',       fields.price.value.trim());
+        fd.append('deadline',    fields.deadline.value.trim());
+
+        fetch('../../../api/ai_advice.php', {
+          method: 'POST',
+          body: fd,
+          credentials: 'same-origin',
+          signal: controller.signal,
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(new Error('http ' + r.status)))
+        .then(data => {
+          if (controller !== activeController) return;
+          if (data.summary) {
+            summaryEl.textContent = data.summary;
+            show(summaryB, true);
+          } else { show(summaryB, false); }
+          if (data.price_advice) {
+            priceEl.textContent = data.price_advice;
+            show(priceB, true);
+          } else { show(priceB, false); }
+          if (data.deadline_advice) {
+            deadlineEl.textContent = data.deadline_advice;
+            show(deadlineB, true);
+          } else { show(deadlineB, false); }
+          if (Array.isArray(data.suggestions) && data.suggestions.length) {
+            suggEl.innerHTML = '';
+            data.suggestions.forEach(function (s) {
+              const li = document.createElement('li');
+              li.textContent = s;
+              suggEl.appendChild(li);
+            });
+            show(suggB, true);
+          } else { show(suggB, false); }
+          setStatus(data.available ? 'ready' : 'offline', data.available ? 'Analyse à jour' : 'IA hors ligne — verdicts dataset uniquement');
+        })
+        .catch(err => {
+          if (err && err.name === 'AbortError') return;
+          setStatus('offline', 'Analyse indisponible. Réessayez dans un instant.');
+        });
+      }
+
+      function trigger() {
+        clearTimeout(debounce);
+        debounce = setTimeout(refresh, 1200);
+      }
+
+      ['input', 'change'].forEach(function (evt) {
+        Object.values(fields).forEach(function (el) { if (el) el.addEventListener(evt, trigger); });
+      });
+
+      // Première analyse si le formulaire a déjà des valeurs (ex: edit_demande).
+      if (fields.title.value.trim() !== '' || fields.description.value.trim() !== '') {
+        refresh();
+      }
     })();
   </script>
 </body>

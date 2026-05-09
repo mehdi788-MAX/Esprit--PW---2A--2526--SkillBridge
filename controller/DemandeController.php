@@ -186,12 +186,16 @@ class DemandeController {
             return ['success' => false, 'errors' => $errors];
         }
 
+        // Le texte est stocké en clair (strip_tags supprime tout HTML).
+        // L'échappement HTML est appliqué à l'AFFICHAGE seulement, jamais
+        // au stockage : sinon les apostrophes deviennent &#039; en base
+        // et chaque édition redouble l'encodage (&amp;#039;…).
         $demande = new Demande($this->pdo);
         $demande->user_id     = intval($userId);
-        $demande->title       = htmlspecialchars(trim($title), ENT_QUOTES, 'UTF-8');
+        $demande->title       = trim(strip_tags($title));
         $demande->price       = floatval($price);
         $demande->deadline    = trim($deadline);
-        $demande->description = htmlspecialchars(trim($description), ENT_QUOTES, 'UTF-8');
+        $demande->description = trim(strip_tags($description));
 
         if ($demande->create()) {
             return ['success' => true, 'errors' => [], 'id' => (int)$demande->id];
@@ -220,10 +224,10 @@ class DemandeController {
         $demande = new Demande($this->pdo);
         $demande->id          = intval($id);
         $demande->user_id     = intval($userId);
-        $demande->title       = htmlspecialchars(trim($title), ENT_QUOTES, 'UTF-8');
+        $demande->title       = trim(strip_tags($title));
         $demande->price       = floatval($price);
         $demande->deadline    = trim($deadline);
-        $demande->description = htmlspecialchars(trim($description), ENT_QUOTES, 'UTF-8');
+        $demande->description = trim(strip_tags($description));
 
         if ($demande->update()) {
             return ['success' => true, 'errors' => [], 'id' => (int)$demande->id];
@@ -327,8 +331,8 @@ class DemandeController {
         $prop = new Proposition($this->pdo);
         $prop->user_id          = intval($userId);
         $prop->demande_id       = intval($demande_id);
-        $prop->freelancer_name  = htmlspecialchars(trim($freelancer_name), ENT_QUOTES, 'UTF-8');
-        $prop->message          = htmlspecialchars(trim($message), ENT_QUOTES, 'UTF-8');
+        $prop->freelancer_name  = trim(strip_tags($freelancer_name));
+        $prop->message          = trim(strip_tags($message));
         $prop->price            = floatval($price);
 
         if ($prop->create()) {
@@ -535,8 +539,8 @@ class DemandeController {
         $prop->id              = intval($id);
         $prop->user_id         = intval($userId);
         $prop->demande_id      = $demandeId;
-        $prop->freelancer_name = htmlspecialchars(trim($freelancer_name), ENT_QUOTES, 'UTF-8');
-        $prop->message         = htmlspecialchars(trim($message), ENT_QUOTES, 'UTF-8');
+        $prop->freelancer_name = trim(strip_tags($freelancer_name));
+        $prop->message         = trim(strip_tags($message));
         $prop->price           = floatval($price);
 
         if ($prop->update()) {

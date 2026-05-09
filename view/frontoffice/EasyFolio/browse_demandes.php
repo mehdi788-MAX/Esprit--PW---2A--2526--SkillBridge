@@ -2,6 +2,7 @@
 require_once 'auth_check.php';
 require_once '../../../config.php';
 require_once '../../../controller/DemandeController.php';
+require_once '../../../controller/AiRecommendationService.php';
 
 $BASE = base_url();
 $ctrl = new DemandeController();
@@ -40,6 +41,45 @@ if (!empty($userIds)) {
                            WHERE u.id IN ($in)");
     foreach ($aStmt->fetchAll(PDO::FETCH_ASSOC) as $u) {
         $authors[(int)$u['id']] = $u;
+    }
+}
+
+// =====================================================
+// Recommandations IA — top 3 demandes alignées avec le
+// profil du freelancer (compétences + bio). Ranking
+// purement local (dataset + token-overlap), pas d'appel
+// LLM, donc rapide même sans Ollama.
+//
+// 3 états possibles côté UI :
+//   - $recoState = 'ready'      : on a des recommandations à montrer
+//   - $recoState = 'empty_profile' : profil incomplet → CTA « complétez »
+//   - $recoState = 'no_match'   : profil rempli mais aucun match assez fort
+// =====================================================
+$recommendations = [];
+$recoState       = 'hidden'; // par défaut on n'affiche rien (clients, etc.)
+if ($isFreelancer) {
+    $meStmt = $pdo->prepare("SELECT u.id, p.competences, p.bio
+                               FROM utilisateurs u
+                               LEFT JOIN profils p ON p.utilisateur_id = u.id
+                              WHERE u.id = :id LIMIT 1");
+    $meStmt->execute([':id' => (int)$_SESSION['user_id']]);
+    $me = $meStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    $hasProfile = !empty($me['competences']) || !empty($me['bio']);
+    if (!$hasProfile) {
+        $recoState = 'empty_profile';
+    } elseif (!empty($rows)) {
+        $freelancer = [
+            'id'          => (int)($me['id'] ?? 0),
+            'competences' => (string)($me['competences'] ?? ''),
+            'bio'         => (string)($me['bio'] ?? ''),
+        ];
+        $myId = (int)$_SESSION['user_id'];
+        $candidates = array_values(array_filter($rows, function ($r) use ($myId) {
+            return (int)($r['user_id'] ?? 0) !== $myId;
+        }));
+        $recommendations = AiRecommendationService::recommendDemandesForFreelancer($freelancer, $candidates, 3);
+        $recoState = !empty($recommendations) ? 'ready' : 'no_match';
     }
 }
 
@@ -153,6 +193,30 @@ function isDeadlineSoon($d) {
     .author img{width:32px;height:32px;border-radius:50%;object-fit:cover}
     .author .who{font-weight:700;font-size:.85rem;color:var(--ink-2)}
     .author .when{font-size:.75rem;color:var(--ink-soft)}
+    /* Recommandations IA */
+    .reco-block{background:linear-gradient(135deg,var(--sage) 0%,#2A7B65 100%);color:var(--paper);border-radius:24px;padding:28px 30px;margin-bottom:32px;position:relative;overflow:hidden;box-shadow:0 24px 48px -28px rgba(31,95,77,.45)}
+    .reco-block::before{content:'';position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:rgba(245,200,66,.15);pointer-events:none}
+    .reco-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;position:relative;z-index:1;flex-wrap:wrap}
+    .reco-head .ttl{display:flex;align-items:center;gap:14px}
+    .reco-head .ic{width:44px;height:44px;border-radius:14px;background:var(--honey);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;box-shadow:0 8px 18px -8px rgba(245,200,66,.55)}
+    .reco-head h3{color:var(--paper);font-size:1.35rem;font-weight:800;letter-spacing:-.018em;margin:0;line-height:1.2}
+    .reco-head .sub{color:rgba(255,255,255,.78);font-size:.85rem;margin-top:2px}
+    .reco-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;position:relative;z-index:1}
+    @media (max-width:991.98px){.reco-grid{grid-template-columns:1fr}}
+    .reco-card{background:var(--paper);color:var(--ink);border-radius:16px;padding:18px;display:flex;flex-direction:column;gap:10px;transition:transform .15s, box-shadow .15s;text-decoration:none}
+    .reco-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px -18px rgba(0,0,0,.4);color:var(--ink)}
+    .reco-card .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .reco-card .score{display:inline-flex;align-items:center;gap:4px;background:var(--sage-soft);color:var(--sage);font-weight:800;font-size:.78rem;padding:4px 10px;border-radius:999px;white-space:nowrap}
+    .reco-card .score.hi{background:var(--honey);color:var(--ink)}
+    .reco-card h4{font-size:1rem;font-weight:800;color:var(--ink);line-height:1.3;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .reco-card .reason{font-size:.8rem;color:var(--ink-mute);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0;font-style:italic}
+    .reco-card .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.78rem;color:var(--ink-soft);padding-top:8px;border-top:1px dashed var(--rule)}
+    .reco-card .meta .price{font-weight:800;color:var(--sage)}
+    .reco-card .cta{display:inline-flex;align-items:center;gap:4px;color:var(--sage);font-weight:700;font-size:.82rem}
+    .reco-block.reco-empty{padding:22px 28px}
+    .reco-block.reco-empty .reco-head{margin-bottom:0}
+    .reco-cta{display:inline-flex;align-items:center;gap:8px;background:var(--honey);color:var(--ink);padding:10px 18px;border-radius:12px;text-decoration:none;font-weight:700;font-size:.88rem;transition:all .15s;white-space:nowrap;z-index:1}
+    .reco-cta:hover{transform:translateY(-2px);box-shadow:0 14px 28px -12px rgba(245,200,66,.55);color:var(--ink)}
     .empty-state{background:var(--paper);border:1px solid var(--rule);border-radius:22px;padding:60px 30px;text-align:center}
     .empty-state .icon-box{width:80px;height:80px;border-radius:18px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--sage);font-size:2rem}
     .empty-state h4{font-weight:800;font-size:1.2rem;margin-bottom:8px}
@@ -209,6 +273,71 @@ function isDeadlineSoon($d) {
           <div class="kpi"><div class="lbl">Plus récente</div><div class="val" style="font-size:1.05rem;font-weight:700;"><?= $mostRecent ? date('d/m/Y', strtotime($mostRecent)) : '—' ?></div><div class="sub">date de publication</div></div>
           <div class="kpi"><div class="lbl">Deadline proche</div><div class="val" style="font-size:1.05rem;font-weight:700;"><?= $nearestDeadline ? date('d/m/Y', strtotime($nearestDeadline)) : '—' ?></div><div class="sub">prochaine échéance</div></div>
         </div>
+
+        <?php if ($recoState === 'ready'): ?>
+          <!-- ====== Recommandations IA — top 3 demandes alignées avec le profil ====== -->
+          <section class="reco-block" data-aos="fade-up">
+            <div class="reco-head">
+              <div class="ttl">
+                <div class="ic"><i class="bi bi-stars"></i></div>
+                <div>
+                  <h3>Recommandées pour vous</h3>
+                  <div class="sub">Sélection IA basée sur vos compétences et votre profil.</div>
+                </div>
+              </div>
+              <span class="status-badge" style="background:rgba(245,200,66,.22);color:var(--honey);border:1px solid rgba(245,200,66,.4);padding:6px 12px;border-radius:999px;font-size:.74rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px;">
+                <i class="bi bi-magic"></i> Match local
+              </span>
+            </div>
+            <div class="reco-grid">
+              <?php foreach ($recommendations as $r):
+                  $score   = (int)($r['_match_score'] ?? 0);
+                  $reason  = (string)($r['_match_reason'] ?? '');
+                  $hi      = $score >= 70;
+              ?>
+                <a href="add_proposition.php?demande_id=<?= (int)$r['id'] ?>" class="reco-card">
+                  <div class="top-row">
+                    <h4><?= htmlspecialchars(html_entity_decode($r['title'], ENT_QUOTES, 'UTF-8')) ?></h4>
+                    <span class="score <?= $hi ? 'hi' : '' ?>"><i class="bi bi-bullseye"></i> <?= $score ?>%</span>
+                  </div>
+                  <p class="reason"><?= htmlspecialchars($reason) ?></p>
+                  <div class="meta">
+                    <span class="price"><?= number_format((float)$r['price'], 0) ?> DT</span>
+                    <span class="cta">Faire une proposition <i class="bi bi-arrow-right"></i></span>
+                  </div>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          </section>
+        <?php elseif ($recoState === 'empty_profile'): ?>
+          <!-- ====== Profil vide → invitation à compléter pour débloquer le matching ====== -->
+          <section class="reco-block reco-empty" data-aos="fade-up">
+            <div class="reco-head">
+              <div class="ttl">
+                <div class="ic"><i class="bi bi-person-plus-fill"></i></div>
+                <div>
+                  <h3>Débloquez les recommandations</h3>
+                  <div class="sub">Renseignez vos compétences et votre bio — l'IA classe ensuite les demandes selon votre profil.</div>
+                </div>
+              </div>
+              <a href="profil.php" class="reco-cta">
+                Compléter mon profil <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </section>
+        <?php elseif ($recoState === 'no_match'): ?>
+          <section class="reco-block reco-empty" data-aos="fade-up">
+            <div class="reco-head">
+              <div class="ttl">
+                <div class="ic"><i class="bi bi-binoculars-fill"></i></div>
+                <div>
+                  <h3>Pas de match évident pour le moment</h3>
+                  <div class="sub">Aucune demande ne correspond précisément à votre profil — parcourez la liste ci-dessous.</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        <?php endif; ?>
 
         <!-- Filters -->
         <div class="auth-card mb-4" data-aos="fade-up">

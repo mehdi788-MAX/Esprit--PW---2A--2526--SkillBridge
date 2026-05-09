@@ -31,8 +31,9 @@ class Proposition {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->freelancer_name = htmlspecialchars(strip_tags($this->freelancer_name));
-        $this->message         = htmlspecialchars(strip_tags($this->message));
+        // Texte stocké en clair ; échappement uniquement à l'affichage.
+        $this->freelancer_name = strip_tags((string)$this->freelancer_name);
+        $this->message         = strip_tags((string)$this->message);
 
         $stmt->bindParam(':demande_id',      $this->demande_id, PDO::PARAM_INT);
         $stmt->bindParam(':freelancer_name', $this->freelancer_name);
@@ -173,8 +174,9 @@ class Proposition {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->freelancer_name = htmlspecialchars(strip_tags($this->freelancer_name));
-        $this->message         = htmlspecialchars(strip_tags($this->message));
+        // Texte stocké en clair ; échappement uniquement à l'affichage.
+        $this->freelancer_name = strip_tags((string)$this->freelancer_name);
+        $this->message         = strip_tags((string)$this->message);
 
         $stmt->bindParam(':freelancer_name', $this->freelancer_name);
         $stmt->bindParam(':message',         $this->message);

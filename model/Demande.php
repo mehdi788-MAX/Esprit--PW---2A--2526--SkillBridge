@@ -32,9 +32,11 @@ class Demande {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->title       = htmlspecialchars(strip_tags($this->title));
-        $this->description = htmlspecialchars(strip_tags($this->description));
-        $this->deadline    = htmlspecialchars(strip_tags($this->deadline));
+        // Texte stocké en clair (strip_tags neutralise tout HTML).
+        // Les vues échappent à l'affichage via htmlspecialchars().
+        $this->title       = strip_tags((string)$this->title);
+        $this->description = strip_tags((string)$this->description);
+        $this->deadline    = strip_tags((string)$this->deadline);
 
         $stmt->bindParam(':title',       $this->title);
         $stmt->bindParam(':price',       $this->price);
@@ -154,9 +156,11 @@ class Demande {
 
         $stmt = $this->conn->prepare($query);
 
-        $this->title       = htmlspecialchars(strip_tags($this->title));
-        $this->description = htmlspecialchars(strip_tags($this->description));
-        $this->deadline    = htmlspecialchars(strip_tags($this->deadline));
+        // Texte stocké en clair (strip_tags neutralise tout HTML).
+        // Les vues échappent à l'affichage via htmlspecialchars().
+        $this->title       = strip_tags((string)$this->title);
+        $this->description = strip_tags((string)$this->description);
+        $this->deadline    = strip_tags((string)$this->deadline);
 
         $stmt->bindParam(':title',       $this->title);
         $stmt->bindParam(':price',       $this->price);

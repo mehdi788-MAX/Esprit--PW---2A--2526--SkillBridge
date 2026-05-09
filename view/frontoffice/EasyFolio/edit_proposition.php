@@ -2,6 +2,7 @@
 require_once 'auth_check.php';
 require_once '../../../config.php';
 require_once '../../../controller/DemandeController.php';
+require_once '../../../controller/AiRecommendationService.php';
 
 $BASE = base_url();
 $ctrl = new DemandeController();
@@ -74,6 +75,17 @@ $navAvatar    = frontoffice_nav_avatar($pdo, $_SESSION['user_id'] ?? 0);
 $navName      = $navAvatar['name'];
 $navAvatarSrc = $navAvatar['src'];
 $navFallback  = $navAvatar['fallback'];
+
+// Coach IA — analyse de la demande ciblée + match score (cf. add_proposition.php)
+$myProfile = ['competences' => '', 'bio' => ''];
+$pStmt = $pdo->prepare("SELECT competences, bio FROM profils WHERE utilisateur_id = :id LIMIT 1");
+$pStmt->execute([':id' => (int)$_SESSION['user_id']]);
+if ($prow = $pStmt->fetch(PDO::FETCH_ASSOC)) {
+    $myProfile['competences'] = (string)($prow['competences'] ?? '');
+    $myProfile['bio']         = (string)($prow['bio']         ?? '');
+}
+$aiCoach = AiRecommendationService::analyzeProposition($demande, $myProfile);
+$aiAvail = AiRecommendationService::isAvailable();
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -141,6 +153,31 @@ $navFallback  = $navAvatar['fallback'];
     .alert-danger{background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:.92rem}
     .alert-danger ul{margin:6px 0 0;padding-left:18px}
     .readonly-badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg);color:var(--ink-soft);padding:5px 11px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+    /* ===== Coach IA ===== */
+    .ai-coach{background:linear-gradient(180deg,var(--paper) 0%,var(--bg) 100%);border:1px solid var(--rule);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 18px 38px -28px rgba(31,95,77,.2)}
+    .ai-coach-head{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px dashed var(--rule)}
+    .ai-coach-icon{width:42px;height:42px;border-radius:13px;background:var(--sage);color:var(--honey);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;box-shadow:0 6px 14px -6px rgba(31,95,77,.5)}
+    .ai-coach-title{font-weight:800;color:var(--ink);font-size:.98rem;line-height:1.2}
+    .ai-coach-status{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;color:var(--ink-mute);margin-top:2px}
+    .ai-coach-status .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-mute)}
+    .ai-coach-status .dot.ok{background:var(--sage)}
+    .ai-coach-status .dot.warn{background:#C44}
+    .ai-coach-match{background:var(--sage-soft);border:1px solid rgba(31,95,77,.18);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+    .ai-coach-match-bar{height:8px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden}
+    .ai-coach-match-bar .fill{height:100%;background:linear-gradient(90deg,var(--sage),var(--honey));border-radius:999px;transition:width .8s ease}
+    .ai-coach-match-row{display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:var(--sage-d)}
+    .ai-coach-match-row .lbl{font-weight:600;text-transform:uppercase;letter-spacing:.04em;font-size:.7rem}
+    .ai-coach-match-row strong{font-weight:800;font-size:1.05rem;color:var(--sage)}
+    .ai-coach-match-reason{font-size:.78rem;color:var(--sage-d);font-style:italic;line-height:1.4}
+    .ai-coach-block{background:var(--paper);border:1px solid var(--rule);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+    .ai-coach-block .hd{font-size:.7rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--sage);display:inline-flex;align-items:center;gap:6px}
+    .ai-coach-block p{margin:0;font-size:.88rem;color:var(--ink-2);line-height:1.5}
+    .ai-coach-tips{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+    .ai-coach-tips li{font-size:.85rem;color:var(--ink-2);line-height:1.45;padding-left:20px;position:relative}
+    .ai-coach-tips li::before{content:'✦';position:absolute;left:0;top:1px;color:var(--honey-d);font-weight:800}
+    .ai-coach-foot{font-size:.72rem;color:var(--ink-soft);display:inline-flex;align-items:center;gap:6px;padding-top:10px;border-top:1px dashed var(--rule)}
+    .ai-coach-foot i{color:var(--sage)}
   </style>
 </head>
 <body>
@@ -201,6 +238,57 @@ $navFallback  = $navAvatar['fallback'];
                 </div>
               </div>
             </div>
+
+            <!-- ====== Coach IA — rappel pour ajuster la proposition ====== -->
+            <aside class="ai-coach mb-3">
+              <header class="ai-coach-head">
+                <div class="ai-coach-icon"><i class="bi bi-stars"></i></div>
+                <div>
+                  <div class="ai-coach-title">Coach IA</div>
+                  <div class="ai-coach-status">
+                    <?php if ($aiAvail): ?>
+                      <span class="dot ok"></span> Analyse à jour
+                    <?php else: ?>
+                      <span class="dot warn"></span> IA hors ligne — verdicts dataset uniquement
+                    <?php endif; ?>
+                  </div>
+                </div>
+              </header>
+              <?php if ($aiCoach['match_score'] > 0): ?>
+                <div class="ai-coach-match">
+                  <div class="ai-coach-match-bar"><div class="fill" style="width: <?= max(8, min(100, (int)$aiCoach['match_score'])) ?>%;"></div></div>
+                  <div class="ai-coach-match-row">
+                    <span class="lbl">Compatibilité avec votre profil</span>
+                    <strong><?= (int)$aiCoach['match_score'] ?>%</strong>
+                  </div>
+                  <?php if (!empty($aiCoach['match_reason'])): ?>
+                    <div class="ai-coach-match-reason"><i class="bi bi-bullseye"></i> <?= htmlspecialchars($aiCoach['match_reason']) ?></div>
+                  <?php endif; ?>
+                </div>
+              <?php endif; ?>
+              <?php if (!empty($aiCoach['price_advice'])): ?>
+                <section class="ai-coach-block">
+                  <div class="hd"><i class="bi bi-cash-coin"></i> Verdict budget client</div>
+                  <p><?= htmlspecialchars($aiCoach['price_advice']) ?></p>
+                </section>
+              <?php endif; ?>
+              <?php if (!empty($aiCoach['deadline_advice'])): ?>
+                <section class="ai-coach-block">
+                  <div class="hd"><i class="bi bi-calendar-event-fill"></i> Verdict délai</div>
+                  <p><?= htmlspecialchars($aiCoach['deadline_advice']) ?></p>
+                </section>
+              <?php endif; ?>
+              <?php if (!empty($aiCoach['pitch_tips'])): ?>
+                <section class="ai-coach-block">
+                  <div class="hd"><i class="bi bi-magic"></i> Pour convaincre le client</div>
+                  <ul class="ai-coach-tips">
+                    <?php foreach ($aiCoach['pitch_tips'] as $tip): ?><li><?= htmlspecialchars($tip) ?></li><?php endforeach; ?>
+                  </ul>
+                </section>
+              <?php endif; ?>
+              <footer class="ai-coach-foot"><i class="bi bi-shield-check"></i> Analyse locale (Ollama · Qwen).</footer>
+            </aside>
+
             <a href="mes_propositions.php" class="btn-ghost"><i class="bi bi-arrow-left"></i> Retour à mes propositions</a>
           </div>
 

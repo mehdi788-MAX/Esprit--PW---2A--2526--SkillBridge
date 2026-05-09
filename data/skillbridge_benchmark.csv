@@ -1,0 +1,102 @@
+complexite,service,budget_dt,jours_estimes,deadline_jours,verdict_budget,verdict_deadline
+faible,Logo simple,80,2,1,trop_bas,impossible
+faible,Logo simple,120,2,2,correct,serre
+faible,Logo simple,150,2,5,correct,raisonnable
+faible,Logo simple,200,2,14,confortable,large
+faible,Correction texte (1 page),50,1,1,correct,serre
+faible,Correction texte (1 page),30,1,3,trop_bas,raisonnable
+faible,Icone unique,100,1,2,correct,raisonnable
+faible,Icone unique,60,1,1,trop_bas,impossible
+faible,Traduction document (1 page),80,1,1,correct,serre
+faible,Traduction document (1 page),50,1,3,trop_bas,large
+faible,Post Instagram x5,100,2,2,correct,serre
+faible,Post Instagram x5,150,2,7,correct,large
+faible,Miniature YouTube,90,1,2,correct,raisonnable
+faible,Miniature YouTube,40,1,1,trop_bas,impossible
+faible,Banner publicitaire web,80,1,2,correct,raisonnable
+faible,Banner publicitaire web,40,1,1,trop_bas,impossible
+faible,Signature email HTML,70,1,2,correct,raisonnable
+faible,Signature email HTML,30,1,1,trop_bas,impossible
+faible,Carte de visite (recto-verso),90,1,3,correct,large
+faible,Carte de visite (recto-verso),50,1,1,trop_bas,serre
+faible,Retouche photo x10,80,1,2,correct,raisonnable
+faible,Retouche photo x10,40,1,1,trop_bas,impossible
+moyen,CV + lettre de motivation,150,3,2,trop_bas,serre
+moyen,CV + lettre de motivation,200,3,4,correct,raisonnable
+moyen,CV + lettre de motivation,300,3,10,confortable,large
+moyen,Landing page HTML,250,5,3,trop_bas,impossible
+moyen,Landing page HTML,350,5,6,correct,serre
+moyen,Landing page HTML,450,5,14,correct,raisonnable
+moyen,Landing page HTML,600,5,21,confortable,large
+moyen,Redaction article SEO (800 mots),180,3,2,trop_bas,serre
+moyen,Redaction article SEO (800 mots),250,3,5,correct,raisonnable
+moyen,Montage video YouTube (5 min),300,4,3,trop_bas,impossible
+moyen,Montage video YouTube (5 min),450,4,6,correct,raisonnable
+moyen,Montage video YouTube (5 min),650,4,14,confortable,large
+moyen,Identite visuelle (logo + charte),400,5,4,trop_bas,impossible
+moyen,Identite visuelle (logo + charte),600,5,7,correct,raisonnable
+moyen,Identite visuelle (logo + charte),900,5,21,confortable,large
+moyen,Chatbot FAQ simple,350,5,4,trop_bas,impossible
+moyen,Chatbot FAQ simple,550,5,8,correct,raisonnable
+moyen,Chatbot FAQ simple,800,5,20,confortable,large
+moyen,Application mobile simple,500,10,7,trop_bas,serre
+moyen,Application mobile simple,800,10,14,correct,raisonnable
+moyen,Application mobile simple,1200,10,30,confortable,large
+moyen,Audit SEO site web,300,4,3,trop_bas,impossible
+moyen,Audit SEO site web,500,4,6,correct,raisonnable
+moyen,Audit SEO site web,750,4,14,confortable,large
+moyen,Integration WordPress,250,4,3,trop_bas,impossible
+moyen,Integration WordPress,400,4,7,correct,raisonnable
+moyen,Integration WordPress,600,4,14,confortable,large
+moyen,Script Python scraping,300,4,3,trop_bas,impossible
+moyen,Script Python scraping,500,4,7,correct,raisonnable
+moyen,Script Python scraping,750,4,14,confortable,large
+moyen,Pack 10 publications LinkedIn,200,3,2,trop_bas,serre
+moyen,Pack 10 publications LinkedIn,350,3,5,correct,raisonnable
+moyen,Pack 10 publications LinkedIn,500,3,10,confortable,large
+moyen,Rapport business plan (20 pages),400,6,4,trop_bas,impossible
+moyen,Rapport business plan (20 pages),600,6,8,correct,raisonnable
+moyen,Rapport business plan (20 pages),900,6,20,confortable,large
+moyen,Podcast montage + chapitrage,350,3,2,trop_bas,serre
+moyen,Podcast montage + chapitrage,500,3,5,correct,raisonnable
+moyen,Podcast montage + chapitrage,700,3,10,confortable,large
+moyen,Animation logo (motion),400,4,3,trop_bas,impossible
+moyen,Animation logo (motion),600,4,7,correct,raisonnable
+moyen,Animation logo (motion),850,4,14,confortable,large
+eleve,Site e-commerce complet,600,20,10,trop_bas,impossible
+eleve,Site e-commerce complet,900,20,18,trop_bas,serre
+eleve,Site e-commerce complet,1400,20,25,correct,raisonnable
+eleve,Site e-commerce complet,2000,20,40,confortable,large
+eleve,ERP sur mesure,1000,45,20,trop_bas,impossible
+eleve,ERP sur mesure,2000,45,40,trop_bas,serre
+eleve,ERP sur mesure,3500,45,50,correct,raisonnable
+eleve,ERP sur mesure,5000,45,60,confortable,large
+eleve,Application IA + dashboard,2500,30,15,trop_bas,impossible
+eleve,Application IA + dashboard,3500,30,28,correct,serre
+eleve,Application IA + dashboard,5000,30,40,correct,raisonnable
+eleve,Application IA + dashboard,7000,30,60,confortable,large
+eleve,Application mobile e-commerce,1200,25,15,trop_bas,impossible
+eleve,Application mobile e-commerce,2000,25,28,correct,serre
+eleve,Application mobile e-commerce,3500,25,40,correct,raisonnable
+eleve,Application mobile e-commerce,5000,25,60,confortable,large
+eleve,Scraper + dashboard donnees,800,12,7,trop_bas,impossible
+eleve,Scraper + dashboard donnees,1200,12,14,correct,raisonnable
+eleve,Scraper + dashboard donnees,1800,12,30,confortable,large
+eleve,Automatisation n8n / Zapier,600,8,5,trop_bas,impossible
+eleve,Automatisation n8n / Zapier,900,8,10,correct,raisonnable
+eleve,Automatisation n8n / Zapier,1400,8,20,confortable,large
+eleve,Formation en ligne (cours video),1500,20,15,trop_bas,impossible
+eleve,Formation en ligne (cours video),2500,20,25,correct,raisonnable
+eleve,Formation en ligne (cours video),4000,20,45,confortable,large
+eleve,Marketplace multi-vendeurs,2000,35,20,trop_bas,impossible
+eleve,Marketplace multi-vendeurs,3500,35,35,correct,raisonnable
+eleve,Marketplace multi-vendeurs,5500,35,50,confortable,large
+eleve,API REST + documentation,800,14,7,trop_bas,impossible
+eleve,API REST + documentation,1400,14,16,correct,raisonnable
+eleve,API REST + documentation,2000,14,30,confortable,large
+eleve,Modele ML prediction ventes,1500,18,10,trop_bas,impossible
+eleve,Modele ML prediction ventes,2500,18,20,correct,raisonnable
+eleve,Modele ML prediction ventes,4000,18,35,confortable,large
+eleve,Refonte UX/UI application web,1200,15,10,trop_bas,impossible
+eleve,Refonte UX/UI application web,2000,15,18,correct,raisonnable
+eleve,Refonte UX/UI application web,3000,15,30,confortable,large
