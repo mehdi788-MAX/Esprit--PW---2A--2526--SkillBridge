@@ -1,0 +1,6 @@
+# Ignorer les fichiers de configuration sensibles
+config/credentials.php
+ai_debug.txt
+list_models.php
+test_api.php
+db_update_users.php
