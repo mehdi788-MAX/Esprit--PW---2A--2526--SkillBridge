@@ -22,6 +22,62 @@ if (!function_exists('base_url')) {
     }
 }
 
+/**
+ * Préfixe d'URL pour le frontoffice (zone publique : index, login, register, profil, chat).
+ * Usage : frontoffice_url() . '/login.php'  →  http://localhost/<projet>/view/frontoffice/EasyFolio/login.php
+ * Pour les pages chat (sous /view/frontoffice/chat/) utiliser frontoffice_url('chat') . '/conversations.php'.
+ */
+if (!function_exists('frontoffice_url')) {
+    function frontoffice_url($section = 'EasyFolio') {
+        $section = trim((string)$section, '/');
+        $tail = $section !== '' ? '/' . $section : '';
+        return base_url() . '/view/frontoffice' . $tail;
+    }
+}
+
+/**
+ * Préfixe d'URL pour le backoffice (zone admin : dashbord, users_list, edit_user, chat admin).
+ * Usage : backoffice_url() . '/dashbord.php'  →  http://localhost/<projet>/view/backoffice/dashbord.php
+ * Pour les pages chat admin (sous /view/backoffice/chat/) utiliser backoffice_url('chat') . '/conversations.php'.
+ */
+if (!function_exists('backoffice_url')) {
+    function backoffice_url($section = '') {
+        $section = trim((string)$section, '/');
+        $tail = $section !== '' ? '/' . $section : '';
+        return base_url() . '/view/backoffice' . $tail;
+    }
+}
+
+/**
+ * Préfixe d'URL pour les contrôleurs (POST forms, OAuth callbacks, etc.).
+ * Usage : controller_url() . '/utilisateurcontroller.php'
+ */
+if (!function_exists('controller_url')) {
+    function controller_url() {
+        return base_url() . '/controller';
+    }
+}
+
+/**
+ * Préfixe d'URL pour l'API JSON (chat poll, uploads, etc.).
+ * Usage : api_url() . '/chat.php?action=poll'
+ */
+if (!function_exists('api_url')) {
+    function api_url() {
+        return base_url() . '/api';
+    }
+}
+
+/**
+ * Préfixe d'URL pour les uploads (photos de profil, fichiers chat).
+ * Usage : uploads_url() . '/chat/<file>'
+ */
+if (!function_exists('uploads_url')) {
+    function uploads_url() {
+        return base_url() . '/uploads';
+    }
+}
+
 // Database configuration - SkillBridge
 // Essayer MySQL (XAMPP) d'abord, sinon SQLite en fallback local
 $useMySQL = true;
