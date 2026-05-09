@@ -1,15 +1,16 @@
 <div align="center">
-  <img src="view/frontoffice/EasyFolio/assets/img/skillbridge-logo.png" alt="SkillBridge" height="80">
 
-  # SkillBridge
+# 🌉 SkillBridge
 
-  **La marketplace freelance qui connecte les bons talents avec les bons projets.**
+**Marketplace freelance · Tunisie**
 
-  ![PHP](https://img.shields.io/badge/PHP-8.x-777BB4?logo=php&logoColor=white)
-  ![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
-  ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-  ![License](https://img.shields.io/badge/license-Academic-1F5F4D)
-  ![Status](https://img.shields.io/badge/status-MVP-F5C842)
+*Publiez votre demande · Recevez des propositions ciblées · Collaborez en messagerie temps réel — tout au même endroit.*
+
+![PHP](https://img.shields.io/badge/PHP-8.x-1F5F4D?style=flat-square&logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-XAMPP-F5C842?style=flat-square&logo=mysql&logoColor=0F0F0F)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5-1F5F4D?style=flat-square&logo=bootstrap&logoColor=white)
+![Ollama](https://img.shields.io/badge/AI-Ollama%20local-F5C842?style=flat-square&logoColor=0F0F0F)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-1F5F4D?style=flat-square)
 
 </div>
 
@@ -17,24 +18,30 @@
 
 ## Sommaire
 
-- [À propos](#à-propos)
-- [Fonctionnalités](#fonctionnalités)
-- [Stack technique](#stack-technique)
-- [Architecture du projet](#architecture-du-projet)
-- [Installation](#installation)
-- [URLs principales](#urls-principales)
-- [Comptes de démo](#comptes-de-démo)
-- [Design system](#design-system)
-- [Équipe](#équipe)
-- [Licence](#licence)
+1. [À propos](#à-propos)
+2. [Fonctionnalités](#fonctionnalités)
+3. [Stack technique](#stack-technique)
+4. [Architecture du projet](#architecture-du-projet)
+5. [Installation](#installation)
+6. [Mise en route de l'IA (optionnel)](#mise-en-route-de-lia-optionnel)
+7. [URLs principales](#urls-principales)
+8. [Comptes de démo](#comptes-de-démo)
+9. [Design system](#design-system)
+10. [Mettre à jour le projet](#mettre-à-jour-le-projet)
+11. [Équipe](#équipe)
+12. [Licence](#licence)
 
 ---
 
 ## À propos
 
-**SkillBridge** est une plateforme freelance qui met en relation des **clients** à la recherche de prestataires et des **freelancers** souhaitant proposer leurs compétences. Pensée et développée à l'**ESPRIT — École Supérieure Privée d'Ingénierie et de Technologies** (Tunis, Tunisie), elle a pour vocation de fournir aux indépendants tunisiens un espace de collaboration moderne, sécurisé et 100 % en ligne.
+**SkillBridge** est une plateforme web qui connecte clients et freelancers vérifiés en Tunisie. Le client publie une **demande** (titre, budget, échéance, brief), reçoit des **propositions** ciblées, en accepte une — et la conversation s'ouvre automatiquement avec le freelancer retenu.
 
-Le projet a été réalisé dans le cadre du module **Programmation Web — 2ème année (2025/2026)** et couvre l'ensemble des fonctionnalités attendues d'une marketplace : authentification multi-modes, gestion des profils, messagerie temps réel, modération admin et bien plus.
+Le tout est augmenté par un **assistant IA local** qui aide :
+- côté **client** à formuler un brief solide (synthèse, verdict prix vs benchmark, verdict délai, suggestions),
+- côté **freelancer** à rédiger une proposition convaincante (score de compatibilité, conseils pitch, verdicts dataset).
+
+Projet académique (Esprit School of Engineering · 2A · semestre PW) bâti **sans framework** en PHP / MySQL / Bootstrap, avec un design system maison sage & honey.
 
 ---
 
@@ -42,37 +49,38 @@ Le projet a été réalisé dans le cadre du module **Programmation Web — 2èm
 
 ### Pour les clients & freelancers (Frontoffice)
 
-- 🔐 **Authentification multi-modes** — email/mot de passe, OAuth (Google, GitHub, Discord) ou reconnaissance faciale (face-api.js)
-- ✉️ **Vérification d'email** par lien unique (PHPMailer)
-- 👤 **Profils détaillés** — bio, compétences, localisation, site web, photo
-- 💬 **Messagerie temps réel** — messages texte, images, fichiers (jusqu'à 10 Mo), réactions emoji, accusés de lecture, indicateur de saisie
-- 🔔 **Notifications instantanées** — cloche avec badge, panneau déroulant, toasts et notifications natives du navigateur
-- 🌐 **Synchronisation multi-onglets** via `BroadcastChannel` — un onglet « marqué lu » se reflète dans les autres
-- 🎨 **Design system unifié** sur toutes les pages — accueil, connexion, inscription, profil, OAuth role-picker, conversations
+- 🔐 **Auth complète** : email + mot de passe, OAuth (Google · GitHub · Discord), reconnaissance faciale
+- 👤 **Profil enrichi** : photo, bio, compétences, localisation, site web, complétion en %
+- 💬 **Messagerie temps réel** : polling intelligent, indicateurs de saisie, accusés de réception, réactions emoji, upload fichiers/photos, notifications de bureau
+- 📝 **Demandes & propositions** : CRUD complet, modération, filtre par statut
+- ✅ **Cycle de vie des propositions** : un clic « Accepter » ferme la demande, refuse les autres propositions, ouvre la conversation, dispatche les notifications
+- 🧠 **Assistant IA (Ollama local)** :
+  - sur la création de demande : synthèse du brief, verdict prix/délai vs benchmark, suggestions
+  - sur la création de proposition : score de compatibilité freelancer ↔ demande, conseils pitch
+  - sur la liste des demandes (freelancer) : section « Recommandées pour vous » avec top 3 alignés sur le profil
+- 🔔 **Cloche de notifications** : toasts in-app, sons, notifications natives, persistance cross-onglets
 
 ### Pour les administrateurs (Backoffice)
 
-- 📊 **Dashboard** — KPIs admin-actionnables (pulse aujourd'hui / 7 jours, santé du parc), graphiques 14 jours, fil d'activité récent
-- 👥 **Gestion utilisateurs** — liste, profils complets joints, recherche par rôle, édition, activation/désactivation, suppression
-- 💬 **Modération chat** — vue d'ensemble des conversations, lecture seule des fils, suppression de messages problématiques
-- 🔒 **Espace séparé** — login admin dédié, garde-fous serveur, jamais de redirection vers le frontoffice
+- 📊 **Dashboard KPI** : signups du jour / 7 derniers jours, indicateurs de santé (comptes incomplets, inactifs, non vérifiés)
+- 👥 **Gestion utilisateurs** : liste DataTable, profils complets, recherche par rôle, édition
+- 💬 **Modération chat** : conversations, messages, recherche full-text, vue détaillée avec réactions
+- 📋 **Modération marketplace** : liste demandes & propositions avec filtres et suppression
+- 🎨 **UI cohérente** : sidebar sage, topbar cream-blur, palette unifiée avec le frontoffice
 
 ---
 
 ## Stack technique
 
-| Couche | Technologies |
+| Domaine | Technologie |
 |---|---|
-| **Backend** | PHP 8 (POO + MVC manuel), PDO |
-| **Base de données** | MySQL 8 (XAMPP) avec fallback automatique vers SQLite pour le dev local |
-| **Frontend frontoffice** | HTML5, CSS3 (Manrope + Bootstrap Icons), Bootstrap 5, AOS |
-| **Frontend backoffice** | Sage + Honey design system maison, Bootstrap 5, DataTables, Chart.js 4 |
-| **Real-time** | Polling singleton (`ChatBus`) sur `api/chat.php?action=poll` avec throttling Page Visibility / idle |
-| **Auth** | Bcrypt, OAuth 2.0 (Google / GitHub / Discord), face-api.js (descripteurs faciaux) |
-| **Email** | PHPMailer (vérification, reset password) |
-| **DevOps** | Compatible XAMPP / MAMP / `php -S` |
-
-> **Aucun framework côté backend** — tout est en PHP vanilla pour rester pédagogique et auditable. Aucune dépendance Composer non plus : la stack JS arrive via CDN.
+| **Backend** | PHP 8.x — pattern MVC manuel, sans framework, sans Composer |
+| **Base de données** | MySQL 8.x (XAMPP / phpMyAdmin) — fallback SQLite local pour le dev |
+| **Auth** | Sessions natives, OAuth 2.0, FaceAPI.js (vérification faciale) |
+| **Frontend** | Bootstrap 5, Bootstrap Icons, AOS (animations on scroll), DataTables (admin) |
+| **Temps réel** | Polling adaptatif (chatbus.js singleton), BroadcastChannel API cross-onglets |
+| **IA** | [Ollama](https://ollama.com) local + modèle `qwen3:0.6b` (~530 MB) + dataset CSV de benchmarking (100 lignes) |
+| **Typographie** | Manrope (400 → 800) — Google Fonts |
 
 ---
 
@@ -80,48 +88,58 @@ Le projet a été réalisé dans le cadre du module **Programmation Web — 2èm
 
 ```
 SkillBridge/
-├── api/                    # Endpoints JSON (chat polling, uploads)
-├── config/                 # Configuration OAuth (.env-driven)
-├── controller/             # Contrôleurs (UtilisateurController, ChatController, OAuthController)
-├── model/                  # Modèles PDO (Utilisateur, Profil, Conversation, Message, Notification)
-├── lib/                    # Outils internes (Moderator anti-bad-words, etc.)
-├── libs/PHPMailer/         # PHPMailer vendoré
-├── database/
-│   └── skillbridge.sql     # Dump complet — utilisateurs, profils, conversations, messages, notifications, réactions
-├── uploads/
-│   └── chat/               # Pièces jointes (images, fichiers)
+├── api/                     # Endpoints JSON / AJAX
+│   ├── chat.php             #   chat polling + actions (send, react, edit, delete, upload)
+│   └── ai_advice.php        #   assistant IA pour la création de demande
+│
+├── controller/              # Logique métier MVC
+│   ├── DemandeController.php        # CRUD demandes/propositions + acceptProposition
+│   ├── ChatController.php           # CRUD conversations/messages
+│   ├── utilisateurcontroller.php    # Auth + profil + OAuth
+│   └── AiRecommendationService.php  # Moteur IA (Ollama + dataset)
+│
+├── model/                   # Classes PDO (Demande, Proposition, Conversation,
+│                            # Message, Notification, Utilisateur)
+│
 ├── view/
 │   ├── frontoffice/
-│   │   ├── EasyFolio/      # Pages publiques (index, login, register, profil, oauth_role)
-│   │   └── chat/           # Conversations, chat thread, nouvelle conversation, édition
-│   ├── backoffice/
-│   │   ├── _partials/      # Header (sidebar + topbar) + footer partagés
-│   │   ├── dashbord.php    # Dashboard admin
-│   │   ├── login.php       # Connexion admin (séparée du frontoffice)
-│   │   ├── users_list.php  # Liste utilisateurs avec actions
-│   │   ├── users_profils.php # Vue jointe utilisateurs ⟶ profils
-│   │   ├── search_utilisateurs.php # Recherche par rôle
-│   │   ├── edit_user.php   # Édition utilisateur
-│   │   └── chat/           # Modération chat (conversations, messages, recherche)
-│   └── shared/
-│       └── chatbus.js      # Singleton de polling + bell + toasts + cross-tab sync
-├── config.php              # Helpers d'URL (base_url, frontoffice_url, backoffice_url, …) + connexion BDD
-└── README.md               # Ce fichier
+│   │   ├── EasyFolio/       # Pages publiques (landing, login, profil, demandes)
+│   │   └── chat/            # Module messagerie temps réel
+│   ├── backoffice/          # Espace admin (dashbord, users, modération chat & marketplace)
+│   └── shared/chatbus.js    # SDK temps réel (polling, BroadcastChannel, notifications)
+│
+├── data/
+│   └── skillbridge_benchmark.csv   # Dataset prix/délai par service (100 lignes)
+│
+├── database/
+│   ├── skillbridge.sql              # Schéma complet — à importer dans XAMPP
+│   └── migrations/                   # Migrations idempotentes (cycle propositions, etc.)
+│
+├── lib/                     # Helpers OAuth, FaceAPI
+├── uploads/                 # Photos profil + pièces jointes chat (générés)
+│
+├── admin/index.php          # Raccourci /admin → backoffice
+├── index.php                # Raccourci / → frontoffice
+├── .htaccess                # Réécritures Apache (clean URLs, cache)
+├── config.php               # Helpers d'URL + connexion BDD + helpers IA + nav unifiée
+├── .env                     # Secrets OAuth + config Ollama (à créer depuis .env.example)
+└── README.md
 ```
 
-### Helpers d'URL
+### Helpers d'URL (config.php)
 
-Le fichier `config.php` expose des helpers portables qui détectent automatiquement la racine du projet — vous pouvez déployer SkillBridge dans n'importe quel sous-dossier d'XAMPP sans modifier le code :
-
-```php
-base_url();           // → http://localhost/<projet>
-frontoffice_url();    // → http://localhost/<projet>/view/frontoffice/EasyFolio
-frontoffice_url('chat'); // → http://localhost/<projet>/view/frontoffice/chat
-backoffice_url();     // → http://localhost/<projet>/view/backoffice
-controller_url();     // → http://localhost/<projet>/controller
-api_url();            // → http://localhost/<projet>/api
-uploads_url();        // → http://localhost/<projet>/uploads
-```
+| Helper | Retour |
+|---|---|
+| `base_url()` | `http://localhost/skillbridge` (auto-détecté) |
+| `home_url()` | `base_url() . '/'` |
+| `admin_url()` | `base_url() . '/admin/'` |
+| `frontoffice_url($section)` | `base_url() . '/view/frontoffice/EasyFolio'` |
+| `backoffice_url()` | `base_url() . '/view/backoffice'` |
+| `api_url()` | `base_url() . '/api'` |
+| `uploads_url()` | `base_url() . '/uploads'` |
+| `frontoffice_main_nav($activeKey, …)` | Bloc `<a>` du menu principal — ordre canonique partagé |
+| `frontoffice_nav_avatar($pdo, $userId)` | `['name', 'src', 'fallback']` pour le chip de profil nav |
+| `chat_message_preview($raw)` | Aperçu lisible (📷 Photo / 📎 Fichier) au lieu du JSON brut |
 
 ---
 
@@ -129,51 +147,134 @@ uploads_url();        // → http://localhost/<projet>/uploads
 
 ### Prérequis
 
-- **XAMPP** (Apache + MySQL + PHP ≥ 8.0) ou tout serveur web PHP équivalent
-- (Optionnel) Un compte Google / GitHub / Discord developer pour activer l'OAuth
+| Outil | Version conseillée | Notes |
+|---|---|---|
+| **XAMPP** | 8.x (Apache + MySQL) | macOS / Windows / Linux |
+| **PHP** | 8.0 ou plus | inclus avec XAMPP |
+| **Git** | n'importe quelle version récente | |
+| **Ollama** *(optionnel)* | dernière version | uniquement pour l'assistant IA |
 
 ### Étapes
 
-1. **Cloner le projet**
-   ```bash
-   git clone https://github.com/mehdi788-MAX/Esprit--PW---2A20--2026--SkillBridge.git
-   cd Esprit--PW---2A20--2026--SkillBridge
-   ```
+#### 1. Récupérer le code
 
-2. **Placer le projet dans `htdocs/`** (XAMPP) ou démarrer un serveur dédié :
-   ```bash
-   php -S localhost:8000
-   ```
+**Si vous n'avez pas encore cloné le projet :**
 
-3. **Importer la base de données**
+```bash
+# Placez-vous dans le dossier htdocs de XAMPP
+cd /Applications/XAMPP/htdocs        # macOS
+# cd C:\xampp\htdocs                 # Windows
 
-   Démarrer MySQL via le panneau XAMPP, puis dans phpMyAdmin :
-   - Créer une base `skillbridge`
-   - Importer `database/skillbridge.sql`
+git clone https://github.com/mehdi788-MAX/Esprit--PW---2A20--2026--SkillBridge.git skillbridge
+cd skillbridge
+```
 
-   > 💡 **Astuce dev** : si MySQL n'est pas dispo, `config.php` bascule automatiquement sur SQLite (fichier créé sous `database/skillbridge.sqlite` au premier run, avec données de seed).
+**Si vous avez déjà cloné précédemment, mettez à jour :**
 
-4. **Configurer les credentials OAuth** (optionnel, mais recommandé)
+```bash
+cd /Applications/XAMPP/htdocs/skillbridge
 
-   Créer un fichier `.env` à la racine :
-   ```env
-   GOOGLE_CLIENT_ID=...
-   GOOGLE_CLIENT_SECRET=...
-   GITHUB_CLIENT_ID=...
-   GITHUB_CLIENT_SECRET=...
-   DISCORD_CLIENT_ID=...
-   DISCORD_CLIENT_SECRET=...
-   ```
+# Si vous êtes sur une autre branche, repassez sur main
+git checkout main
 
-   Sans `.env`, les boutons OAuth restent simplement masqués — le reste de l'app fonctionne.
+# Récupérez les derniers commits
+git pull origin main
+```
 
-5. **Configurer SMTP pour les emails** (optionnel)
+> **Note** : le repo a été renommé. L'ancien `Esprit--PW---2A--2526--SkillBridge` redirige automatiquement vers le nouveau, donc les anciens clones continuent de fonctionner.
 
-   Dans `controller/email_helper.php`, renseignez les identifiants SMTP (Gmail App Password recommandé pour le dev).
+#### 2. Démarrer XAMPP
 
-6. **Lancer !**
-   - Frontoffice : [http://localhost/Esprit-PW.../view/frontoffice/EasyFolio/index.php](http://localhost/Esprit-PW.../view/frontoffice/EasyFolio/index.php)
-   - Backoffice : [http://localhost/Esprit-PW.../view/backoffice/login.php](http://localhost/Esprit-PW.../view/backoffice/login.php)
+Lancez **Apache** + **MySQL** depuis le panneau XAMPP. Vérifiez ensuite :
+- Apache : <http://localhost> répond
+- MySQL : phpMyAdmin accessible sur <http://localhost/phpmyadmin>
+
+#### 3. Importer la base de données
+
+Deux options :
+
+**Option A — via phpMyAdmin (recommandée) :**
+
+1. Ouvrez <http://localhost/phpmyadmin>
+2. Créez la base : `Nouvelle base` → nom `skillbridge` → interclassement `utf8mb4_unicode_ci`
+3. Sélectionnez la base `skillbridge` → onglet **Importer**
+4. Choisissez le fichier `database/skillbridge.sql` → **Exécuter**
+
+**Option B — via la ligne de commande :**
+
+```bash
+# Créer la base
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS skillbridge CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# Importer le schéma
+mysql -u root skillbridge < database/skillbridge.sql
+```
+
+> ⚠️ Le script `skillbridge.sql` **supprime les tables existantes** avant de les recréer. Faites une sauvegarde si vous avez des données importantes.
+
+#### 4. Configurer les variables d'environnement
+
+```bash
+cp .env.example .env
+```
+
+Ouvrez `.env` et renseignez les clés OAuth dont vous voulez activer le bouton (Google, GitHub, Discord). Les clés vides désactivent simplement le bouton correspondant — l'auth email/mot de passe fonctionne sans aucune clé.
+
+Pour l'IA, gardez les valeurs par défaut sauf si vous voulez utiliser un autre modèle Ollama.
+
+#### 5. Vérifier l'accès
+
+Le projet est servi sous `htdocs/skillbridge`, donc accessible à :
+
+- **Frontoffice** : <http://localhost/skillbridge/>
+- **Backoffice** : <http://localhost/skillbridge/admin>
+
+Le serveur intégré PHP fonctionne aussi (utile pour le dev) :
+
+```bash
+php -S localhost:8000 -t .
+```
+
+→ <http://localhost:8000> et <http://localhost:8000/admin>
+
+---
+
+## Mise en route de l'IA (optionnel)
+
+L'assistant IA tourne **localement** via [Ollama](https://ollama.com) — aucune donnée ne quitte votre machine. Le projet **fonctionne entièrement sans Ollama** : les verdicts prix/délai sont alors calculés depuis le dataset CSV uniquement (la synthèse & les suggestions LLM sont remplacées par des fallbacks).
+
+### Installation d'Ollama
+
+```bash
+# macOS (Homebrew)
+brew install ollama
+
+# Linux
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Windows : télécharger l'installeur sur https://ollama.com/download
+```
+
+Démarrez le service :
+
+```bash
+ollama serve   # tourne en tâche de fond sur 127.0.0.1:11434
+```
+
+### Pull du modèle
+
+```bash
+ollama pull qwen3:0.6b
+```
+
+Le modèle pèse ~530 MB. Une fois pull, l'assistant est immédiatement opérationnel — rafraîchissez la page de création de demande, le panneau IA passe de « hors ligne » à « ✅ Analyse à jour ».
+
+### Vérification
+
+Le statut s'affiche en haut du panneau IA sur :
+- `add_demande.php` / `edit_demande.php` (côté client)
+- `add_proposition.php` / `edit_proposition.php` (côté freelancer — Coach IA)
+- `browse_demandes.php` (recommandations pour vous)
 
 ---
 
@@ -185,14 +286,14 @@ Le projet expose des URLs propres à la racine pour éviter d'avoir à taper les
 
 | Raccourci | Redirige vers |
 |---|---|
-| `/` ou `/skillbridge/` | `view/frontoffice/EasyFolio/index.php` |
-| `/admin` ou `/skillbridge/admin/` | `view/backoffice/login.php` *(ou dashbord si déjà connecté)* |
-| `/login` | `view/frontoffice/EasyFolio/login.php` |
-| `/register` | `view/frontoffice/EasyFolio/register.php` |
-| `/profil` | `view/frontoffice/EasyFolio/profil.php` |
-| `/chat` | `view/frontoffice/chat/conversations.php` |
+| `/skillbridge/` | `view/frontoffice/EasyFolio/index.php` |
+| `/skillbridge/admin/` | `view/backoffice/login.php` *(ou dashbord si déjà connecté)* |
+| `/skillbridge/login` | `view/frontoffice/EasyFolio/login.php` |
+| `/skillbridge/register` | `view/frontoffice/EasyFolio/register.php` |
+| `/skillbridge/profil` | `view/frontoffice/EasyFolio/profil.php` |
+| `/skillbridge/chat` | `view/frontoffice/chat/conversations.php` |
 
-> Sous Apache/XAMPP, les raccourcis `/login`, `/register`, `/profil`, `/chat` sont activés par `.htaccess` (mod_rewrite requis). Sous le serveur intégré PHP, seuls `/` et `/admin/` sont actifs — les autres URLs canoniques restent valides.
+> Les raccourcis `/login`, `/register`, `/profil`, `/chat` nécessitent `mod_rewrite` (activé par défaut dans XAMPP). Sous le serveur intégré PHP, seuls `/` et `/admin/` fonctionnent — les chemins canoniques `view/...` restent toujours valides.
 
 ### Frontoffice (chemins canoniques)
 
@@ -204,9 +305,17 @@ Le projet expose des URLs propres à la racine pour éviter d'avoir à taper les
 | OAuth — choix du rôle | `view/frontoffice/EasyFolio/oauth_role.php` |
 | Mon profil | `view/frontoffice/EasyFolio/profil.php` |
 | Mes conversations | `view/frontoffice/chat/conversations.php` |
-| Nouveau chat | `view/frontoffice/chat/new_conversation.php` |
-| Demandes (client) | `view/frontoffice/EasyFolio/mes_demandes.php` |
-| Demandes (freelancer) | `view/frontoffice/EasyFolio/browse_demandes.php` |
+| Nouvelle conversation | `view/frontoffice/chat/new_conversation.php` |
+| **Marketplace — client** | |
+| Mes demandes | `view/frontoffice/EasyFolio/mes_demandes.php` |
+| Publier une demande | `view/frontoffice/EasyFolio/add_demande.php` *(panneau IA live)* |
+| Modifier une demande | `view/frontoffice/EasyFolio/edit_demande.php` *(panneau IA live)* |
+| Propositions reçues | `view/frontoffice/EasyFolio/demande_propositions.php` *(bouton Accepter)* |
+| **Marketplace — freelancer** | |
+| Parcourir les demandes | `view/frontoffice/EasyFolio/browse_demandes.php` *(recommandations IA)* |
+| Faire une proposition | `view/frontoffice/EasyFolio/add_proposition.php` *(coach IA)* |
+| Mes propositions | `view/frontoffice/EasyFolio/mes_propositions.php` |
+| Modifier ma proposition | `view/frontoffice/EasyFolio/edit_proposition.php` *(coach IA)* |
 
 ### Backoffice (chemins canoniques)
 
@@ -220,6 +329,8 @@ Le projet expose des URLs propres à la racine pour éviter d'avoir à taper les
 | Modération conversations | `view/backoffice/chat/conversations.php` |
 | Tous les messages | `view/backoffice/chat/messages.php` |
 | Recherche messages | `view/backoffice/chat/searchMessages.php` |
+| Demandes (modération) | `view/backoffice/demandes_list.php` |
+| Propositions (modération) | `view/backoffice/propositions_list.php` |
 
 ---
 
@@ -229,62 +340,94 @@ Le dump SQL initialise trois comptes de test :
 
 | Rôle | Email | Mot de passe |
 |---|---|---|
-| **Admin** | `admin@skillbridge.com` | `password` |
-| **Freelancer** | `freelancer@test.com` | `password` |
-| **Client** | `client@test.com` | `password` |
+| 👨‍💼 **Client** | `client@skillbridge.tn` | `client123` |
+| 👩‍💻 **Freelancer** | `freelancer@skillbridge.tn` | `freelancer123` |
+| 🛡️ **Admin** | `admin@skillbridge.tn` | `admin123` |
+
+> ⚠️ Mots de passe en clair pour la démo uniquement. Changez-les avant tout déploiement.
 
 ---
 
 ## Design system
 
-SkillBridge utilise un design system maison baptisé **Sage & Honey**, taillé pour un univers freelance moderne et chaleureux.
-
 ### Palette
 
 | Couleur | Hex | Usage |
 |---|---|---|
-| 🟢 Sage | `#1F5F4D` | Action principale, accent éditorial, éléments de confiance |
-| 🟡 Honey | `#F5C842` | Pop d'attention, CTA secondaire, badges de mise en valeur |
-| ⚫ Ink | `#0F0F0F` | Texte principal, CTA dark, footers |
-| 🟤 Cream | `#F7F4ED` | Fond paper, sections atmosphériques |
-| 🟫 Rule | `#E8E2D5` | Bordures, séparateurs |
+| 🟢 Sage | `#1F5F4D` | Couleur principale, CTAs, accents |
+| 🟢 Sage Dark | `#134438` | Hover, gradients |
+| 🟢 Sage Soft | `#E8F0EC` | Fonds, badges légers |
+| 🟡 Honey | `#F5C842` | Accent secondaire, badges premium, boutons hot |
+| 🟡 Honey Soft | `#FBE9A0` | Fonds chauds, KPIs |
+| ⚪ Cream | `#F7F4ED` | Fond global (ink-cream) |
+| ⚫ Ink | `#0F0F0F` | Texte principal |
 
 ### Typographie
 
-- **Manrope** (400 → 800) — toute l'interface, du body aux display headlines
-- Italiques utilisées pour les **mots-accents** dans les titres : *« Trouvez le talent **parfait** »*
+- **Display** : Manrope 700-800 (titres, hero)
+- **Body** : Manrope 400-600 (corps, formulaires)
+- **Mono** : monospace pour les badges/labels uppercase
 
 ### Composants partagés
 
-- `auth-card` — cartes blanches arrondies (24px) avec ombre douce
-- `eyebrow` — pills sage (ou honey) au-dessus des titres de section
-- `kpi` — cartes statistiques denses (icône, label uppercase, gros chiffre, sous-titre contextuel)
-- `ad-table` — tables sand-bordered, hover cream, badges colorés selon le rôle
-- `chatbus.js` — composant unique pour la cloche, les toasts, le polling et la sync multi-onglets
+- **`.btn-sage`** : CTA principal (sage filled)
+- **`.btn-honey`** : CTA accent (honey filled)
+- **`.btn-ghost`** : CTA secondaire (paper outlined)
+- **`.kpi`** : carte KPI avec icône + label uppercase + valeur
+- **`.demande-card`**, **`.proposition-card`**, **`.reco-card`** : cards marketplace
+- **`.ai-panel`**, **`.ai-coach`** : panneaux assistant IA (statut idle/thinking/ready/offline)
+
+---
+
+## Mettre à jour le projet
+
+```bash
+# Si vous êtes sur une branche de travail, sauvegardez vos changements
+git stash                # ou git commit avant
+
+# Repassez sur main si nécessaire
+git checkout main
+
+# Récupérez les derniers commits
+git pull origin main
+
+# Si une nouvelle migration SQL est arrivée, importez-la depuis phpMyAdmin
+# (les migrations sont rangées dans database/migrations/, idempotentes)
+
+# Restaurez vos changements éventuels
+git stash pop
+```
+
+### Migrations à appliquer après pull
+
+Les migrations sont idempotentes (on peut les exécuter plusieurs fois sans erreur). À importer via phpMyAdmin → base `skillbridge` → onglet **Importer** :
+
+| Fichier | Apporte |
+|---|---|
+| `database/migrations/2026_chat_realtime.sql` | Tables temps réel chat (réactions, typing, notifications) |
+| `database/migrations/2026-05-09_add_user_id_to_propositions.sql` | FK `propositions.user_id` |
+| `database/migrations/2026-05-09_proposition_lifecycle.sql` | Statuts `propositions.status` + `demandes.status` + FK acceptée |
 
 ---
 
 ## Équipe
 
-Projet réalisé en groupe dans le cadre du module **Programmation Web — 2ème année** à **ESPRIT** :
+| Rôle | Membre | GitHub |
+|---|---|---|
+| 👥 Gestion Utilisateurs · Auth · Profils | **Mehdi** | [@mehdi788-MAX](https://github.com/mehdi788-MAX) |
+| 💬 Gestion Chat · Messagerie temps réel | **Oussema Hedhli** | [@oussemahedhli](https://github.com/oussemahedhli) |
+| 📋 Gestion Demandes/Propositions · IA matching | **Essil Hamdi** | [@essil92](https://github.com/essil92) |
 
-| Contributeur | Module |
-|---|---|
-| [@mehdi788-MAX](https://github.com/mehdi788-MAX) | Gestion Utilisateurs · authentification & OAuth · refonte UI/UX & design system Sage & Honey · intégration backoffice |
-| [@oussemahedhli](https://github.com/oussemahedhli) | Gestion Chat · messagerie temps réel · notifications · réactions emoji |
-| [@essil92](https://github.com/essil92) | Modules complémentaires (demandes / propositions) |
-
-> **Encadrement académique** : ESPRIT — École Supérieure Privée d'Ingénierie et de Technologies, Z.I. Charguia 2, 2035 Ariana, Tunisie.
+> **Esprit School of Engineering** — 2A · semestre PW · 2025-2026
 
 ---
 
 ## Licence
 
-Projet pédagogique — utilisation académique uniquement.
-Le code est livré tel quel, sans garantie. Les dépendances tierces conservent leurs licences respectives (PHPMailer, Bootstrap, face-api.js, Chart.js, DataTables…).
+Ce projet est un travail académique. Tous droits réservés à l'équipe et à Esprit School of Engineering.
 
 ---
 
 <div align="center">
-  <sub>Made with 💚 at <strong>ESPRIT</strong> — Tunis, Tunisie · Année universitaire 2025/2026</sub>
+Développé avec ❤️ à Tunis · <strong>SkillBridge</strong> · 2026
 </div>
